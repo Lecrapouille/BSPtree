@@ -1,0 +1,642 @@
+\documentclass[a4paper,11pt]{amsart} 
+\usepackage[francais]{babel}
+\usepackage{epsfig}
+\usepackage{mathtime}
+%\usepackage{epsfig}
+\usepackage[oztex,hideboxes]{boxedeps}
+
+\newcommand{\dessin}[4]{
+\begin{figure}[htb]
+\centering
+\HideDisplacementBoxes 
+\BoxedEPSF{#1 scaled #2}
+%\epsfig{file=#1, height= #2mm}
+\caption{#3}
+\label{#4}
+\end{figure}}
+
+\newtheorem{remarque}{Remarque} \newcommand{\AAA}{{\mathcal A}} 
+\newcommand{\BB}{{\mathcal B}} \newcommand{\CC}{{\mathcal C}} 
+\newcommand{\DD}{{\mathcal D}} \newcommand{\EE}{{\mathcal E}} 
+\newcommand{\FF}{{\mathcal F}} \newcommand{\GG}{{\mathcal G}} 
+\newcommand{\HH}{{\mathcal H}} \newcommand{\II}{{\mathcal I}} 
+\newcommand{\JJ}{{\mathcal J}} \newcommand{\KK}{{\mathcal K}} 
+\newcommand{\LL}{{\mathcal L}} \newcommand{\MM}{{\mathcal M}} 
+\newcommand{\NN}{{\mathcal N}} \newcommand{\OO}{{\mathcal O}} 
+\newcommand{\PP}{{\mathcal P}} \newcommand{\QQ}{{\mathcal Q}} 
+\newcommand{\RR}{{\mathcal R}} \newcommand{\SSS}{{\mathcal S}} 
+\newcommand{\TT}{{\mathcal T}} \newcommand{\UU}{{\mathcal U}} 
+\newcommand{\VV}{{\mathcal V}} \newcommand{\WW}{{\mathcal W}} 
+\newcommand{\XX}{{\mathcal X}} \newcommand{\ZZ}{{\mathcal Z}} 
+\newcommand{\bbR}{{\mathbb R}} \newcommand{\bbD}{{\mathbb D}} 
+\newcommand{\bbO}{{\mathbb O}} \newcommand{\bbS}{{\mathbb S}} 
+\newcommand{\bbE}{{\mathbb E}} \newcommand{\bbN}{{\mathbb N}} 
+\newcommand{\bbM}{{\mathbb M}} \newcommand{\bbV}{{\mathbb V}} 
+\newcommand{\bbC}{{\mathbb K}} \newcommand{\bbF}{{\mathbb F}} 
+\newcommand{\bbP}{{\mathbb P}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Rapport fait le : 11\01\2001
+
+\begin{document}
+\title{\'ELIMINATION DES PARTIES CACH\'EES} 
+\author{Q. QUADRAT}
+
+\maketitle \tableofcontents
+%%%%%%%%%%%%%%%%%%%%%%%
+\vfill \vspace{0.5cm}\hrule
+\section{Introduction}
+\hrule\vspace{0.5cm}
+%%%%%%%%%%%%%%%%%%%%%%
+
+L'un des probl\`emes importants lors d'une projection d'une sc\`ene graphique, 
+qu'elle soit en 2D ou 3D, est d'\'eliminer les parties cach\'ees 
+de la sc\`ene.  Cet expos\'e va pr\'esenter deux 
+algorithmes pour r\'esoudre ce probl\`eme.  
+D'une part, l'algorithme de z-buffer 
+qui affiche les pixels les plus proches de l'observateur dans une 
+projection parall\`ele,
+d'autre part, un algorithme de partitionnement binaire de 
+l'espace, qui permet d'afficher les objets les plus \'eloign\'es 
+avant d'afficher les plus proches.
+
+\newpage
+%%%%%%%%%%%%%%%%%%
+\vfill \vspace{0.5cm}\hrule
+\section{Sc\`ene 3D}
+\hrule\vspace{0.5cm}
+%%%%%%%%%%%%%%%%%%
+Une sc\`ene 3D not\'ee $\SSS$, est d\'efinie par un ensemble d'objets 
+$\{\OO_1,\OO_2,\cdots,\OO_n \}$ dans l'espace \`a trois dimensions.  
+La surface ext\'erieure d'un objet $\OO$, appel\'ee bord, est not\'ee 
+$\partial\OO$.  On se limite \`a des sc\`enes dont les objets sont 
+poly\`edraux.  Le bord d'un poly\`edre est donc une union de faces qui 
+sont des polygones : $$\partial\OO=\{\partial\OO^1, 
+\partial\OO^2,\cdots, \partial\OO^n\}.$$ Un polygone peut \^etre 
+triangul\'e c'est \`a dire que chaque polygone est une union de 
+triangles : $$\partial\OO_0^k=\{t_0^{k,1},\cdots,t_0^{k,l}\}.$$ En fin 
+de compte pour visualiser une sc\`ene nous avons besoin de 
+repr\'esenter uniquement les bords des objets.  L'ensemble des bords des 
+objets d'une sc\`ene sera appele bord de la sc\`ene $\partial\SSS$ qui 
+sera qu'un ensemble de triangles dans l'espace 3D~: 
+$$\partial\SSS=\{t_0^{k,l}\}.$$ Un triangle, est une surface 
+color\'ee, 
+d\'efini par ses trois sommets~: $$t=(p_1,p_2,p_3),$$ o\`u chaque 
+sommet est d\'efini par le quadruplet~: $p=(x,y,z,c),$ o\`u $x,y,z$ 
+sont les coordonn\'ees du sommet et $c$ sa couleur donc  un triangle est 
+d\'efini par une matrice de quatres lignes et trois colonnes.  On peut 
+ainsi repr\'esenter une sc\`ene par un ensemble de telles matrices.
+
+\dessin{scene.epsf}{1000}{Exemple de sc\`ene 3D}{Web}
+
+De m\^eme on aura besoin de sc\`enes 2D polygonales.  Dans ce cas, 
+chaque objet est un polygone.  Le bord d'un objet est une union de 
+faces o\`u chaque face est un segment.  Un segment est d\'efini par 
+ses deux extr\'emit\'es donc une matrice 2 colonnes 3 lignes.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\vfill \newpage \vspace{0.5cm}\hrule
+\section{Rappel de g\'eom\'etrie et introduction au calcul matriciel}
+\hrule\vspace{0.5cm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Calcul matriciel}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Les matrices sont des tableaux de nombres r\'eels.  On dira que la 
+matrice est $m\times n$ si elle a $m$ lignes et $n$ colonnes.  Sur des 
+tableaux de tailles compatibles, on d\'efinit une addition et une 
+multiplication~\cite{FOLE95}.
+\begin{itemize}
+\item \emph{Addition matricielle} : Soit $A$ et $B$ deux matrices 
+$m\times n$, la somme des matrices $A$ et $B$ est la matrice $C$ 
+$m\times n$ d\'efinie par~: $$C_{ij}=A_{ij}+B_{ij}, \;\;\; i=1\cdots 
+m,\; j=1\cdots n.$$
+%
+\item \emph{Multiplication matricielle} : Soit $A$ une matrice 
+$m\times n$ et $B$ une matrice $n\times p$, le produit des matrices 
+$A$ et $B$ est la matrice $C$ $m\times n$ d\'efinie par~: 
+$$C_{ik}=\sum_{j=1}^n A_{ij}B_{jk}, \;\;\; i=1\cdots m,\; k=1\cdots 
+p.$$ \item \emph{Multiplication par un scalaire} : Soit $A$ une 
+matrice $m\times n$ et $\lambda$ un nombre r\'eels, le produit de $C=A 
+\lambda = \lambda A$ est d\'efini par~: $$C_{ij}=\lambda A_{ij},\;\;\; 
+i=1\cdots m,\; j=1\cdots n.$$
+\end{itemize}
+%
+\begin{remarque} Le calcul matriciel a de bonnes propri\'et\'es.  En 
+parti\-culier les matrices $m\times m$ munies de ces deux op\'erations 
+a une structure d'anneau.
+\end{remarque}
+%----------------------------
+\subsection{G\'eom\'etrie 2D}
+%-----------------------------
+On consid\`ere un plan muni de son syst\`eme de coordonn\'ees 
+$(O,x,y)$.  Un point $P$ est d\'efini par ses coordonn\'es $(x,y)$ que 
+l'on notera matriciellement~: $$P=\begin{bmatrix}x\\y\end{bmatrix}.$$
+
+On d\'efinit sur ces points les transformations g\'eometriques 
+suivantes qui \`a $P\;(x,y)$ associe $P'\;(x',y')$ ~:
+\begin{itemize}
+\item\emph{Translation} : la translation de vecteur $T$ est la 
+transformation d\'efinie par $P'=P+T$.\vspace{0.2cm}
+%
+\item\emph{Rotation} : la rotation d'angle $\theta$ est la 
+transformation d\'efinie par~: $$x'=x\cos \theta -y \sin 
+\theta,\hspace{0.5cm}y'=x \sin \theta +y \cos \theta.$$ Sous forme 
+matricielle nous avons~: $P'=R P$ avec $$R=\begin{bmatrix}\cos\theta & 
+-\sin\theta \\ \sin\theta & \cos\theta\end{bmatrix}.$$\vspace{0.1cm}
+%
+\item\emph{Homoth\'etie} : l'homoth\'etie de rapport $h$ est la 
+transformation d\'efinie par~: $$x'=hx,\hspace{0.5cm}y'=hy.$$ Sous 
+forme matricielle nous avons~: $P'=hP$.\vspace{0.2cm}
+%
+\item\emph{Perspective} : la perspective $V$ de centre $O$ et de plan 
+de projection $\PP$ (d'\'equation $y=1$) est d\'efinie par 
+$x'=x/y,\;\;y'=1).$ $P'$ est l'intersection de $OP$ avec $\PP$.  Elle 
+est d\'efinie lorsque $P\not= 0.$ Elle ne s'exprimera en terme de 
+calcul matriciel que dans le cadre de la g\'eom\'etrie 
+projective~\cite{FOLE95}.
+\end{itemize}
+%---------------------------------------
+\subsection{G\'eom\'etrie projective 2D}
+%---------------------------------------
+Pour unifier les probl\`emes apparaissant en g\'eo\-m\'etries, on 
+introduit la g\'eom\'etrie projective.  On se place dans un espace \`a 
+trois dimensions.  Au lieu de raisonner avec les points d'un espace 
+2D, on raisonne avec les \emph{rayons} (droites passant par l'origine) 
+d'un espace 3D. On peut voir alors la g\'eom\'etrie 2D comme la 
+g\'eom\'etrie des intersections des rayons avec un plan.  Un rayon est 
+la classes de points proportionnels entre eux.  Deux points $P$ de 
+coordonn\'ees $(X,Y,Z)$ et $P'$ de coordonn\'ees $(X',Y',Z')$ sont 
+\'equivalents $(P\sim P')$ si seulement si $P'=\lambda P$ o\`u 
+$\lambda$ est un nombre r\'eel.  Lorsque $Z\not= 0$ un repr\'esentant 
+d'un rayon est $(x=X/Z,y=Y/Z,1)$.  C'est l'intersection du rayon avec 
+le plan $Z=1$.  Les points $Q=(x,y,1)$ du plan $Z=1$ sont les points 
+de la g\'eom\'etrie 2D du paragraphe pr\'ec\'edant.  En g\'eom\'etrie 
+projective les transformations du paragraphe pr\'ec\'edant 
+s'\'ecrivent comme des produits matriciels $3\times 3$. 
+(Figure~\ref{Pp})~\cite{FOLE95}.  
+%\vspace{0.1cm}
+
+%
+\dessin{espace3D.epsf}{800}{G\'eom\'etrie projective 2D}{Pp}
+%
+
+Aux quatre op\'erations vues pr\'ec\'edemment sont respectivement 
+associ\'ees une matrice~: la translation $T$, la rotation $R$, 
+l'homoth\'etie $H$ et la perspective $V$.
+
+$$T=\begin{bmatrix}1&0&T_x\\0&1&T_y\\0&0&1\end{bmatrix},\hspace{0.5cm} 
+R=\begin{bmatrix}\cos\theta&-\sin\theta&0\\
+\sin\theta&\cos\theta&0\\0&0&1\end{bmatrix},\hspace{0.5cm}$$ 
+$$H=\begin{bmatrix}h&0&0\\0&h&0\\0&0&h\end{bmatrix},\hspace{0.5cm} 
+V=\begin{bmatrix}1&0&0\\0&1&0\\0&1&0\end{bmatrix}.$$
+
+V\'erifions que la derni\`ere op\'eration r\'ealise bien la 
+perspective~: 
+$$\begin{bmatrix}1&0&0\\0&1&0\\0&1&0\end{bmatrix}\begin{bmatrix}x
+\\y\\1\end{bmatrix}= 
+\begin{bmatrix}x\\y\\y\end{bmatrix}\sim 
+\begin{bmatrix}x/y\\1\\1\end{bmatrix}.$$
+%---------------------------------------
+\subsection{G\'eom\'etrie projective 3D}
+%---------------------------------------
+De nouveau, on d\'efinit une g\'eom\'etrie 3D projective en 
+consid\'erant les rayons dans un espace 4D. Les coordonn\'ees 
+homog\`enes seront les quadruplets $(X,Y,Z,T)$ et on peut associer 
+\`aux op\'erations une matrice.  Sont associ\'es par une matrice~: la 
+translation de vecteur $(T_x,T_y,T_z)$, la rotation d'angle $\theta$ 
+et d'axe $z$, l'homoth\'etie de rapport $h$.
+
+$$T=\begin{bmatrix}1&0&0&T_x\\0&1&0&T_y\\0&0&1&T_z\\0&0&0&1\end{bmatrix},
+\; 
+R=\begin{bmatrix}\cos\theta&-\sin\theta&0&0\\
+\sin\theta&\cos\theta&0&0\\0&0&1&0\\0&0&0&1\end{bmatrix},\; 
+H=\begin{bmatrix}h&0&0&0\\0&h&0&0\\0&0&h&0\\0&0&0&1\end{bmatrix}.$$
+
+Nous nous interessons \`a deux sortes de perspective dans un espace 
+3D~:
+\begin{itemize}
+\item\emph{projection perspective} de centre $O$ sur $Z=1$ (figure 
+\ref{Pp})~: 
+$$V=\begin{bmatrix}1&0&0&0\\0&1&0&0\\0&0&1&0\\0&0&1&0\end{bmatrix}.$$ 
+\item\emph{projection parall\`ele} \`a $(Oz)$ sur le plan $Z=1$ (figure 
+\ref{pa})~: 
+$$W=\begin{bmatrix}1&0&0&0\\0&1&0&0\\0&0&0&1\\0&0&0&1\end{bmatrix}.$$
+
+\dessin{projectionPara.epsf}{800}{perspective parall\`ele}{pa}
+
+\end{itemize}
+\begin{remarque}
+Les transformations g\'eom\'etriques d\'efinies par des matrices 
+conservent les alignements.  C'est \`a dire une droite est 
+transform\'ee en une droite, un plan en un plan et l'ordre
+des points sur une droite est pr\'eserv\'e.
+\end{remarque}
+\dessin{M.epsf}{800}{Transformation du volume canonique par la matrice $M$}{M}
+
+Il est plus fa\c cile de faire une projection parall\`ele qu'une 
+projection perspective.  On peut ramener une projection perspective 
+\`a une projection parall\`ele en utilisant la transformation 
+g\'eom\'etrique d\'efinie par la matrice suivante~: 
+$$M=\begin{bmatrix}1&0&0&0\\0&1&0&0\\0&0&\frac{1}{1-m}&\frac{-m}{1-m} 
+\\0&0&1&0\end{bmatrix}\;\text{avec } 1>m>0. $$
+L'inverse de cette matrice est :
+$$M^{-1}=\frac{1-m}{m}\begin{bmatrix}1&0&0&0\\0&1&0&0\\0&0&0&\frac{m}{1-m}\\
+0&0&-1&\frac{1}{1-m}\end{bmatrix}\;\text{avec } 1>m>0.$$
+
+Dans la figure~\ref{M} on montre les vues de c\^ot\'e du volume canonique avant (a) et apr\'es 
+(b) l'application de la matrice $M$ (voir \cite{FOLE95}).
+
+Cette transformation a les propri\'et\'es suivantes~:
+\begin{itemize}
+\item Les points du plan $z=1$ ne sont pas modifi\'es.  Pour preuve : 
+$$M \begin{bmatrix}x\\y\\1\\1\end{bmatrix}= 
+\begin{bmatrix}x\\y\\1\\1\end{bmatrix}.$$
+\item Le plan $z = m$ est envoy\'e sur le plan $z=0$ : 
+$$M\begin{bmatrix}x\\y\\m\\1\end{bmatrix}= 
+\begin{bmatrix}x\\y\\0\\m\end{bmatrix}.$$
+\item L'origine $O$ est envoy\'e \`a l'infini dans la 
+direction $x=0,\;y=0$ : 
+$$M \begin{bmatrix}0\\0\\0\\1\end{bmatrix}= 
+\begin{bmatrix}0\\0\\ \frac{-m}{1-m}\\0\end{bmatrix}.$$ 
+C'est math\'ematiquement incorrect, mais si on divise tous les \'el\'ements 
+par $0,$ le centre de projection va \`a l'infini.
+\end{itemize}
+\dessin{pertopara.epsf}{800}{Sch\'ema}{ptp}
+
+On peut r\'esumer ces transformations par la figure \ref{ptp}. On 
+v\'erifie la formule $$V=M^{-1}W M=W M.$$
+Les deux m\'ethodes suivantes sont \'equivalentes : 
+\begin{itemize}
+\item
+\'eliminer les surfaces 
+cach\'ees avec l'\oe il \`a l'origine et faire la perspective de 
+centre $0$,
+\item transformer la sc\`ene par $M$, faire l'\'elimination pour
+la projection parall\`ele et faire la projection parall\`ele voir \cite{FOLE95}.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\vfill \newpage
+\vspace{0.5cm}\hrule
+\section{L'algorithme de Partitionnement binaire de l'espace}
+\hrule\vspace{0.5cm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% R\'ef\'erences : \cite{FOLE95},\cite{ZEN},\cite{FAQ},\cite{WEB},\cite{GEO}.
+
+\subsection{Partition binaire d'un ensemble}
+Un \emph{graphe orient\'e} $\GG=(N,A)$ est d\'efini comme un ensemble 
+fini de \emph{noeuds} $N$ et d'\emph{arcs} $A$, o\`u un arc $a$ est 
+une paire ordonn\'ee de noeuds $(n_1,n_2)$.  On dira que $n_1$ est 
+\emph{pr\'ed\'ecesseur} de $n_2$ et que $n_2$ est un \emph{successeur} 
+de $n_1$.
+
+Un \emph{arbre} est un graphe qui poss\'ede un unique noeud n'ayant 
+aucun pr\'ed\'ecesseur, appel\'e \emph{racine}, et tel que tout noeud 
+autre que la racine a un pr\'ed\'ec\'esseur unique.
+
+Soit un ensemble $A$ on appelle \emph{coupure} une 
+application $\alpha$ qui \`a $A$ associe deux ensembles non vides 
+$A^+$, $A^-$ tels que $A=A_\alpha^{+} \cup A_\alpha^{-}$.
+
+Une partition binaire $\PP$ d'un ensemble $A$ est une partition 
+obtenue par une suite r\'ecursive de coupures.  $A$ est coup\'e 
+\'eventuellement par $\alpha$.  $A_\alpha^{+}$ est \'eventuellement 
+coup\'ee par $\beta$ ($A_\alpha^+=A_{\alpha^+\beta^+}\cup 
+A_{\alpha^+\beta^-}$) et $A_\alpha^{-}$ est \'eventuellement coup\'e 
+par $\gamma \cdots$ (figure \ref{coupure}).
+
+%----------------------------------------------------------------
+\dessin{coupure.epsf}{800}{Exemple de coupures : elles ne sont pas 
+forcement droites !}{coupure}
+%
+
+Dans un espace \`a n dimensions.  Les coupures sont des hyperplans 
+(voir \cite{FAQ}, \cite{GEO}, \cite{WEB}). c'est \`a dire des sous espaces \`a $n-1$ dimensions.  Par exemple 
+dans un espace 3D l'hyperplan est un plan et pour un espace 2D, c'est 
+une droite.
+
+\subsection{Repr\'esentation d'une sc\`ene 2D par un BSP}
+Une sc\`ene 2D polygonales est d\'efinie par les segments des bords 
+des objets qui la composent.  Pour construire l'arbre BSP associ\'e 
+\`a la sc\`ene, on utilise, comme coupure, les droites d\'efinies par 
+les faces des objets.  Chaque noeud de l'arbre est associ\'e \`a une 
+coupure d\'efinie par un segment orient\'e et repr\'esent\'e par une 
+matrice $3\times 2$ contenant les 2 coordonn\'ees et la couleur des 
+extr\'emit\'es du segment.  Chaque coupure coupe l'espace en deux.  Le 
+demi-espace positif est celui qui contient la normale au segment 
+orient\'e faisant un angle de $\pi/2$ avec celui-ci.  L'autre 
+demi-espace sera dit n\'egatif. 
+
+Soit une sc\`ene $\SSS$ (figure \ref{scene}) constitu\'ee deux objets : un 
+triangle et un rectangle.  Orientons toutes les faces (fl\`eches 
+noires). On d\'efinit, ici, une sc\`ene comme un ensemble de segments.
+
+%
+\dessin{orientation.epsf}{800}{Sc\`ene orient\'ee}{scene}
+%
+
+Les segments constituant ces deux figures appartiennent aux coupures 
+respectives~: $\alpha, \delta, \varepsilon, \gamma, \xi, \beta, \nu.$ 
+Par exemple prenons $\alpha$ l'hypoth\'enuse du triangle comme premier 
+segment.  Par la suite, nous ne distingueront plus coupures et 
+segments : ils porteront le m\^eme nom.  Donc $\SSS=(\alpha, \delta, 
+\varepsilon, \gamma, \xi, \beta, \nu)$.  Coupons $\SSS$ par $\alpha,$ 
+notre sc\`ene est \`a pr\'esent form\'ee de deux demi-espaces~: 
+$A_{\alpha^{+}}$ et $A_{\alpha^{-}}$.  La construction d'un arbre se 
+fera selon le principe suivant.  Si $\alpha$ est la racine de l'arbre 
+alors $A_{\alpha^{+}}$ sera la branche gauche et $A_{\alpha^{-}}$ la 
+branche droite.  On va donc former un arbre dont les noeuds sont les 
+faces des objets de la sc\`ene et les branches des ensembles.  Les 
+feuilles sont les ensembles finaux de la partition.
+
+Dans notre exemple, nous aurons donc $A_{\alpha^{-}}=(\beta, \nu)$ et 
+$A_{\alpha^{-}}=(\delta, \varepsilon, \gamma,\xi)$.  Pour savoir par 
+exemple si $\beta \in A_{\alpha^{-}},$ voir annexe 1 sous-section 1.
+
+
+%
+\dessin{partition.epsf}{800}{Partitionnement d'une sc\`ene 2D}{partit}
+%
+
+L'algorithme de construction de l'arbre sera \cite{FAQ}, \cite{GEO}, 
+\cite{WEB} :
+
+\vspace{0.5cm}
+\centerline{\fbox{$\text{bsp}(\SSS)=
+\begin{cases}
+\bullet & \text{ si } \SSS = \text{nil}\;, \\
+\SSS & \text{ si } \text{ card(}\SSS)=1\;, \\
+(\text{t\^ete}(\SSS)\,\text{bsp} (\SSS^{+})\,\text{bsp(}\SSS^{-})) & \text{ 
+sinon\;.} \\
+\end{cases}$}}
+\vspace{0.5cm}
+
+Avec $\SSS^{+}$ la sc\`ene gauche et $\SSS^{-}$ la sc\`ene droite par rapport \`a une coupure.
+
+En d\'eveloppant la r\'ecursion sur la sc\`ene de l'exemple, on obtient :
+\begin{align*}
+(\alpha \; \delta \; \varepsilon \; \gamma \; \xi \; \beta \; \nu\;) 
+&=(\alpha \; (\delta \; \varepsilon \; \gamma \; \xi\;) \; (\beta \; 
+\nu\;)\;) \\
+&=(\alpha \; (\delta \; (\varepsilon \; \gamma \; \xi\;) \;\bullet \;)\; (\beta 
+\;\bullet \; \nu\;) \;)\\
+&=(\alpha \; (\delta \; (\varepsilon \; \bullet (\gamma \; \xi\;)\; \bullet 
+\;)\; (\beta \; 
+\bullet \; \nu)\; ) \\
+&=(\alpha \; (\delta \;(\varepsilon \; \bullet \; (\gamma \; \bullet 
+\xi\;)\;)\; \bullet\; )\; (\beta \; \bullet \; \nu)\;).
+\end{align*}
+
+Ce qui correspond \`a l'arbre de la figure~\ref{arbre}.
+%--------
+\dessin{arbre.epsf}{800}{Arbre BSP final}{arbre}
+%--------
+
+
+%%%%%%%%%%%%%%%%%%%
+
+\subsection{Algorithme du peintre}
+Nous appelons \emph{algorithme du peintre} un algorithme r\'ecursif 
+de parcourt un arbre, qui affiche les objets des plus \'eloign\'es au plus
+pr\'es de l'oeil, ce qui permetrra ne de pas voir les objets normalement
+cach\'es \cite{FAQ}.
+
+Soit $\alpha$ une coupure et $A$ un ensemble repr\'esent\'e par un 
+arbre binaire tel que : $A=(\alpha,A_{\alpha^-},A_{\alpha^{+}})$ et 
+$P$ la position de l'oeil, o\`u $P \in A$.  La fonction peintre est 
+d\'efinie r\'ecursivement par~:
+
+\vspace{0.1cm}
+\centerline{\fbox{$\text{peintre }(A, P) =
+\begin{cases}
+\text{peintre } (A_{\alpha^{-}},P), \text{afficher } \alpha, 
+\text{peintre } (A_{\alpha^{+}},P) & \text{si } P\in A_{\alpha^{+}}, 
+ \\
+\text{peintre } (A_{\alpha^{+}},P), \text{afficher } \alpha, 
+\text{peintre } (A_{\alpha^{-}},P) & \text{si } P \in A_{\alpha^{-}}, 
+\\
+\text{peintre } (nil,P) = \bullet & \text{si } A = nil.
+\end{cases}$}}
+\vspace{0.5cm}
+
+Pour savoir si $P \in A_{\alpha^{+}}$ ou $P \in A_{\alpha^{-}}$, se 
+reporter \`a l'annexe 1, sous-section~1.
+
+Dans notre exemple l'oeil $P$ est situ\'ee dans l'espace 
+$A_{\alpha^{+}\delta^{+}\varepsilon^{+}}$.  Nous allons appliquer 
+peintre($\alpha, P$).  Comme $P \in \alpha^{+},$ nous affichons en 
+premier, la branche $A_{\alpha^{-}}$ puis $\alpha$ puis 
+$A_{\alpha^{+}}.$ Dans la brache $A_{\alpha^{-}}$ nous r\'eapliquons 
+l'algorithme du peintre.  Comme $\beta$ est plus \'eloign\'e que $\nu$ 
+et comme on affiche pas les feuilles, on va donc afficher en premier 
+$\beta,$ vient ensuite $\nu$ puis $\alpha$.  Dans la branche 
+$A_{\alpha^{+}},$ comme $P \in \delta^{+}$ on affiche en premier 
+$\delta$.  On arrive \`a la branche $\varepsilon$, on applique 
+peintre($\varepsilon, P$) c'est \`a dire on va afficher la branche 
+$A_{\alpha^{+}\delta^{+}\epsilon^{-}}$ puis $\varepsilon$. Comme $\xi$
+est plus \'eloign\'e que $\gamma$ on affiche en premier $\xi$ puis 
+$\gamma$ et enfin $\varepsilon$. En conclusion, nous allons afficher
+dans l'orde : $\beta, \nu, \alpha, \delta, \xi, \gamma, \varepsilon.$
+(Figure~\ref{arbre2}).
+
+\dessin{parcours.epsf}{600}{Ordre de parcours}{arbre2}
+
+Pour simplifier l'\'ecriture, nous noterons $\alpha$ pour
+peintre($\alpha$, $P$) et $\dot{\alpha}$ pour afficher $\alpha$
+dans le d\'eveloppement de r\'ecursion du peintre, on obtient ainsi~:
+
+\begin{align*}
+\alpha &=\alpha^- \dot{\alpha}\alpha^+ \\
+       &=\backslash\!\!\!\beta^{+}\dot{\beta}\beta^{-}\dot{\alpha}\alpha^+ \\
+       &=\dot{\beta}\backslash\!\!\!\nu^{+}\dot{\nu}\backslash\!\!\!\nu^{-}\dot{\alpha}\alpha^+ \\
+       &=\dot{\beta}\dot{\nu}\dot{\alpha}\backslash\!\!\!\delta^{-}\dot{\delta}\delta^{+} \\
+       &=\dot{\beta}\dot{\nu}\dot{\alpha}\dot{\delta}\varepsilon^-\dot{\varepsilon}\backslash\!\!\!\varepsilon^{+}\\
+       &=\dot{\beta}\dot{\nu}\dot{\alpha}\dot{\delta}\gamma^{-}\dot{\gamma}\backslash\!\!\!\gamma^{+}\dot{\varepsilon}\\       
+       &=\dot{\beta}\dot{\nu}\dot{\alpha}\dot{\delta}\backslash\!\!\!\xi^{+}\dot{\xi}\backslash\!\!\!\xi^-\dot{\gamma}\dot{\varepsilon}\\   
+       &=\dot{\beta}\dot{\nu}\dot{\alpha}\dot{\delta}\dot{\xi}\dot{\gamma}\dot{\varepsilon}
+\end{align*}
+
+Nous obtenons ainsi le parours de l'arbre donn\'e dans la figure~\ref{arbre2}.
+
+Ainsi, nous venons d'afficher tous les objets des plus ``\'eloign\'es'' aux 
+plus ``proches''. Nous avons ainsi \'elimin\'e toutes les parties cach\'ees.
+Il ne reste plus qu'\`a effectuer les projections perspectives des faces 
+lorsqu'on affiche une face de la sc\`ene pour pouvoir la visualiser sur l'\'ecran 
+(figure \ref{ecran}).
+\dessin{peintre.epsf}{700}{Projection sur l'\'ecran}{ecran}
+
+La construction de l'arbre BSP associ\'e \`a une sc\`ene 3D est 
+analogue \`a la construction 2D. Les coupures sont, maintenant, les 
+plans d\'efinis par les faces des objets. L'algorithme du peintre reste
+identique.
+
+%\section{Exemple en Caml d'\'elimination de parties cach\'ees}
+%%%%%%%%%%%%%%%%%%%%
+\vfill \newpage \vspace{0.5cm}\hrule
+\section{Conclusion}
+\hrule\vspace{0.5cm}
+%%%%%%%%%%%%%%%%%%%%
+\subsection{BSP}
+L'arbre BSP est un arbre  o\`u les noeuds repr\'esentent les 
+polygones d'une sc\`ene 2D ou 3D.
+
+L'arbre BSP est utilis\'e, pour la gestion dans un 
+moteur 3D, d'un monde, constitu\'e de nombreux polygones et en 
+grande partie statique (Quake, Doom, Flight Simulator etc...).  
+Il permet un ordre d'affichage des polygones \'eliminant les parties 
+cach\'ees \'evitant ainsi l'utilisation de z-buffer.
+
+Un arbre BSP a plusieurs avantages~:
+\begin{itemize}
+\item L'arbre donne \`a peu de frais un ordre exact d'affichage 
+des polygones gr\^ace \`a l'algorithme du peintre.
+\item L'arbre permet de s\'electionner efficacement les faces visibles dans 
+le c\^one de vision de la cam\'era.
+\item L'arbre permet d'effectuer des tests de collisions sur un nombre 
+minimal de polygones.
+\end{itemize}
+
+Mais il a aussi quelques inconv\'enients~:
+\begin{itemize}
+\item La construction de l'arbre engendre un grand nombre de 
+polygones.  En effet, de nombreux polygones vont appara\^itre \`a la 
+suite de d\'ecoupage. 
+\item Une fois construit, l'arbre ne peut pas 
+(ou tr\`es difficilement) \^etre modifi\'e. 
+\item Un arbre BSP est dur \`a d\'ebuguer.
+\end{itemize}
+
+
+\subsection{Zbuffer}
+Algorithme standard 
+pour l'obtention rapide d'images de qualit\'e moyenne.  Application \`a la 
+conception et fabrication assist\'ee par ordinateur (station de travail 
+graphique), \`a la r\'ealit\'e virtuelle et au jeu.
+
+
+Les avantages du z-buffer sont :
+\begin{itemize}
+\item L'algorithme est facilement implantable au niveau logiciel et 
+mat\'eriel.
+\item Il peut \^etre 
+optimis\'e en utilisant exclusivement des entiers, ouen utilisant des variantes 
+de l'algorithme de Bresenham pour le trac\'e de segments.
+\item L'algorithme est facilement pipelinable et parall\'elisable.
+\item Gestion simple des recoupements entre objets.  
+\item Ex\'ecution en un temps en $o(n)$ du nombre de facettes donc une bonne 
+scalabilit\'e.
+\end{itemize}
+
+Les inconv\'enients du Z-buffer sont :
+\begin{itemize}
+\item  Les deux zones tampon peuvent avoir des 
+tailles tr\`es importantes (plusieurs Mo dans le cas de grands \'ecrans). 
+\item La d\'ecomposition de chaque surface \'el\'ementaire en pixels n\'ecessite une 
+puissance de calcul importante (de l'ordre de 50 Mips pour 100000 
+facettes/s) et une vitesse d'acc\'es m\'emoire tr\`es \'elev\'ee. 
+\item  On n'a pas de gestion intrins\`eque des r\'eflexions et des 
+transmissions.  
+\item Des difficult\'es existent pour implanter la mod\'elisation de ph\'enomnes optiques complexes.  
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\vfill\newpage\vspace{0.5cm}\hrule
+\section{Annexes}
+\hrule\vspace{0.5cm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{D\'etermination de l'appartenance d'un point \`a un 
+demi-espace}
+On rappelle que le \emph{produit scalaire} de deux vecteurs 
+$\overrightarrow{v_{1}}(a_{1},b_{1})$ et 
+$\overrightarrow{v_{2}}(a_{2},b_{2}),$ est la constante   
+$$\overrightarrow{v_{1}}.\overrightarrow{v_{2}}=a_{1}a_{2}+b_{1}b_{2}.$$
+Soit $M(a_{1},b_{1})$ et $N(a_{2},b_{2})$ deux points.  Ces deux 
+points d\'efinissent le vecteur 
+$\overrightarrow{MN}=(a_{2}-a_{1},b_{2}-b_{1})$.  Le vecteur normal 
+$\overrightarrow{n}$ de $\overrightarrow{MN}$ est~:
+$$\overrightarrow{n}=(b_{1}-b_{2},a_{2}-a_{1}).$$ Tous les points 
+$P(x,y)$ appartenant \`a la droite $\alpha =(MN)$ v\'erifient
+$\overrightarrow{OP}. \overrightarrow{n} = k,$ avec 
+$k$ une constante et $O$ l'origine du rep\`ere (figure \ref{scal}). 
+
+\dessin{scalaire.epsf}{700}{D\'etermination de l'appartenance d'un point \`a un 
+demi-espace}{scal}
+
+Dans notre exemple nous avons~: \\
+$$\overrightarrow{OP}.\overrightarrow{n} = 
+x(b_{1}-b_{2})+y(a_{2}-a_{1})=k=a_{1}(b_{1}-b_{2})+b_{1}(a_{2}-a_{1}).$$ 
+
+\vspace{0.5cm}
+\centerline{\fbox{$P\in 
+\begin{cases}
+A_{\alpha^{+}} & \text{Si } \overrightarrow{OP}.\overrightarrow{n} > k, \\
+A_{\alpha^{-}} & \text{Si } \overrightarrow{OP} . \overrightarrow{n} < 
+k, \\
+\alpha & \text{Si }\overrightarrow{OP}. \overrightarrow{n} = k.
+\end{cases}$}}
+\vspace{0.5cm}
+
+\subsection{Partition d'une sc\`ene 2D en deux sc\`enes par une coupure}
+
+On veut savoir si un segment $\beta$ appartient \`a l'ensemble positif 
+ou n\'egatif d'une coupure.  On se donne d'abord $P_{1}, P_{2}$ les 
+sommets du segment $\beta$.  Ensuite, on applique deux produits 
+scalaires~: un entre le vecteur $\overrightarrow{v_{\alpha}}$ de la 
+coupure $\alpha$ et $\overrightarrow{OP_{1}}$, puis un autre produit 
+scalaire avec $\overrightarrow{v_{\alpha}}$ et 
+$\overrightarrow{OP_{2}}$.
+
+\begin{itemize}
+\item Si les deux produits scalaires sont plus grands que la 
+constante, alors $\beta \in A_{\alpha^{+}}.$ \item Si les deux 
+produits scalaires sont plus petits que la constante, alors $\beta \in 
+A_{\alpha^{-}}$ (Exemple 1).  \item Si un des produits scalaires est 
+plus grand et que l'autre est plus petit, alors on recommence la 
+m\^eme op\'eration sur les segments $[P_{1}P']$ et $[P' P_{2}],$ o\` u 
+$P'$ est l'intersection entre $\alpha$ et $\beta$. (Exemple 2).
+\end{itemize}
+\dessin{testEnsemble1.epsf}{800}{Exemple1}{EX1}
+\dessin{testEnsemble2.epsf}{800}{Exemple 2}{EX1}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\vfill \newpage \vspace{0.5cm}\hrule
+\begin{thebibliography}{999999999}
+\hrule\vspace{0.5cm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibitem[FOLE95]{FOLE95} J. Foley, A. van Dam, S. Feiner, J. Hughes, R. 
+Phillips, \emph{Introduction \`a l'infographie}, Addison-Wesley 
+France, 1995.
+
+\bibitem[ABVA97]{ZEN} M. Abvash, \emph{Zen de la programmation graphique}
+International Thomson Publishing France, 1997.
+
+\bibitem[EBEV02]{ENG} D. Ebevly, \emph{3D Game Engine and Design} Morgan
+Kaufman Publishers, 2002.
+
+\bibitem[ROSS86]{ROSS86} J.R. Rossignac and A.A.G. Requicha, 
+\emph{Depth-Buffering Display Techniques for Constructive Solid 
+Geometry} CG \& A,6(9), Septembre 1986, 29-39.
+
+\bibitem[CATM74]{CATM74} E,A Catmull, \emph{Subdivision Algorithm for Computer 
+Display of Curved Surfaces} Ph.D. Thesis, Report UTEC-CSc-74-133, 
+Computer Science Departement, University of Utah, Salt Lake City, 
+D\'ecembre 1974.
+
+\bibitem[ATHE81]{ATH} P.R. Atherton, \emph{A Method of Interactive 
+Visualisation of CAD Surface Models on a Color Video Display} SIGGRAPH 
+81, 279-287.
+
+\bibitem[faqs.org]{FAQ} 
+\emph{wwww.faqs.org$\backslash$faqs$\backslash$graphics
+$\backslash$bsptree-faq$\backslash$index.html}
+
+\bibitem[geocities.com]{GEO} 
+\emph{wwww.geocities.com$\backslash$SiliconValley$\backslash$
+2151$\backslash$bsp.html}
+
+\bibitem[cs.wpi.edu]{WEB} 
+\emph{wwww.cs.wpi.edu$\backslash$\~matt$\backslash$courses
+$\backslash$cs563$\backslash$talks$\backslash$bsp$\backslash$bsp.html}
+
+\end{thebibliography}
+\end{document}
