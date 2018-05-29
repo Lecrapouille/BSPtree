@@ -1,0 +1,463 @@
+%%
+%% recuitsimule.tex for Recuit Simule
+%%
+%% Made by Quentin Quadrat
+%% Mail   <lecrapouille@gmail.com>
+%%
+%% Started on  Tue Oct  3 01:47:34 2006 Quentin Quadrat
+%% Last update Mon Oct 16 14:41:38 2006 Quentin Quadrat
+%%
+
+\documentclass[a4paper, 11pt]{article}%{report}
+\usepackage{fullpage}
+\usepackage[latin1]{inputenc}
+\usepackage[french]{babel}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{picins}
+\usepackage{hyperref}
+\usepackage{showlabels}
+\usepackage{epsfig}
+
+\hypersetup{
+backref=true,    %permet d'ajouter des liens dans...
+pagebackref=true,%...les bibliographies
+hyperindex=true, %ajoute des liens dans les index.
+colorlinks=true, %colorise les liens
+breaklinks=true, %permet le retour à la ligne dans les liens trop longs
+urlcolor= blue,  %couleur des hyperliens
+linkcolor= blue, %couleur des liens internes
+bookmarks=true,  %créé des signets pour Acrobat
+bookmarksopen=true, %si les signets Acrobat sont créés, les afficher complètement.
+pdftitle={Projet H4H}, %informations apparaissant dans
+pdfauthor={Quentin QUADRAT},     %dans les informations du document
+pdfsubject={Mac OS X}          %sous Acrobat.
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\dessin}[4]{
+\begin{figure}[htb]
+\centering
+\includegraphics[scale= #2]{#1}
+\caption{#3}
+\label{#4}
+\end{figure}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\dessinsscaption}[2]{
+\begin{figure}[htb]
+\centering
+\includegraphics[scale= #2]{#1}
+\end{figure}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newtheorem{remarque}{Remarque} \newcommand{\AAA}{{\mathcal A}}
+\newcommand{\BB}{{\mathcal B}} \newcommand{\CC}{{\mathcal C}}
+\newcommand{\DD}{{\mathcal D}} \newcommand{\EE}{{\mathcal E}}
+\newcommand{\FF}{{\mathcal F}} \newcommand{\GG}{{\mathcal G}}
+\newcommand{\HH}{{\mathcal H}} \newcommand{\II}{{\mathcal I}}
+\newcommand{\JJ}{{\mathcal J}} \newcommand{\KK}{{\mathcal K}}
+\newcommand{\LL}{{\mathcal L}} \newcommand{\MM}{{\mathcal M}}
+\newcommand{\NN}{{\mathcal N}} \newcommand{\OO}{{\mathcal O}}
+\newcommand{\PP}{{\mathcal P}} \newcommand{\QQ}{{\mathcal Q}}
+\newcommand{\RR}{{\mathcal R}} \newcommand{\SSS}{{\mathcal S}}
+\newcommand{\TT}{{\mathcal T}} \newcommand{\UU}{{\mathcal U}}
+\newcommand{\VV}{{\mathcal V}} \newcommand{\WW}{{\mathcal W}}
+\newcommand{\XX}{{\mathcal X}} \newcommand{\ZZ}{{\mathcal Z}}
+\newcommand{\bbR}{{\mathbb R}} \newcommand{\bbD}{{\mathbb D}}
+\newcommand{\bbO}{{\mathbb O}} \newcommand{\bbS}{{\mathbb S}}
+\newcommand{\bbE}{{\mathbb E}} \newcommand{\bbN}{{\mathbb N}}
+\newcommand{\bbM}{{\mathbb M}} \newcommand{\bbV}{{\mathbb V}}
+\newcommand{\bbC}{{\mathbb K}} \newcommand{\bbF}{{\mathbb F}}
+\newcommand{\bbP}{{\mathbb P}}
+\newcommand{\www}{{\mathfrak w \;}} \newcommand{\fff}{{\mathfrak f \;}}
+\newcommand{\nnn}{{\mathfrak n \;}} \newcommand{\aaa}{{\mathfrak a \;}}
+\newcommand{\hhh}{{\mathfrak h \;}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\title{Stabilisation d'un hélicoptère 4 hélices sur une rotule grâce à un ordinateur}
+%\title{Stabilisation et pilotage d'un hélicoptère à quatre hélices}
+
+\begin{document}
+%\pagestyle{empty}
+\title{\vskip -2cm
+  \Large \sl \bf  Quentin QUADRAT\\
+    Login: quadra\_q, UID: 17115, Promo: 2007 \\
+    \vspace{0.5cm}\hrule
+  \vskip 3.2cm
+{\LARGE  Travaux pratiques sur les Métaheuristiques pour
+    l'optimisation difficile}\\
+\vskip 2cm
+  \today \\
+\vskip 2cm
+  \vskip 1cm {\textsc{Résolution d'un problème de
+        placement de composants électroniques en des sites
+        prédéterminés}}
+%  \vskip 2cm
+%  \dessinsscaption{titre}{0.8}
+}
+
+\date
+{
+\vspace{7cm}
+      \begin{minipage}[b]{.2\linewidth}
+\centering\epsfig{figure= epita, width=\linewidth}
+\end{minipage}\hspace{1cm}
+\begin{minipage}[b]{.3\linewidth}
+\centering\epsfig{figure=gistr, width=\linewidth}
+\end{minipage}\\
+      %\large EPITA \\
+  \large \textbf{École Pour l'Informatique et les Techniques
+  Avancées} \\
+}
+
+\maketitle
+\strut\thispagestyle{empty}
+\setcounter{page}{0}
+
+\newpage
+
+\section{Rappel du sujet}
+
+Le sujet du TP cherche à résoudre un problème de placement de
+composants électroniques en des sites prédéterminés d'un
+circuit.
+
+Un circuit électronique est constitué :
+\begin{itemize}
+\item[$\bullet$] de composants numérotés de 1 à $n$, reliés entre eux
+  par des arcs et placés aléatoirement sur le circuit;
+\item[$\bullet$] de places disponibles prédéterminées et numérotées de 1 à $n$.
+\end{itemize}
+Il faut placer les composants dans les espaces disponibles tout en
+minimisant la longueur de leurs laisons. Le seul mouvement autorisé
+est la permutation de deux composants. Voici l'état initial du circuit
+électronique :
+
+\dessin{etatinit}{0.6}{Etat initial}{init}
+
+Voici l'état final du circuit électronique que l'on voudrait
+obtenir~:
+
+\dessin{etatfinal}{0.6}{Etat final}{final}
+
+Ces images ont été obtenues grâce à un programme codé en OCaml dont
+nous expliquerons son code dans la section (\ref{code}). Nous allons
+dábord introduire le principe du recuit simulé.
+
+\section{L'algorithme du recuit simulé}
+L'algorithme du recuit simulé inventé dans les années 80 a été
+inspirée d'un processus utilisé en métallurgie. Ce processus alterne
+des cycles de refroidissement lent et de réchauffage (recuit) qui
+tendent à minimiser l'énergie du matériau. L'algorithme du recuit
+simulé se déroule en plusieurs étapes comme le montre le schéma
+suivant (\ref{recuit}).
+
+\dessin{recuit}{0.6}{Algorithme du recuit simulé.}{recuit}
+
+\subsection{Configuration initiale}
+L'énergie $E$ du système, dans le cas du problème de placement de
+composant, est la longueur des arcs qui les relient les uns aux
+autres.
+
+La temprature $T$ initiale sera prise élevée. Plus la température sera
+chaude plus une perturbation d'énergie sera accepetée. Ce choix est
+alors totalement arbitraire et va dépendre de la loi de décroissance
+utilisée.
+
+\subsection{Modification élementaire} On prend deux composants au
+hasard, on échange leur position. On calcule la variation d'énergie
+(différence de l'ancienne énergie avec la nouvelle). On obtient $\Delta
+E$.
+
+\subsection{Régle d'acceptation de Métropolis}
+La modification élémentaire est retenue avec la probabilité suivante~:
+$$P=\begin{cases}
+1 & \text{si } \Delta E < 0 \\
+\exp^{\frac{-\Delta E}{T}}& \text{sinon}
+\end{cases}$$
+
+\subsection{Equilibre thermodynamique}
+L'équilibre thermodynamique est atteint lors du palier de température
+dès qu'une des deux conditions est remplie~:
+\begin{itemize}
+\item[$\bullet$] $12 n$ perturbations acceptées;
+\item[$\bullet$] $100 n$ perturbations tentées.
+\end{itemize}
+où $n$ correspond au nombre de degré de libertés du problème.  Dans
+notre cas nous prendrons le nombre total de composants~:
+
+\subsection{Système figé}
+Le système est figé si aucun changement n'est accepté lors du palier
+de température ou que la température atteint est quasi nulle~:
+
+\subsection{Diminution de la température}
+Il existe plusieurs méthodes pour diminuer la température~:
+\begin{itemize}
+\item[$\bullet$] {\tt décroissance géométrique} $T_{k+1} = 0.9 T_k$
+\item[$\bullet$] {\tt décroissance adaptative} $T_{k+1} =
+  min(0.9,\frac{E_k}{M_k}) T_k$ où $E_k$ est l'énergie des
+  configurations acceptées au palier $k$ et $M_k$ est l'énergie
+  moyenne des configurations acceptées au cours du palier $k$.
+\end{itemize}
+
+\section{Implémentation en OCaml}\label{code}
+
+Nous allons définir manuellement le circuit sous la forme d'un graphe.
+Il s'agit d'une liste de composants (lecture verticale) qui
+connaissent leurs voisins (lecture horizontale). Le graphe représente
+une grille de $5 \times 5$ composants.
+\begin{verbatim}
+let taille = 5 ;;
+let circuit =
+  [
+    (1, ref 1, [2;6]);
+    (2, ref 2, [1;3;7]);
+    (3, ref 3, [2;4;8]);
+    (4, ref 4, [3;9;5]);
+    (5, ref 5, [4;10]);
+    (6, ref 6, [1;7;11]);
+    (7, ref 7, [2;6;8;12]);
+    (8, ref 8, [3;7;9;13]);
+    (9, ref 9, [4;8;10;14]);
+    (10, ref 10, [5;9;15]);
+    (11, ref 11, [6;12;16]);
+    (12, ref 12, [7;11;13;17]);
+    (13, ref 13, [8;12;14;18]);
+    (14, ref 14, [9;13;15;19]);
+    (15, ref 15, [10;14;20]);
+    (16, ref 16, [11;17;21]);
+    (17, ref 17, [12;16;18;22]);
+    (18, ref 18, [13;17;19;23]);
+    (19, ref 19, [14;18;20;24]);
+    (20, ref 20, [15;19;25]);
+    (21, ref 21, [16;22]);
+    (22, ref 22, [17;21;23]);
+    (23, ref 23, [18;22;24]);
+    (24, ref 24, [19;23;25]);
+    (25, ref 25, [20;24])
+  ] ;;
+\end{verbatim}
+Le premier champ indique l'identifiant du composant qui servira lors
+de l'affichage, le deuxième champ indique le numéro de position où il
+se trouve (le mot clef {\tt ref} indique que ce numéro est modifiable)
+et enfin, le troisième champ est une liste statique des composants
+voisins avec lesquels il est en contact.
+
+Nous allons définir des accesseurs qui nous serons utiles pour
+l'écriture des autres fonctions. La première fonction permet d'accéder
+au {\tt n}-ième composant du circuit~:
+\begin{verbatim}
+let get_composant circuit n = List.nth circuit (n - 1) ;;
+\end{verbatim}
+
+Nous voulons pouvoir modifier le nouveau numéro de position du
+composant {\tt n} grâce à la fonction~:
+\begin{verbatim}
+let set_position circuit n posi =
+  let (_,p,_) = get_composant circuit n in p := posi ;;
+\end{verbatim}
+
+et connaître facilement le numéro de position du composant {\tt n}~:
+\begin{verbatim}
+let get_position circuit n =
+  let (_,p,_) = get_composant circuit n in !p ;;
+\end{verbatim}
+
+Parce que connaitre le numéro de position n'est pas une information
+utile pour calculer l'énergie du circuit, nous devons créer une
+fonction retournant la position cartésienne en fonctionnant d'un
+numéro de position {\tt n}.
+\begin{verbatim}
+let posi2coord n = (1 + (n - 1) mod taille, 1 + (n - 1) / taille) ;;
+\end{verbatim}
+
+Pour calculer la distance entre deux composants ({\tt c1} et {\tt
+  c2}), on utilise distance Manhattan qui est la somme des distances
+sur chaques axes, entre deux composants. Elle est également connue
+sous le nom de longueur en L~:
+\begin{verbatim}
+let long_manhattan circuit c1 c2 =
+  let (x1,y1) = posi2coord (get_position circuit c1) in
+  let (x2,y2) = posi2coord (get_position circuit c2) in
+    abs (x1 - x2) + abs (y1 - y2) ;;
+\end{verbatim}
+
+Il est alors très facile de calculer l'energie locale d'un composant
+{\tt n}~: c'est la somme des longueurs Manhattan avec ses voisins.
+\begin{verbatim}
+let energie_locale circuit n =
+  let (_,_,voisins) = get_composant circuit n in
+  let liste = List.map (long_manhattan circuit n) voisins in
+    List.fold_left (+) 0 liste ;;
+\end{verbatim}
+
+L'énergie totale du circuit est la somme des énergies locales de tous
+les composants divisée par 2~:
+\begin{verbatim}
+let energie_totale circuit =
+  let l = List.map (fun (x,_,_) -> energie_locale circuit x) circuit in
+  let res = List.fold_left (+) 0 l in res ;;
+\end{verbatim}
+
+OCaml permet de dessiner très simplement. Il suffit de charger le
+module graphique {\tt graphics}, d'ouvrir une fenêtre pour dessiner,
+d'écrire une fonction qui dessine un arc entre deux composants et
+d'écrire une fonction qui dessine un composant. Dessiner le circuit
+entier se fait très facilement, grâce à un itérateur sur la liste des
+composants qui affichera les arcs et les noeuds~:
+\begin{verbatim}
+#load "graphics.cma" ;;
+Graphics.open_graph "" ;;
+
+let dessine_arc circuit c1 c2 =
+  let (x1,y1) = posi2coord (get_position circuit c1) in
+  let (x2,y2) = posi2coord (get_position circuit c2) in
+    Graphics.moveto (x1 * 75 + Graphics.size_x () / 10) (y1 * 75 + Graphics.size_y () / 10);
+    Graphics.lineto (x2 * 75 + Graphics.size_x () / 10) (y2 * 75 + Graphics.size_y () / 10);;
+
+let dessine_noeud circuit c =
+  let (x,y) = posi2coord (get_position circuit c) in
+    Graphics.set_color Graphics.background;
+    Graphics.fill_circle (x * 75 + Graphics.size_x () / 10) (y * 75 + Graphics.size_y () / 10) 10;
+    Graphics.set_color Graphics.foreground;
+    Graphics.draw_circle (x * 75 + Graphics.size_x () / 10) (y * 75 + Graphics.size_y () / 10) 10;
+    Graphics.moveto (x * 75 + Graphics.size_x () / 10) (y * 75 + Graphics.size_y () / 10 - 5);
+    Graphics.draw_char (char_of_int (int_of_char 'A' + c - 1)) ;;
+
+let dessine_circuit circuit =
+  Graphics.clear_graph ();
+  List.iter (fun (id,_,v) -> List.iter (dessine_arc circuit id) v) circuit;
+  List.iter (fun (id,_,v) -> dessine_noeud circuit id) circuit ;;
+\end{verbatim}
+
+Les fonctions de dessin et d'informations générales sur le circuit
+étant terminées, il ne reste plus qu'à programmer les fonctions les
+principales du recuit simulé.
+
+L'équilibre thermodynamique est atteint lors du palier de température
+dés qu'une des deux conditions suivantes est remplie :
+\begin{itemize}
+\item[$\bullet$] $12 n$ perturbations acceptées;
+\item[$\bullet$] $100 n$ perturbations tentées.
+\end{itemize}
+où $n$ correspond au nombre de degré de libertés du problème.  Dans
+notre cas nous prendrons le nombre total de composants~:
+\begin{verbatim}
+let equilibre_thermo nb_permut_acceptee nb_permu_tentee =
+  let max_pa = 12 * taille * taille in
+  let max_pt = 100 * taille * taille in
+    (nb_permut_acceptee >= max_pa) || (nb_permu_tentee >= max_pt) ;;
+\end{verbatim}
+
+Le système est figé si aucun changement n'est accepté lors du
+palier de température ou que la température atteint est quasi nulle~:
+\begin{verbatim}
+let syst_fige iteration energie =
+  let iteration_max = 10000 in
+  let energie_min = 0.001 in
+    (iteration >= iteration_max) || (energie <= energie_min) ;;
+\end{verbatim}
+
+Nous devons pouvoir permutter deux composants au hazard. La fonction
+commute joue se rôle et retourne également les numéros des
+composants permutés ainsi que leur position respective~:
+\begin{verbatim}
+Random.self_init () ;;
+
+let modif_elementaire circuit =
+  let c1 = Random.int (taille * taille) + 1 in
+  let p1 = get_position circuit c1 in
+  let c2 = Random.int (taille * taille) + 1 in
+  let p2 = get_position circuit c2
+  in
+    set_position circuit c1 p2;
+    set_position circuit c2 p1;
+    (c1,p1,c2,p2) ;;
+\end{verbatim}
+
+La fonction d'acceptation est donc très simple à écrire. Elle retourne
+un triplet : le nombre de permutation acceptée, le nombre de
+permutation tentée et la nouvelle énergie. La seule entorse que l'on
+s'est sautorisée à faire est que cette fonction appelle {\tt
+  modif\_elementaire} alors que ce n'est pas à elle de le faire. Ceci
+permet de simplifier l'écriture du programme~:
+\begin{verbatim}
+let permut_et_accept circuit temperature energie nb_permut_acceptee nb_permu_tentee =
+  let (c1,p1,c2,p2) = modif_elementaire circuit in
+  let en = float_of_int (energie_totale circuit) in
+  let delta_energie = en -. energie in
+    match delta_energie <= 0.0 with
+      | true  -> (nb_permut_acceptee + 1, nb_permu_tentee, en);
+      | false ->
+          let p = exp (-1.0 *. delta_energie /. temperature) in
+          let r = Random.float 1.0 in
+            match r <= p with
+              | true  -> (nb_permut_acceptee + 1, nb_permu_tentee, en);
+              | false -> (* restauration du circuit *)
+                  set_position circuit c1 p1;
+                  set_position circuit c2 p2;
+                  (nb_permut_acceptee, nb_permu_tentee + 1, energie) ;;
+\end{verbatim}
+
+Notre dernière fonction consite à définir la fonction principale du recuit
+simulé. Cette fonction est récursive. Notre température initiale est très
+chaude ($666666$) et décroie de fa\c con géométrique~:
+\begin{verbatim}
+let placement_de_composants circuit =
+  let rec recuit_simule circuit temperature energie iter pa pt =
+    let (ppa,ppt,nrj)  = permut_et_accept circuit temperature energie pa pt in
+      match equilibre_thermo ppa ppt with
+        | false -> recuit_simule circuit temperature nrj (iter + 1) ppa ppt
+        | true  ->
+             (match syst_fige iter nrj with
+                | true  -> circuit (* Fin algo *)
+                | false -> recuit_simule circuit (temperature *. 0.9) nrj
+                                              (iter + 1) ppa ppt)
+  in
+    recuit_simule circuit 666666.0 (float_of_int (energie_totale circuit)) 0 0 0 ;;
+\end{verbatim}
+
+Pour exécuter cette fonction, l'interpreteur interactif OCaml peut
+être lance soit dans un console, soit avec Emacs. Après avoir mélangé
+préablement tous les composants un certain nombre de fois grâce à la
+fonction {\tt commute circuit ;;}, l'algorithme se lance simplement~:
+\begin{verbatim}
+dessine_circuit (placement_de_composants circuit);;
+\end{verbatim}
+
+Comme la fonction {\tt placement\_de\_composants} modifie le circuit
+et que les $10 000$ itérations ne suffisent pas pour trouver la
+configuration optimale recherchés, on peut appeler plusieurs fois de
+suite cette fonction.
+
+\section{Résultat graphique}
+
+Voici un exemple de déroulement de notre programme OCaml de placement
+de composants. Toute la difficulte du recuit simulé consite à trouver
+la bonne diminution de l'énergie et de posséder un très bon générateur
+de nombre aléatoire. Sans être optimal, notre algorithme marche bien;
+notre exemple s'est exécuté en $50 000$ itérations, d'autres essais
+ont permis d'obtenir en moins de $20 000$ itérations.
+
+\dessin{etatinit}{0.8}{Etat initial mélangé.}{i}
+
+\dessin{etat1}{0.8}{Etat 1 (aprés $10 0 000$ itérations).}{e1}
+
+\dessin{etat2}{0.8}{Etat 2 (aprés $20 0 000$ itérations).}{e2}
+
+\dessin{etat3}{0.8}{Etat 3 (aprés $30 0 000$ itérations).}{e3}
+
+\dessin{etatfinal}{0.8}{Etat final (aprés $50 0 000$ itérations).}{f}
+
+
+\end{document}
+
+
+
+
+
+
+
+
+

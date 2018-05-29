@@ -1,0 +1,104 @@
+\documentclass[a4paper,11pt]{amsart}
+
+\usepackage[francais]{babel}
+%\usepackage[pdftex]{graphicx}
+%\uspackage{pstricks}
+\usepackage{graphicx}
+
+\newcommand{\dessin}[4]{
+\begin{figure}[htb]
+\centering
+\includegraphics[scale= #2]{#1}
+\caption{#3}
+\label{#4}
+\end{figure}}
+
+\newtheorem{remarque}{Remarque} \newcommand{\AAA}{{\mathcal A}}
+\newcommand{\BB}{{\mathcal B}} \newcommand{\CC}{{\mathcal C}}
+\newcommand{\DD}{{\mathcal D}} \newcommand{\EE}{{\mathcal E}}
+\newcommand{\FF}{{\mathcal F}} \newcommand{\GG}{{\mathcal G}}
+\newcommand{\HH}{{\mathcal H}} \newcommand{\II}{{\mathcal I}}
+\newcommand{\JJ}{{\mathcal J}} \newcommand{\KK}{{\mathcal K}}
+\newcommand{\LL}{{\mathcal L}} \newcommand{\MM}{{\mathcal M}}
+\newcommand{\NN}{{\mathcal N}} \newcommand{\OO}{{\mathcal O}}
+\newcommand{\PP}{{\mathcal P}} \newcommand{\QQ}{{\mathcal Q}}
+\newcommand{\RR}{{\mathcal R}} \newcommand{\SSS}{{\mathcal S}}
+\newcommand{\TT}{{\mathcal T}} \newcommand{\UU}{{\mathcal U}}
+\newcommand{\VV}{{\mathcal V}} \newcommand{\WW}{{\mathcal W}}
+\newcommand{\XX}{{\mathcal X}} \newcommand{\ZZ}{{\mathcal Z}}
+\newcommand{\bbR}{{\mathbb R}} \newcommand{\bbD}{{\mathbb D}}
+\newcommand{\bbO}{{\mathbb O}} \newcommand{\bbS}{{\mathbb S}}
+\newcommand{\bbE}{{\mathbb E}} \newcommand{\bbN}{{\mathbb N}}
+\newcommand{\bbM}{{\mathbb M}} \newcommand{\bbV}{{\mathbb V}}
+\newcommand{\bbC}{{\mathbb K}} \newcommand{\bbF}{{\mathbb F}}
+\newcommand{\bbP}{{\mathbb P}}
+
+\title{Etude du mouvement vertical d'un monocycle}
+\author{QUADRAT Quentin}
+  \thanks{{\tt Page web} : www.epita.fr/$\sim$quadra\_q}
+  \thanks{{\tt Email :} quadra\_q@epita.fr}
+
+\begin{document}
+\maketitle
+
+\section{Pr\'esentation du mod\'ele}
+Le v\'ehicule est mod\'elis\'e en 2D, par une carcasse de masse
+ponctuelle $M_v$ accroch\'ee \`a une roue (de rayon $r$ et de masse
+$M_r$) par un ressort. On note $u(t)$ la l'altitude du sol par rapport
+\`a au rep\'ere, $y(t)$ est l'altitude de la carcasse, $z(t)$
+l'alongement du ressort, et $y(t)+z(t)$, l'altitude de la roue. On
+note $g$ la gravit\'e (figure \ref{dyna}).
+
+\dessin{dynavoit.epsf}{0.6}{Le monocycle}{dyna}
+
+\section{Calcul des \'equations du mouvement}
+Les forces qui sont en jeux sont : la pesanteur des masses (roue et
+carcasse), la r\'epulsion du sol sur la roue et la force du ressort.
+
+L'\'energie cin\'etique de la roue (not\'ee $\EE_r^c$) est :
+$\EE_r^c = 1/2M_r(\dot{y}+\dot{z})^2\;.$
+
+L'\'energie cin\'etique de la voiture (not\'ee $\EE_v^c$) est :
+$\EE_v^c = 1/2M_v\dot{y}^2\;.$
+
+L'\'energie ressort (not\'ee $\EE_r$) est :
+$\EE_r = 1/2kz^2;.$
+
+L'\'energie potentiel de la voiture (not\'ee $\EE_v^p$) est :
+$\EE_v^p = M_vgy\;.$
+
+L'\'energie potentiel de la roue (not\'ee $\EE_r^p$) est :
+$\EE_r^p = M_rg(y+z)\;.$
+
+L'\'energie de reaction du sol (not\'ee $\EE_s$) est : $\EE_s =
+1/2((u-(y+z-r))^+)^2\;,$ c'est \`a dire que $\EE_s$ vaut $1/2(u-(y+z-r))^2$
+quand $u-(y+z-r) > 0$, sinon il vaut $0$.
+
+\begin{align*}
+\AAA(x()) =& \int (\;1/2M_r(\dot{y}+\dot{z})^2 + 1/2M_v\dot{y}^2 -1/2kz^2 -M_vgy - M_rg(y+z)\\
+&- 1/2(u-(y+z-r))^+)^2\;)dt\;
+\end{align*}
+
+Comme dans le rapport expliquant le principe de la moindre action, on
+trouve un syst\`eme d'\'equation diff\'erentielle o\`u les inconnues
+sont l'altitude de la roue et de la carcasse :
+\begin{align}
+  &(\ddot{z}+\ddot{y})M_r+\ddot{y}M_v + g(M_v+M_r) - (u-(y+z-r))^+ = 0\;,\label{equ1}\\
+  &(\ddot{z}+\ddot{y})M_r+M_rg+kz-(u-(y+z-r))^+ = 0\;.\label{equ2}
+\end{align}
+En notant : $w=y+z$, (\ref{equ1})-(\ref{equ2}) donne :
+$$\ddot{y}M_v+gM_v-k(w-y)=0.$$
+(\ref{equ2}) donne :
+$$\ddot{w}M_r+gM_r+k(w-y)-(u-(w-r))^+ = 0$$
+
+\section{Discr\'etisation des \'equations diff\'erentielles}
+Pour calculer les trajectoires des deux corps, nous pouvons approximer
+les \'equations diff\'erentielles (\ref{equ1}) et (\ref{equ2}) par les
+\'equations r\'ecurrentes, o\`u $h$ d\'esigne le pas de discr\'etisation~:
+
+\begin{align*}
+& y(t+h)=2y(t)-y(t-h)+gh^2-\frac{k(w-y)h^2}{M_v}\;,\\
+& w(t+h)=2w(t)-w(t-h)+\frac{h^2}{M_r}(u(t)-w(t)+r)^+-\frac{h^2k(w(t)-y(t))}{M_r}-h^2g\;.
+\end{align*}
+
+\end{document}

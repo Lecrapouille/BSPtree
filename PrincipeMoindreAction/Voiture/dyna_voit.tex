@@ -1,0 +1,276 @@
+\documentclass[a4paper,11pt]{amsart}
+%\usepackage[francais]{babel}
+%\usepackage[pdftex]{graphicx}
+%%\uspackage{pstricks}
+\usepackage{graphicx}
+\newtheorem{remarque}{Remarque} \newcommand{\AAA}{{\mathcal A}}
+\newcommand{\BB}{{\mathcal B}} \newcommand{\CC}{{\mathcal C}}
+\newcommand{\DD}{{\mathcal D}} \newcommand{\EE}{{\mathcal E}}
+\newcommand{\FF}{{\mathcal F}} \newcommand{\GG}{{\mathcal G}}
+\newcommand{\HH}{{\mathcal H}} \newcommand{\II}{{\mathcal I}}
+\newcommand{\JJ}{{\mathcal J}} \newcommand{\KK}{{\mathcal K}}
+\newcommand{\LL}{{\mathcal L}} \newcommand{\MM}{{\mathcal M}}
+\newcommand{\NN}{{\mathcal N}} \newcommand{\OO}{{\mathcal O}}
+\newcommand{\PP}{{\mathcal P}} \newcommand{\QQ}{{\mathcal Q}}
+\newcommand{\RR}{{\mathcal R}} \newcommand{\SSS}{{\mathcal S}}
+\newcommand{\TT}{{\mathcal T}} \newcommand{\UU}{{\mathcal U}}
+\newcommand{\VV}{{\mathcal V}} \newcommand{\WW}{{\mathcal W}}
+\newcommand{\XX}{{\mathcal X}} \newcommand{\ZZ}{{\mathcal Z}}
+\newcommand{\bbR}{{\mathbb R}} \newcommand{\bbD}{{\mathbb D}}
+\newcommand{\bbO}{{\mathbb O}} \newcommand{\bbS}{{\mathbb S}}
+\newcommand{\bbE}{{\mathbb E}} \newcommand{\bbN}{{\mathbb N}}
+\newcommand{\bbM}{{\mathbb M}} \newcommand{\bbV}{{\mathbb V}}
+\newcommand{\bbC}{{\mathbb K}} \newcommand{\bbF}{{\mathbb F}}
+\newcommand{\bbP}{{\mathbb P}}
+
+\newcommand{\dessin}[4]{
+\begin{figure}[htb]
+\centering
+\includegraphics[scale= #2]{#1}
+\caption{#3}
+\label{#4}
+\end{figure}}
+
+\title{Etude du mouvement vertical d'une voiture}
+\author{QUADRAT Quentin}
+  \thanks{{\tt Page web} : www.epita.fr/$\sim$quadra\_q}
+  \thanks{{\tt Email :} quadra\_q@epita.fr}
+
+\begin{document}
+\maketitle
+
+\section{Pr\'esentation du mod\'ele}
+On veut \'etudier le mouvement vertical d'une voiture dont le 
+mouvement horizontal est donn\'e par le triplet $(x(t),y(t),\phi 
+(t))$, o\`u $\phi (t)$ est la direction du v\'ehicule. Celui-ci est 
+mod\'elis\'e en 3D, par une carcasse repr\'esent\'ee
+par une plaque (de longueur $2L$, de largeur $2l$, de masse
+ponctuelle $M$ et de moment d'inertie $I_{\theta}$ et $I_{\alpha}$)
+\`a laquelle sont accroch\'ees quatre roues (de rayon
+$r$ et de masse $m$) par des ressorts (de rigidit\'e $k$).
+
+On note  $I_{\alpha}$ le moment 
+d'inertie par rapport \`a l'axe longitudinal de la voiture (roulis),
+$I_{\theta}$ le moment d'inertie 
+par rapport \`a l'axe transversal de la voiture (tangage), $g$ la gravit\'e, 
+$u(x,y)$ l'altitude du sol, $z(t)$ l'altitude du centre de gravit\'e 
+de la carcasse, $z_1(t) \ldots z_4(t)$ les
+allongements des quatre ressorts de la suspension de la voiture, $\theta$ 
+l'angle de tangage et $\alpha$ l'angle de roulis.
+
+\dessin{Voiture.epsf}{0.6}{Voiture}{voiture}
+
+\section{Calcul des \'energies cin\'etiques}
+De la premi\`ere roue :
+$ 1/2m(\dot{z}+L\dot{\theta}+\dot{z}_1+l\dot{\alpha})^2 \;.$
+
+De la deuxi\`eme roue :
+$ 1/2m(\dot{z}+L\dot{\theta}+\dot{z}_2-l\dot{\alpha})^2 \;.$
+
+De la troisi\`eme roue :
+$ 1/2m(\dot{z}-L\dot{\theta}+\dot{z}_3-l\dot{\alpha})^2 \;.$
+
+De la quatri\`eme roue :
+$ 1/2m(\dot{z}-L\dot{\theta}+\dot{z}_4+l\dot{\alpha})^2 \;.$
+
+De la caracasse :
+$1/2(M\dot{z}^2 +I_{\theta}\dot{\theta}^2 +I_{\alpha}\dot{\alpha}^2)\;.$
+
+
+\section{Calcul des \'energies potentielles}
+Des quatre roues : 
+$ mg(4z+z_1+z_2+z_3+z_4)\;.$
+
+Des quatre ressorts :
+$ 1/2k(z^2_1+z^2_2+z^2_3+z^2_4)\;.$
+
+De la caracasse :
+$ Mgz\;.$
+
+Soit :
+\begin{align*} 
+R_1 &= (u(x+L\cos\phi+l\sin\phi,y+L\sin\phi-l\cos\phi)-(z+z_1+L\theta+l\alpha-r))^+\;;\\
+R_2 &= (u(x+L\cos\phi-l\sin\phi,y+L\sin\phi+l\cos\phi)-(z+z_2+L\theta-l\alpha-r))^+\;;\\
+R_3 &= (u(x-L\cos\phi-l\sin\phi,y-L\sin\phi+l\cos\phi)-(z+z_3-L\theta-l\alpha-r))^+\;;\\
+R_4 &= (u(x-L\cos\phi+l\sin\phi,y-L\sin\phi-l\cos\phi)-(z+z_4-L\theta+l\alpha-r))^+\;.
+\end{align*}
+ 
+L'\'en\'ergie de la r\'eaction du sol sur la premi\`eme roue est alors
+de $1/2R_1^2\;,$ celle de la deuxi\`eme roue : $1/2R_2^2\;,$ celle de
+la troisi\`eme : $1/2R_3^2\,$ et enfin la quatri\`eme : $1/2R_4^2\;.$
+
+\section{Principe de la moindre action}
+
+On trouve :
+\begin{align*}
+\delta\AAA = \int &
+                      M\dot{z}\delta \dot{z} 
+                      + I_{\theta}\dot{\theta}\delta\dot{\theta} +
+                        I_{\alpha}\dot{\alpha}\delta\dot{\alpha} -2Mg\delta z \\
+                  &   -2mg(4\delta z + \delta z_{1} + \delta z_{2} 
+                          +\delta z_{3} + \delta z_{4}) \\
+                  &   -k(z_{1}\delta z_{1} + z_{2}\delta z_{2}
+                      +z_{3}\delta z_{3} + z_{4}\delta z_{4}) \\
+                  &   +m(\dot{z}+\dot{z}_1+L\dot{\theta}+l\dot{\alpha})
+                      (\delta\dot{z}+\delta\dot{z}_1+L\delta\dot{\theta}+l\delta\dot{\alpha}) 
+                      \\ 
+                  &   +m(\dot{z}+\dot{z}_2+L\dot{\theta}-l\dot{\alpha})
+                      (\delta\dot{z}+\delta\dot{z}_2+L\delta\dot{\theta}-l\delta\dot{\alpha})
+                      \\
+                  &   +m(\dot{z}+\dot{z}_3-L\dot{\theta}-l\dot{\alpha})
+                      (\delta\dot{z}+\delta\dot{z}_3-L\delta\dot{\theta}-l\delta\dot{\alpha})
+                      \\
+                  &   +m(\dot{z}+\dot{z}_4-L\dot{\theta}+l\dot{\alpha})
+                      (\delta\dot{z}+\delta\dot{z}_4-L\delta\dot{\theta}+l\delta\dot{\alpha})\\
+                  &   +R_1(\delta z+\delta z_1+L\delta\theta+l\delta\alpha-r)\\
+                  &   +R_2(\delta y+\delta y_2+L\delta\theta-l\delta\alpha-r)\\
+                  &   +R_3(\delta y+\delta y_3-L\delta\theta-l\delta\alpha-r)\\
+                  &   +R_4(\delta y+\delta y_4-L\delta\theta+l\delta\alpha-r) 
+\end{align*}
+
+La variation de l'action apr\'es int\'egration par partie vaut :
+\begin{align*}
+\delta\AAA = \int &
+                      -M\ddot{z}\delta z 
+                      - I_{\theta}\ddot{\theta}\delta\theta -
+                        I_{\alpha}\ddot{\alpha}\delta\alpha -2Mg\delta z \\
+                  &   -2mg(4\delta z + \delta z_{1} + \delta z_{2} 
+                          +\delta z_{3} + \delta z_{4}) \\
+                  &   -kz_{1}\delta z_{1} -kz_{2}\delta z_{2}
+                      -kz_{3}\delta z_{3} -kz_{4}\delta z_{4} \\
+%avant de faire l'IPP
+%                     &  +4m\dot{z}\delta\dot{z} + m\dot{z}(\delta\dot{z}_1
+%                                                + \delta\dot{z}_2
+%                                                + \delta\dot{z}_3
+%                                                + \delta\dot{z}_4)
+%                                                \\
+%                    &   + m(\dot{z}_1\delta\dot{z}_1
+%                        + \dot{z}_2\delta\dot{z}_2
+%                        + \dot{z}_3\delta\dot{z}_3
+%                        + \dot{z}_4\delta\dot{z}_4)\\
+%                    &   + (\dot{z}_1 + \dot{z}_2 + \dot{z}_3 + \dot{z}_4
+%                          ) m\delta\dot{z}\\
+%                    &   + (\dot{z}_1+\dot{z}_2-\dot{z}_3-\dot{z}_4)
+%                          mL\delta\dot{\theta} \\
+%                    &   + (\dot{z}_1-\dot{z}_2-\dot{z}_3+\dot{z}_4)
+%                          ml\delta\dot{\alpha} \\
+%                    &   + (\delta\dot{z}_1+\delta\dot{z}_2
+%                          -\delta\dot{z}_3-\delta\dot{z}_4)
+%                                                mL\dot{\theta}\\
+%                    &   +4mL^2\dot{\theta}\delta\dot{\theta} 
+%                        +4ml^2\dot{\alpha}\delta\dot{\alpha}\\
+%                    &   +(\delta\dot{z}_1-\delta\dot{z}_2
+%                        -\delta\dot{z}_3+\delta\dot{z}_4)
+%                        ml\dot{\alpha}\\
+%END
+                    &   -4m\ddot{z}\delta z - m\ddot{z}(\delta z_1
+                                               +\delta z_2
+                                               +\delta z_3
+                                               +\delta z_4)
+                                               \\
+                   &   - m\ddot{z}_1\delta z_1
+                       - m\ddot{z}_2\delta z_2
+                       - m\ddot{z}_3\delta z_3
+                       - m\ddot{z}_4\delta z_4\\
+                   &   - (\ddot{z}_1 + \ddot{z}_2 + \ddot{z}_3 + \ddot{z}_4
+                         ) m\delta z\\
+                   &   - (\ddot{z}_1+\ddot{z}_2-\ddot{z}_3-\ddot{z}_4)
+                         mL\delta\theta \\
+                   &   - (\ddot{z}_1-\ddot{z}_2-\ddot{z}_3+\ddot{z}_4)
+                         ml\delta\alpha \\
+                   &   - (\delta z_1+\delta z_2
+                         -\delta z_3-\delta z_4) mL\ddot{\theta}\\
+                   &   -4mL^2\ddot{\theta}\delta \theta 
+                       -4ml^2\ddot{\alpha}\delta \alpha\\
+                   &   -(\delta z_1-\delta z_2
+                       -\delta z_3+\delta z_4) ml\ddot{\alpha}\\
+                   &   +R_1(\delta z + \delta z_1 + L\delta\theta +
+                                               l\delta\alpha)\\
+                   &   +R_2(\delta z + \delta z_2 + L\delta\theta -
+                                               l\delta\alpha)\\
+                   &   +R_3(\delta z + \delta z_3 - L\delta\theta -
+                                               l\delta\alpha)\\
+                   &   +R_4(\delta z + \delta z_4 - L\delta\theta + l\delta\alpha)\;.
+\end{align*}
+
+On trouve un syst\`eme d'\'equation diff\'erentielle :
+\begin{align}
+\label{eqv01} \ddot{z}+\frac{m(\ddot{z}_1+\ddot{z}_2+\ddot{z}_3+\ddot{z}_4)}{M+4m} & = \frac{R_1+R_2+R_3+R_4}{M+4m}-2g\;. \\ 
+\label{eqv02} kz_1+m(\ddot{z}_1+\ddot{z}+L\ddot{\theta}+l\ddot{\alpha}) & = -2mg +
+R_1 \;. \\ 
+\label{eqv03} kz_2+m(\ddot{z}_2+\ddot{z}+L\ddot{\theta}-l\ddot{\alpha}) & = -2mg +
+R_2 \;. \\ 
+\label{eqv04} kz_3+m(\ddot{z}_3+\ddot{z}-L\ddot{\theta}-l\ddot{\alpha}) & = -2mg +
+R_3 \;. \\ 
+\label{eqv05} kz_4+m(\ddot{z}_4+\ddot{z}-L\ddot{\theta}+l\ddot{\alpha}) & = -2mg +
+R_4 \;. \\ 
+\label{eqv06} m(\ddot{z}_1+\ddot{z}_2-\ddot{z}_3-\ddot{z}_4+4L\ddot{\theta})+\frac{I_{\theta}\ddot{\theta}}{L} 
+& = R_1+R_2-R_3-R_4\;.\\ 
+\label{eqv07}m(\ddot{z}_1-\ddot{z}_2-\ddot{z}_3+\ddot{z}_4+4l\ddot{\alpha})+\frac{I_{\alpha} \ddot{\alpha}}{l}
+& = R_1-R_2-R_3+R_4 \;.
+\end{align}
+
+En faisant (\ref{eqv02}) plus (\ref{eqv03}) moins
+(\ref{eqv04}) moins (\ref{eqv05}) moins (\ref{eqv06}), on obtient~:
+\begin{align}
+\label{eqv08} I_{\theta}\ddot{\theta} = Lk(z_1+z_2-z_3-z_4)\;.
+\end{align}
+
+En faisant (\ref{eqv02}) plus (\ref{eqv06}) moins
+(\ref{eqv03}) moins (\ref{eqv04}) moins (\ref{eqv07}), on obtient~:
+\begin{align}
+\label{eqv09} I_{\alpha}\ddot{\alpha} = lk(z_1-z_2-z_3+z_4)\;.
+\end{align}
+
+En faisant (\ref{eqv01}) moins (\ref{eqv02}) moins (\ref{eqv03}) moins
+(\ref{eqv04}) moins (\ref{eqv05}), on obtient~:
+\begin{align}
+\label{eqv10} M\ddot{z}=-2Mg+k(z_1+z_2+z_3+z_4)\;.
+\end{align}
+
+%En faisant (\ref{eqv04}) moins (\ref{eqv05}) on obtient~:
+%$$\ddot{z}_3-\ddot{z}_4=\frac{R_3-R_4+k(z_4-z_3)}{m}+2l\ddot{\alpha}\;.$$
+
+Soit :
+$$F_1=\frac{k(z_1+z_2+z_3+z_4)}{M}\;,$$
+$$F_2=\frac{L^2k(z_1+z_2-z_3-z_4)}{I_{\theta}}\;,$$
+$$F_3=\frac{l^2k(z_1-z_2-z_3+z_4)}{I_{\alpha}}$$
+
+En utilisant les \'equations (\ref{eqv08}), (\ref{eqv09}) et 
+(\ref{eqv10}); (\ref{eqv02}) 
+s'\'ecrit :
+$$\ddot{z}_1 = 
+\frac{R_1-kz_1}{m}-F_1-F_2-F_3\;.$$
+
+De m\^eme, on trouve :
+\begin{align*}
+\ddot{z}_2 &= 
+\frac{R_2-kz_2}{m}-F_1-F_2+F_3\;,\\
+\ddot{z}_3 &= 
+\frac{R_3-kz_3}{m}-F_{1}+F_2+F_3\;,\\
+\ddot{z}_4 &= 
+\frac{R_4-kz_4}{m}-F_1+F_2-F_3\;.
+\end{align*}
+
+\section{Discr\'etrisation des \'equations}
+
+Pour calculer les trajectoires des corps, nous pouvons approximer
+les \'equations diff\'erentielles par des
+\'equations r\'ecurrentes, o\`u $h$ d\'esigne le pas de discr\'etisation en temps~:
+
+\begin{align*}
+z_1(t+h) &= 2z_1(t)-z_1(t-h)+h^2\left 
+(\frac{R_1-kz_1(t)}{m}-F_1(t)-F_2(t)-F_3(t) \right ) \;,\\
+z_2(t+h) &= 2z_2(t)-z_2(t-h)+h^2\left 
+(\frac{R_2-kz_2}{m}-F_1(t)-F_2(t)+F_3(t)  \right )\;,\\
+z_3(t+h) &= 2z_3(t)-z_3(t-h)+h^2\left 
+(\frac{R_3-kz_3(t)}{m}-F_1(t)+F_2(t)+F_3(t)  \right )\;,\\
+z_4(t+h) &= 2z_4(t)-z_4(t-h)+h^2\left 
+(\frac{R_4-kz_4(t)}{m}-F_1(t)+F_2(t)-F_3(t)  \right )\;,\\
+z(t+h) &= 2z(t)-z(t-h)+h^2\left (
+F_1(t)-2g\right )\;,\\
+\alpha (t+h) &= 2\alpha (t)-\alpha (t-h)+ \frac{h^2 F_3(t)}{l}\;,\\
+\theta (t+h) &= 2\theta (t)-\theta (t-h)+ \frac{h^2 F_2(t)}{L}\;.
+\end{align*}
+
+\end{document}

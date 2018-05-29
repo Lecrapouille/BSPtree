@@ -1,0 +1,99 @@
+\documentclass[a4paper,11pt]{amsart}
+
+\usepackage[francais]{babel}
+%\usepackage[pdftex]{graphicx}
+%\uspackage{pstricks}
+\usepackage{graphicx}
+\newtheorem{remarque}{Remarque} \newcommand{\AAA}{{\mathcal A}}
+\newcommand{\BB}{{\mathcal B}} \newcommand{\CC}{{\mathcal C}}
+\newcommand{\DD}{{\mathcal D}} \newcommand{\EE}{{\mathcal E}}
+\newcommand{\FF}{{\mathcal F}} \newcommand{\GG}{{\mathcal G}}
+\newcommand{\HH}{{\mathcal H}} \newcommand{\II}{{\mathcal I}}
+\newcommand{\JJ}{{\mathcal J}} \newcommand{\KK}{{\mathcal K}}
+\newcommand{\LL}{{\mathcal L}} \newcommand{\MM}{{\mathcal M}}
+\newcommand{\NN}{{\mathcal N}} \newcommand{\OO}{{\mathcal O}}
+\newcommand{\PP}{{\mathcal P}} \newcommand{\QQ}{{\mathcal Q}}
+\newcommand{\RR}{{\mathcal R}} \newcommand{\SSS}{{\mathcal S}}
+\newcommand{\TT}{{\mathcal T}} \newcommand{\UU}{{\mathcal U}}
+\newcommand{\VV}{{\mathcal V}} \newcommand{\WW}{{\mathcal W}}
+\newcommand{\XX}{{\mathcal X}} \newcommand{\ZZ}{{\mathcal Z}}
+\newcommand{\bbR}{{\mathbb R}} \newcommand{\bbD}{{\mathbb D}}
+\newcommand{\bbO}{{\mathbb O}} \newcommand{\bbS}{{\mathbb S}}
+\newcommand{\bbE}{{\mathbb E}} \newcommand{\bbN}{{\mathbb N}}
+\newcommand{\bbM}{{\mathbb M}} \newcommand{\bbV}{{\mathbb V}}
+\newcommand{\bbC}{{\mathbb K}} \newcommand{\bbF}{{\mathbb F}}
+\newcommand{\bbP}{{\mathbb P}}
+
+\newcommand{\dessin}[4]{
+\begin{figure}[htb]
+\centering
+\includegraphics[scale= #2]{#1}
+\caption{#3}
+\label{#4}
+\end{figure}}
+
+\newcommand{\dessinsscaption}[2]{
+\begin{figure}[htb]
+\centering
+\includegraphics[scale= #2]{#1}
+\end{figure}}
+
+\title{Mouvement horizontal}
+\author{QUADRAT Quentin}
+  \thanks{{\tt Page web} : www.epita.fr/$\sim$quadra\_q}
+  \thanks{{\tt Email :} quadra\_q@epita.fr}
+
+
+\begin{document}
+\maketitle
+\section{Mouvement horizontal}
+
+Pour mod\'eliser les d\'eplacements du v\'ehicule dans le plan
+horizontal, on repr\'esente le v\'ehicule par une barre de demi
+longueur $l$ et de masse ponctuelle $M$ \`a laquelle sont accroch\'ees
+deux roues de masse $m$.  Dans un rep\`ere fixe $(Oxy)$ (voir figure
+\ref{direction}), on note~:
+\begin{itemize}
+\item $x(t)$ et $y(t)$ la position du centre de gravit\'e de la voiture,
+\item $\phi(t)$ l'angle de la carcasse de la carcasse avec l'axe $(Ox)$,
+\item $\psi(t)$ l'angle des roues avec l'axe $(Ox)$.
+\end{itemize}
+
+\dessin{direction.epsf}{0.6}{Mod\'elisation de la voiture (vue de dessus)}{direction}
+
+On note :
+\begin{itemize}
+\item $a(t)$ acc\'el\'eration donn\'ee par le joueur \`a la voiture
+(la puissance du moteur),
+\item $\xi(t)$ le changement de direction donn\'e par le joueur au v\'ehicule.
+\end{itemize}
+
+%L'\'energie cin\'etique de la voiture vaut alors : $$\frac{1}{2}(2m+M)(\dot{x}^2+\dot{y}^2)+ml\dot{\phi}^2\;.$$
+%
+%L'\'energie potentielle du moteur vaut : $$-a\cos \phi\ x - a\sin \phi\ y\;.$$
+%
+%L'\'energie potentielle de d\'eformation des pneus lors d'un changement de direction est don\'e par: $$-\frac{\xi^2}{2}\;.$$
+%
+%L'action \`a minimiser est donc :
+%$$\AAA=1/2\int \left(\frac{1}{2}(2m+M)(\dot{x}^2+\dot{y}^2)+ml\dot{\phi}^2 +
+%a\cos \phi\ x + a\sin \phi\ y -\frac{k(\psi-\phi)^2}{2}\right) dt $$
+
+La vitesse de rotation du v\'ehicule autour de son centre de gravite est proportionnelle au changement de direction $\xi$ indiqu\'ee.
+%Le moteur exerce une force d'intensit\'e $a$ choisie par le joueur
+%dans la direction $\phi$.
+On suppose que lors d'un changement de direction, l'\'elasticit\'e des pneus --- adh\'erents sur le sol --- produit un couple de rotation proportionel \`a $\xi$.
+
+En n\'egligeant les frottements de l'air, on obtient les \'equations du mouvement en appliquant le principe fondamental de la dynamique :
+$$(2m+M)\ddot{x} = a\cos\phi\;,$$
+$$(2m+M)\ddot{y} = a\sin\phi\;,$$
+$$\dot{\phi} = \xi\;.$$
+
+
+\section{Discr\'etisation des \'equations diff\'erentielles}
+On peut discr\'etiser ces \'equations diff\'erentielles~:
+$$x(t+h) = 2x(t)-x(t-h)+h^2\left(\frac{a(t)\cos\phi(t)}{2m+M}\right)\,$$
+$$y(t+h) = 2y(t)-y(t-h)+h^2\left(\frac{a(t)\sin\phi(t)}{2m+M}\right)\,$$
+$$\phi(t+h) = \phi(t)+h\xi$$
+o\`u $h$ d\'esigne le pas de discr\'etisation en temps.
+
+\end{document}

@@ -1,0 +1,96 @@
+\documentclass[a4paper,11pt]{amsart}
+
+\usepackage[francais]{babel}
+%\usepackage[pdftex]{graphicx}
+%\uspackage{pstricks}
+\usepackage{graphicx}
+
+\newcommand{\dessin}[4]{
+\begin{figure}[htb]
+\centering
+\includegraphics[scale= #2]{#1}
+\caption{#3}
+\label{#4}
+\end{figure}}
+
+\newtheorem{remarque}{Remarque} \newcommand{\AAA}{{\mathcal A}}
+\newcommand{\BB}{{\mathcal B}} \newcommand{\CC}{{\mathcal C}}
+\newcommand{\DD}{{\mathcal D}} \newcommand{\EE}{{\mathcal E}}
+\newcommand{\FF}{{\mathcal F}} \newcommand{\GG}{{\mathcal G}}
+\newcommand{\HH}{{\mathcal H}} \newcommand{\II}{{\mathcal I}}
+\newcommand{\JJ}{{\mathcal J}} \newcommand{\KK}{{\mathcal K}}
+\newcommand{\LL}{{\mathcal L}} \newcommand{\MM}{{\mathcal M}}
+\newcommand{\NN}{{\mathcal N}} \newcommand{\OO}{{\mathcal O}}
+\newcommand{\PP}{{\mathcal P}} \newcommand{\QQ}{{\mathcal Q}}
+\newcommand{\RR}{{\mathcal R}} \newcommand{\SSS}{{\mathcal S}}
+\newcommand{\TT}{{\mathcal T}} \newcommand{\UU}{{\mathcal U}}
+\newcommand{\VV}{{\mathcal V}} \newcommand{\WW}{{\mathcal W}}
+\newcommand{\XX}{{\mathcal X}} \newcommand{\ZZ}{{\mathcal Z}}
+\newcommand{\bbR}{{\mathbb R}} \newcommand{\bbD}{{\mathbb D}}
+\newcommand{\bbO}{{\mathbb O}} \newcommand{\bbS}{{\mathbb S}}
+\newcommand{\bbE}{{\mathbb E}} \newcommand{\bbN}{{\mathbb N}}
+\newcommand{\bbM}{{\mathbb M}} \newcommand{\bbV}{{\mathbb V}}
+\newcommand{\bbC}{{\mathbb K}} \newcommand{\bbF}{{\mathbb F}}
+\newcommand{\bbP}{{\mathbb P}}
+
+\title{Principe de la moindre action}
+\author{QUADRAT Quentin}
+  \thanks{{\tt Page web} : www.epita.fr/$\sim$quadra\_q}
+  \thanks{{\tt Email :} quadra\_q@epita.fr}
+
+\begin{document}
+
+\maketitle
+
+\section{D\'efinition}
+On appelle action $\AAA$ d'un syst\`eme m\'ecanique l'int\'egrale
+le long du mouvement de la diff\'erence de son \'energie cin\'etique et
+de son \'energie potentielle:
+$$\AAA(x()) = \int (\EE_c(x(t)) - \EE_p(x(t))dt\;,$$
+o\`u  $\EE_c(x(t))$ designe l'\'energie cin\'etique, $\EE_p(x(t))$
+l'\'energie potentielle et $t\mapsto x(t)$ la trajectoire du syst\`eme.
+
+Le principe de la moindre action nous dit que la trajectoire
+du syst\`eme est celle qui minimise l'action.
+
+Pour trouver cette trajectoire on calcule la variation de
+l'action $\delta \AAA$ associ\'ee \`a la variation de la trajectoire
+$\delta x$ et on d\'etermine les conditions qui assurent que
+$\delta \AAA$ soit nul quelque soit $\delta x$.
+
+\section{Exemple d'application}
+Prenons le cas de deux masses, de poids respectifs $m_1$ et $m_2$,
+accroch\'ees l'une \`a l'autre par un ressort de force $F =
+-kl$ ou $l$ d\'esigne l'allongement du ressort ($|x_1(t)-x_2(t)|$)
+avec  $x_1(t)$ et $x_2(t)$ les positions \`a l'instant $t$ des deux masses.
+
+\begin{align*}
+\delta \AAA =& 1/2\int (m_1(\dot{x_1}+\delta \dot{x}_1)^2+
+ m_2( \dot{x}_2+\delta \dot{x}_2)^2-
+ k(x_2+\delta x_2-x_1-\delta x_1)^2) dt\\
+ &-1/2\int (m_1\dot{x}_1^2+m_2\dot{x}_2^2-k(x_2-x_1)^2)dt \;,
+\end{align*}
+$$\delta \AAA = \int m_1\dot{x}_1\delta \dot{x}_1+m_2\dot{x}_2 \delta
+\dot{x}_2-k(x_2-x_1) (\delta x_2-\delta x_1)+o(\| x_1-x_2\|)\;,$$
+
+Par int\'egration par partie on obtient :
+$$\delta \AAA = \int -m_1\ddot{x_1}\delta x_1 -m_2\ddot{x_2}\delta x_2
+- k(x_2-x_1)(\delta x_2-\delta x_1) + o(\| x_1-x_2\|)\;,$$
+car on
+suppose que les variations des trajectoires sont nulles aux
+extr\'emites.
+
+Finalement on trouve :
+$$\delta \AAA =\int (-m_1\ddot{x_1}+k(x_2-x_1))\delta x_1 + \int
+(-m_2\ddot{x_2}+k(x_1-x_2))\delta x_2 + o(\| x_1-x_2\|)\;.$$
+
+L'action doit \^etre minimale c.a.d. $$\delta A = 0,\quad\forall
+\delta x_1,\;\forall \delta x_2,$$
+
+donc :
+$$-m_1\ddot{x_1}+k(x_2-x_1) = 0,\quad-m_2\ddot{x_2}+k(x_1-x_2) = 0\;.$$
+
+On obtient les m\^emes \'equations que celles en appliquant la loi
+fondamentale de la dynamique $m\vec{\gamma} = \vec{F}$.
+
+\end{document}

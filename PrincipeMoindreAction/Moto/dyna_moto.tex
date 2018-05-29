@@ -1,0 +1,190 @@
+\documentclass[a4paper,11pt]{amsart}
+
+\usepackage[francais]{babel}
+%\usepackage[pdftex]{graphicx}
+%\uspackage{pstricks}
+\usepackage{graphicx}
+
+\newcommand{\dessin}[4]{
+\begin{figure}[htb]
+\centering
+\includegraphics[scale= #2]{#1}
+\caption{#3}
+\label{#4}
+\end{figure}}
+
+\newtheorem{remarque}{Remarque} \newcommand{\AAA}{{\mathcal A}}
+\newcommand{\BB}{{\mathcal B}} \newcommand{\CC}{{\mathcal C}}
+\newcommand{\DD}{{\mathcal D}} \newcommand{\EE}{{\mathcal E}}
+\newcommand{\FF}{{\mathcal F}} \newcommand{\GG}{{\mathcal G}}
+\newcommand{\HH}{{\mathcal H}} \newcommand{\II}{{\mathcal I}}
+\newcommand{\JJ}{{\mathcal J}} \newcommand{\KK}{{\mathcal K}}
+\newcommand{\LL}{{\mathcal L}} \newcommand{\MM}{{\mathcal M}}
+\newcommand{\NN}{{\mathcal N}} \newcommand{\OO}{{\mathcal O}}
+\newcommand{\PP}{{\mathcal P}} \newcommand{\QQ}{{\mathcal Q}}
+\newcommand{\RR}{{\mathcal R}} \newcommand{\SSS}{{\mathcal S}}
+\newcommand{\TT}{{\mathcal T}} \newcommand{\UU}{{\mathcal U}}
+\newcommand{\VV}{{\mathcal V}} \newcommand{\WW}{{\mathcal W}}
+\newcommand{\XX}{{\mathcal X}} \newcommand{\ZZ}{{\mathcal Z}}
+\newcommand{\bbR}{{\mathbb R}} \newcommand{\bbD}{{\mathbb D}}
+\newcommand{\bbO}{{\mathbb O}} \newcommand{\bbS}{{\mathbb S}}
+\newcommand{\bbE}{{\mathbb E}} \newcommand{\bbN}{{\mathbb N}}
+\newcommand{\bbM}{{\mathbb M}} \newcommand{\bbV}{{\mathbb V}}
+\newcommand{\bbC}{{\mathbb K}} \newcommand{\bbF}{{\mathbb F}}
+\newcommand{\bbP}{{\mathbb P}}
+
+\title{Etude du mouvement vertical d'une moto (tangage)}
+\author{QUADRAT Quentin}
+  \thanks{{\tt Page web} : www.epita.fr/$\sim$quadra\_q}
+  \thanks{{\tt Email :} quadra\_q@epita.fr}
+
+\begin{document}
+\maketitle
+
+\section{Pr\'esentation du mod\'ele}
+Le v\'ehicule est mod\'elis\'e en 2D, par une carcasse repr\'esent\'e
+par une barre de demi longueur $l$ et de masse ponctuelle $M$ \`a
+laquelle sont accroch\'ees deux roues (de rayon $R$ et de masse $m$)
+par des ressorts. On note $u(t)$ la l'altitude du sol, $y(t)$ est
+l'altitude de la carcasse, $y_1(t)$ et $y_2(t)$ les allongements des
+deux ressorts, $\theta$ le degr\'e d'inclinaison du v\'ehicule.  On
+note $g$ la gravit\'e, $\theta$ le degr\'e de penchement du v\'ehicule
+(figure \ref{dyna}).
+
+\dessin{dyna.epsf}{0.5}{Mod\'elisation de la voiture}{dyna}
+
+\section{Calcul des \'equations du mouvement}
+Les forces qui sont en jeux sont : la pesanteur des masses (roue et
+carcasse), la r\'epulsion du sol sur les roues et la force des ressorts.
+
+L'\'energie cin\'etique de la voiture est : $$\frac{M\dot{y}^2}{2}\;.$$
+
+L'\'energie potentielle de la voiture  est : $$Mgy\;.$$
+
+L'\'energie cin\'etique verticale de la roue de devant est
+$(\dot{y_2}+l\cos\theta\dot{\theta}+\dot{y})^2\;, $
+%On approximera ($\theta$ petit) l'\'energie cin\'etique verticale de la roue de devant par:
+que l'on approxime en faisant l'hypoth\'ese $\theta$ petit par :
+$$1/2m(\dot{y}_1+\dot{y}+l\dot{\theta})^2\;.$$
+
+De m\^eme, l'\'energie cin\'etique verticale de la roue de derri\`ere est :
+$$1/2m(\dot{y}_2+\dot{y}-l\dot{\theta})^2\;.$$
+
+
+L'\'energie potentielle due \`a la pesanteur des deux roues est :
+$$mg(2y+y_2+y_1)\;.$$
+
+L'\'energie potentielle du ressort de la roue avant est :
+$$1/2ky_1^2\;.$$
+
+
+L'\'energie potentielle du ressort de la roue arri\`ere est :
+$$1/2ky_2^2\;.$$
+
+L'\'energie potentielle de r\'eaction du sol sur la roue de devant est
+:
+$$1/2([u(x+l)-(y_1+y+l\theta-R)]^+)^2\;,$$
+o\`u $A^+$ d\'esigne la partie positive de $A$.
+
+L'\'energie potentielle de r\'eaction du sol sur la roue de derri\`ere est :
+$$1/2([u(x-l)-(y_2+y-l\theta-R)]^+)^2\;.$$
+
+
+L'action \`a minimiser vaut donc :
+\begin{align*}
+\AAA=1/2\int &\big\{ M\dot{y}^2+m(\dot{y}_1+\dot{y}+l\dot{\theta})^2+
+m(\dot{y}_2+\dot{y}-l\dot{\theta})^2 \\
+&-ky_1^2-ky_2^2-2Mgy-2mg(2y+y_2+y_1) \\
+&-([u(x+l)-(y_1+y+l\theta-R)]^+)^2\\
+&-([u(x-l)-(y_2+y-l\theta-R)]^+)^2 \big\} dt\;
+\end{align*}
+
+On trouve un syst\`eme
+d'\'equation diff\'erentielle o\`u les inconnues sont : trois
+altitudes (une pour la carcasse, une pour chaque roue)
+et enfin l'inclinaison de la carcasse ($\theta$).
+
+On note :
+$$R_1 =[u(x+l)-(y_1+y+l\theta-R)]^+\;,$$
+$$R_2 =[u(x-l)-(y_2+y-l\theta-R)]^+\;,$$
+
+On a :
+\begin{align}
+(M+2m)\ddot{y}+m\ddot{y}_1+m\ddot{y}_2 & = -2g(2m+M)+R_1+R_2\label{eqy}\;,\\
+m(\ddot{y}_1+\ddot{y}+l\ddot{\theta}) &  = -ky_1-gm+R_1\label{eq1}\;,\\
+m(\ddot{y}_2+\ddot{y}-l\ddot{\theta}) & = -ky_2-gm+R_2\label{eq2}\;,\\
+m(\ddot{y}_1-\ddot{y}_2+2l\ddot{\theta}) & = R_1-R_2\label{eqo}\;.
+\end{align}
+
+En faisant  (\ref{eqo}) plus (\ref{eq2}) moins (\ref{eq1}) on obtient
+$0 =k(y_1-y_2)$
+et donc $y_1=y_2.$
+
+En faisant  (\ref{eqy}) moins (\ref{eq1}) moins (\ref{eq2}) on obtient :
+\begin{equation}
+M\ddot{y}=-gM+2ky_1\;.\label{eqyy}
+\end{equation}
+
+L'equation (\ref{eqo}) donne alors :
+\begin{equation}
+2ml\ddot{\theta}= R_1-R_2\;. \label{eqoo}
+\end{equation}
+
+Puis, (\ref{eq1}) moins $\frac{m}{M}$(\ref{eqyy}) moins $\frac{1}{2}$(\ref{eqoo})
+donne :
+\begin{equation}
+m\ddot{y}_1 = -ky_1(1+\frac{2m}{M})+\frac{R_1+R_2}{2}\;.
+\end{equation}
+
+%Enfin, (\ref{eq2}) moins $\frac{m}{M}$(\ref{eqyy}) moins $\frac{1}{4}$(\ref{eqoo})
+%donne :
+%\begin{equation}
+%m\ddot{y}_2 = \frac{k(y_1-y_2)}{2}+R_2+\frac{mg(2m+M)}{M}\;.
+%\end{equation}
+
+Finalement, on obtient, le syst\`eme alg\'ebriquo-dif\'erentiel suivant :
+\begin{align*}
+%M\ddot{y} &=-gM+2ky_1\;,\\
+%m\ddot{y}_1 &= -ky_1(1+\frac{2m}{M})+\frac{R_1+R_2}{2}\;,\\
+%m\ddot{y}_2 &= -ky_2(1+\frac{2m}{M})+\frac{R_1+R_2}{2}\;,\\
+%2ml\ddot{\theta} &= (R_1+R_2)\;.
+\ddot{y} &=-2g+\frac{2ky_1}{M}\;,\\
+\ddot{y}_1 &= -ky_1(\frac{1}{m}+\frac{2}{M})+\frac{R_1+R_2}{2m}\;,\\
+y_2 &= y_1\;,\\
+\ddot{\theta} &= \frac{R_1+R_2}{2ml}\;.
+\end{align*}
+
+%En notant :
+%$$P=\begin{bmatrix}
+%M+2m & m & m & 0 \\
+%m & m & 0 & ml \\
+%m & 0 & m & -ml \\
+%0 & m & -m & 2ml \\
+%\end{bmatrix}\;,$$
+%le syst\`eme differentiel s'\'ecrit :
+%$$\begin{bmatrix}
+%\ddot{y} \\ \ddot{y_1} \\ \ddot{y_2} \\ \ddot{\theta}
+%\end{bmatrix}
+%= P^{-1}
+%\begin{bmatrix}
+%-g(2m+M) + R_1+R_2 \\
+%-gm -ky_1+R_1\\
+
+%-gm -ky_2+R_2\\
+%R_1+R_2\\
+%\end{bmatrix}\;.
+%$$
+%\subsection{Discr\'etisation des \'equations differentielles}
+
+\section{Discr\'etisation des \'equations diff\'erentielles}
+Pour calculer les trajectoires des corps, nous pouvons approximer
+les \'equations diff\'erentielles par des
+\'equations r\'ecurrentes, o\`u $h$ d\'esigne le pas de discr\'etisation en temps~:
+
+\begin{align*}
+y(t+h) &=2y(t)-y(t-h)+h^2\left(-2g+\frac{2ky_1}{M}\right)\;,\\
+y_1(t+h) &=2y_1(t)-y_1(t-h)+h^2\left(-ky_1(\frac{1}{m}+\frac{2}{M})+\frac{R_1+R_2}{2m}\right)\;,\\
+\theta(t+h) &=2\theta(t)-\theta(t-h)+h^2\left(\frac{R_1+R_2}{2ml}\right)\;.
+\end{align*}
+
+\end{document}

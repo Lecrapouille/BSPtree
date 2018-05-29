@@ -1,0 +1,1078 @@
+\documentclass[a4paper, 10pt]{article}
+\usepackage[french]{babel}
+\usepackage[latin1]{inputenc}
+\usepackage{amstext}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{rotating}
+\usepackage{fancyhdr}
+\usepackage{amssymb}
+\usepackage{picins}
+\usepackage{multicol}
+%\usepackage{xy}
+%\xyoption{all}
+
+%%
+\setlength{\textwidth}{18cm}
+\setlength{\hoffset}{-3cm}
+\setlength{\voffset}{-4cm}
+\setlength{\textheight}{28cm}
+%%
+
+\newcommand{\dessin}[4]{
+\begin{figure}[htb]
+\centering
+\includegraphics[scale= #2]{#1}
+\caption{#3}
+\label{#4}
+\end{figure}}
+%%
+
+\newcommand{\yinifnt}{\fontencoding{OT1}\fontfamily{yinit}\fontsize{40}{60}\selectfont}
+\newtheorem{remarque}{Remarque} \newcommand{\AAA}{{\mathcal A}}
+\newcommand{\BB}{{\mathcal B}} \newcommand{\CC}{{\mathcal C}}
+\newcommand{\DD}{{\mathcal D}} \newcommand{\EE}{{\mathcal E}}
+\newcommand{\FF}{{\mathcal F}} \newcommand{\GG}{{\mathcal G}}
+\newcommand{\HH}{{\mathcal H}} \newcommand{\II}{{\mathcal I}}
+\newcommand{\JJ}{{\mathcal J}} \newcommand{\KK}{{\mathcal K}}
+\newcommand{\LL}{{\mathcal L}} \newcommand{\MM}{{\mathcal M}}
+\newcommand{\NN}{{\mathcal N}} \newcommand{\OO}{{\mathcal O}}
+\newcommand{\PP}{{\mathcal P}} \newcommand{\QQ}{{\mathcal Q}}
+\newcommand{\RR}{{\mathcal R}} \newcommand{\SSS}{{\mathcal S}}
+\newcommand{\TT}{{\mathcal T}} \newcommand{\UU}{{\mathcal U}}
+\newcommand{\VV}{{\mathcal V}} \newcommand{\WW}{{\mathcal W}}
+\newcommand{\XX}{{\mathcal X}} \newcommand{\ZZ}{{\mathcal Z}}
+\newcommand{\bbR}{{\mathbb R}} \newcommand{\bbD}{{\mathbb D}}
+\newcommand{\bbO}{{\mathbb O}} \newcommand{\bbS}{{\mathbb S}}
+\newcommand{\bbE}{{\mathbb E}} \newcommand{\bbN}{{\mathbb N}}
+\newcommand{\bbM}{{\mathbb M}} \newcommand{\bbV}{{\mathbb V}}
+\newcommand{\bbC}{{\mathbb K}} \newcommand{\bbF}{{\mathbb F}}
+\newcommand{\bbP}{{\mathbb P}}
+\newcommand{\www}{{\mathfrak w \;}} \newcommand{\fff}{{\mathfrak f \;}}
+\newcommand{\nnn}{{\mathfrak n \;}} \newcommand{\aaa}{{\mathfrak a \;}}
+\newcommand{\hhh}{{\mathfrak h \;}}
+%%
+
+\title{Note sur le Cours d' Automatique de K.J. Astrom}
+\author{QUADRAT Quentin}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Formule de Taylor}
+Formule de Taylor avec un param\`etre $x = x_0 + \delta x$ :
+$$f(x) = \sum_{n \geq 0}  \left( \frac{f^{(n)}(x_0) (x-x_0)^n}{n!} \right)$$
+
+Formule de Taylor dans le cas vectoriel:
+\begin{align*}f(x,y) & = f(x_0,y_0) + \left(f'_x(x_0,y_0)(x-x_0)+f'_y(x_0,y_0)(y-y_0) \right) \\
+& + \frac{1}{2} \left(
+f''_x(x_0,y_0)(x-x_0)^2+f''_y(x_0,y_0)(y-y_0)^2 + f''_{x,y}(x_0,y_0) (x-x_0)(y-y_0) \right)
+\end{align*}
+\section{Lin\'earisation}
+
+Exemple de lin\'earisation de l'\'equation du mouvement d'un pendule invers\'e (conditions initiales nulles):
+\begin{align*}
+\dot{x_1} & = x_2 \\
+\dot{x_2} & = \frac{mgl}{J} \sin{x_1} + \frac{ml}{J} u \cos{x_2}
+\end{align*}
+
+On peut \'ecrire $\dot{x_2}= f(x_1, x_2, u)$. Gr\^ace \`a la formule de Taylor  :
+$$\dot{x_2} \simeq f(0, 0, 0) + \delta x_1 f_{x_1}'(0, 0, 0) + \delta x_2
+f_{x_2}'(0,
+0, 0) + \delta u f_u'(0, 0, 0)$$
+
+Ce qui donne :
+$$\delta \dot{x_2} = \dot{x_2} \simeq 0 + \delta x_1 \left( \frac{mgl}{J}
+\cos{0} - \frac{ml}{J} 0 \sin{0} \right) + \delta
+u\left( \frac{ml}{J}\cos{0} \right)$$
+
+Ce qui donne :
+$$\delta \dot{x_2} \simeq \delta x_1 \left( \frac{mgl}{J} \right) + \delta u \left( \frac{ml}{J} \right)$$
+
+De m\^eme on a :
+$$\delta \dot{x_1} = \delta x_2$$
+
+Finalement, on obtient le systeme suivant \ref{sys}:
+\begin{align*}
+\delta \dot{x_1} = & \; \delta x_2 \label{sys}\\
+\delta \dot{x_2} = & \; \delta x_1 \left( \frac{mgl}{J} \right)+ \delta
+u \left( \frac{ml}{J} \right) \\
+\delta y = & \; \delta x_1
+\end{align*}
+
+Ou bien sous la forme matricielle :
+\begin{align*}
+\delta \dot{x} = &
+\begin{bmatrix}
+0 & 1 \\ 
+\frac{mgl}{J} & 0\\
+\end{bmatrix}
+\begin{bmatrix}
+\delta x_1 \\ \delta x_2 \\
+\end{bmatrix}
++ \begin{bmatrix}
+0 \\  \frac{ml}{J} \\
+\end{bmatrix} \delta u
+\\
+\delta y= & \begin{bmatrix}
+1 & 0 \\ 
+\end{bmatrix}
+\begin{bmatrix}
+\delta x_1 \\ \delta x_2 \\
+\end{bmatrix}
++ \begin{bmatrix}
+0\\
+\end{bmatrix} \delta u
+\end{align*}
+
+\dessin{blockdiag}{0.85}{u est l'entr\'ee, y la sortie, x l'\'etat (ou m\'emoire)}{blockdiag}
+
+En changeant de notation $\delta x \rightarrow x, \delta u \rightarrow u, \delta y \rightarrow y$, le syst\`eme s'\'ecrit bien sous la forme (cf. block diagramme \ref{blockdiag}) :
+\begin{align*}
+\frac{dx}{dt} = & \; Ax + Bu \\
+y = & \; Cx + Du
+\end{align*}
+
+Avec $A$ une matrice $n \times n,$ $B$ une matrice $n \times p,$ $C$ une matrice $q \times n,$
+et $D$ une matrice $q \times p$.
+
+Une propri\'et\'e amusante : on peut emboiter les 4 matrices.
+$$\begin{array}{|cc|c|} \hline
+0 & 1 & 0 \\
+\frac{mgl}{J} & 0 & \frac{ml}{J} \\ \hline
+1 & 0 & 0 \\ \hline
+\end{array}$$
+
+\subsection{R\'esolution de syst\`eme d'equa diff avec Scilab}
+\begin{verbatim}
+function xprim=f(t, x)
+xprim(1)=x(2);
+xprim(2)=(m*g*l)/j*x(1) + (m*l)/j*sin(100*t);
+endfunction
+
+m=10; g=10; l=1; j=10; x1_0=0.1; x2_0=0.;
+t0=0; tmax=0.1; dt=0.001; t=t0:dt:tmax;
+
+pendule=ode([x1_0;x2_0], t0, t, f);
+\end{verbatim}
+
+
+\section{Syst\`emes lin\'eaires temps invariant}
+
+\subsection{Exercice 1 de lin\'earisation}
+
+Soit $\dot{x} = 2x,$ sachant $x(0) = x_0.$ Que vaut $x(t) ?$
+
+Solution :
+$$x(t) = a \; e^{2t}$$
+$$\dot{x}(t) = 2a \; e^{2t}$$
+
+Pour trouver $a$, on utilise la condition initiale de l'\'ennonc\'e, soit :
+$$x(0) = a = x_0$$
+
+\subsection{Exercice 2 de lin\'earisation}
+Soit $\dot{x} = 2x + u,$ sachant $x(0) = x_0.$ Que vaut $x(t) ?$
+
+Solution :
+
+Pour $u=0$ on a : $x(t) = a(t)\; e^{2t}$
+
+
+En deérivant on a :
+$$\dot{x}(t) = 2a \; e^{2t} + \dot{a}(t) \; e^{2t} = 2x(t) + u(t) = 2a(t) \; e^{2t}+u(t)$$
+
+En se simplifiant :
+$$\dot{a}(t)=u(t)\; e^{2t}$$
+
+D'o\`u :
+$$a(t)=\int_0^t u(s) \; e^{-2s}ds + a_0$$
+$$x(t) = a_0 \; e^{2t} + \int_0^t u(s)(\; e^{2(t-s)}ds$$
+
+En utilisant la condition initiale de l'\'ennonc\'e, on a :
+$$x(0) = x_0 = a_0$$
+
+Finalement :
+
+$$x(t)=x_0\; e^{2t}+\int_0^t u(s)\; e^{2(t-s)}ds$$
+
+\subsection{Une d\'emonstration sur les exp de matrices}
+
+Montrons que si $A$ est diagonalisable, nous avons : $e^{At}=Pe^{\Lambda t}P^{-1}$
+
+Soit $A$ diagonalisable, alors $A$ s'\'ecrit sous la forme : $A=P\Lambda P^{-1}$
+
+On rappelle que : $A^n = P \Lambda^n P^{-1}$
+
+D'o\`u :
+\begin{align*}
+e^A & = \sum_{n\geq0}\frac{A^n}{n!}\\
+e^A & = \sum_{n\geq0}\frac{P\Lambda^n P^{-1}}{n!}\\
+e^A & =P\left( \sum_{n\geq0}\frac{\Lambda^n}{n!} \right) P^{-1}\\
+e^A & =Pe^{\Lambda}P^{-1}
+\end{align*}
+
+\subsection{Scilab et les exp de matrice}
+\begin{verbatim}
+    -->A=[2,1;0,2]
+     A  = 
+    !   2.    1. !
+    !   0.    2. !
+
+    -->exp(2)
+     ans  = 
+    7.3890561
+
+    -->expm(A)
+     ans  = 
+    !   7.3890561    7.3890561 !
+    !   0.           7.3890561 !
+\end{verbatim}
+
+\subsection{Exercice 1 sur les exp de matrices}
+
+$$A=\begin{bmatrix}
+0 & 1\\ 1 & 0 
+\end{bmatrix} $$
+
+Polyn\^ome caract\'eristique :
+$$\begin{vmatrix}
+-\lambda & 1\\ 1 & -\lambda
+\end{vmatrix} = \lambda^2 - 1$$
+
+D'o\`u : $A = P\Lambda P^{-1}$ avec :
+$$\Lambda=\begin{bmatrix}
+1 & 0\\ 0 & -1 
+\end{bmatrix}$$
+
+Puisque $\Lambda$ est diagonale on \'ecrire :
+$$e^{\Lambda t} = e^{\begin{bmatrix}
+t & 0\\ 0 & -t
+\end{bmatrix}}=\begin{bmatrix}
+e^t & 0\\ 0 & e^{-t} 
+\end{bmatrix}$$
+
+\subsection{Exercice 2  sur les exp de matrices}
+Soit :
+$$A=\begin{bmatrix}
+\alpha & 1 & 0 \\
+0 & \alpha & 1 \\
+0 & 0 & \alpha \\
+\end{bmatrix}$$
+
+Montrer que :
+$$e^{A t}=
+\begin{bmatrix}
+e^{\alpha t} & t e^{\alpha t} & t^2 e^{\alpha t} \\
+0 & e^{\alpha t} & t e^{\alpha t} \\
+0 & 0 & e^{\alpha t} \\
+\end{bmatrix}$$
+
+On calcule :
+$$I + At + \frac{1}{2} (At)^2 + \frac{1}{3!} (At)^3 =
+\begin{bmatrix}
+1 + \alpha t + \frac{\alpha^2 t^2}{2} + \frac{\alpha^3 t^3}{6} & t + \alpha t^2 + \frac{1}{2} \alpha^2 t^3 & \frac{1}{2}(t^2 + \alpha t^3) \\
+0 & 1 + \alpha t + \frac{\alpha^2 t^2}{2} + \frac{\alpha^3 t^3}{6} & t + \alpha t^2 + \frac{1}{2} \alpha^2 t^3 \\
+0 & 0 & 1 + \alpha t + \frac{\alpha^2 t^2}{2} + \frac{\alpha^3 t^3}{6} \\
+\end{bmatrix}$$
+
+Finalement :
+$$e^{A t}=
+\begin{bmatrix}
+e^{\alpha t} & t e^{\alpha t} & t^2 e^{\alpha t} \\
+0 & e^{\alpha t} & t e^{\alpha t} \\
+0 & 0 & e^{\alpha t} \\
+\end{bmatrix}$$
+
+\section{Mod\`ele d'entr\'ee-sortie}
+
+\subsection{R\'eponse impulsionelle}
+Trouver la r\'eponse impulsionelle $y(t)=\int_0^tg(t-s)u(s)ds$ du syst\`eme \ref{sys}.
+
+Condition initiale : $x(0)=0$.
+
+\begin{align*}
+y(t) & = \begin{bmatrix}
+1 & 0 \\
+\end{bmatrix}
+\int_0^t e^{\begin{bmatrix}
+0 & 1 \\
+\frac{mgl}{J} & 0
+\end{bmatrix}(t-s)}
+\begin{bmatrix}
+0 \\ \frac{ml}{J} 
+\end{bmatrix} u(s)ds \\
+& =\int_0^t
+\begin{bmatrix}
+1 & 0 \\
+\end{bmatrix}
+e^{\begin{bmatrix}
+0 & 1 \\
+\frac{mgl}{J} & 0
+\end{bmatrix}(t-s)}
+\begin{bmatrix}
+0 \\ \frac{ml}{J} 
+\end{bmatrix} u(s)ds
+\end{align*}
+
+Donc finalement on en d\'eduit :
+$$g(t) = \begin{bmatrix}
+1 & 0 \\
+\end{bmatrix}
+e^{t\begin{bmatrix}
+0 & 1 \\
+\frac{mgl}{J} & 0
+\end{bmatrix}}
+\begin{bmatrix}
+0 \\ \frac{ml}{J} 
+\end{bmatrix} $$
+
+\subsection{Transform\'ee de Laplace et fonction de transfert}
+
+Trouver la fonction de transert $Y(s) = G(s)U(s)$ de la r\'eponse impulsionelle $y(t)=\int_0^tg(t-s)u(s)ds$ et en d\'eduire la stabilit\'e du syst\`eme.
+
+On rappelle le syst\`eme \ref{sys} (avec $\frac{ml}{J} = \frac{mgl}{J} = 1$ pour faire simple) et $x_1(0) = 0$ et $x_2(0) = 0$ :
+\begin{align}
+\dot{x_1} & = x_2 \\
+\dot{x_2} & = x_1 + u \\
+ y & = x_1
+\end{align}
+
+$$\LL(x_2)=X_2(s)=\int_0^{\infty} e^{-st} x_2 ds$$
+$$\LL(\dot{x_2})=s X_2(s) - x_2(0)$$
+$$\LL(\dot{x_1})=s X_1(s)$$
+
+De (2) on a : $s X_1(s) = X_2(s)$
+
+De (3) on a : $s X_2(s) = X_1(s) + U(s)$
+
+De (1) on a : $Y(s) = X_1(s)$
+
+D'o\`u : $s^2X_1 = sX_2  = X_1 + U$ puis $X_1(s^2-1) = U$
+
+Finalement : 
+$$Y=X_1=\frac{U}{s^2-1}$$
+
+et donc, la fonction de transfert s'\'ecrit :
+
+$$G=\frac{Y}{U} = \frac{1}{s^2-1}$$
+
+En regardant les p\^oles ($1$ et $-1$) on en d\'eduit que le syst\`eme est instable.
+
+\subsection{Transform\'ee de Laplace de la d\'eriv\'ee}
+Montrons que $\LL\frac{\delta f}{\delta t} = s \LL f - f(0)$
+
+Par une IPP, on pose $u = e^{-st}$ d'o\`u $u' = -se^{-st}$ ainsi que : $v'=f'(t)$ d'o\`u $v = f$
+
+Donc :
+$$\left[ e^{-st}f(t)\right]^{\infty}_0+s\int_0^{\infty}fe^{-st}dt$$
+
+Finalement :
+$$\LL\frac{\delta f}{\delta t} = s\LL f - f(0)$$
+
+\subsection{Transform\'ee de Laplace de l'intégrale}
+
+Montrons que $\LL\int_0^t f(\tau)d\tau = \frac{1}{s} \LL f $
+
+Par une IPP, on pose $u = \int_0^t f(\tau)d\tau$ d'o\`u $u' = f$ ainsi que : $v'=e^{-st}$ d'o\`u $v = -\frac{1}{s}e^{-st}$
+
+Donc :
+$$\left[ -\frac{1}{s}e^{-st} \int_0^{t} f(\tau)d\tau  \right]_0^{\infty} + \frac{1}{s} \int_0^{\infty} e^{-st} f(t)dt$$
+
+Finalement :
+$$\LL\int_0^t f(\tau)d\tau = \frac{1}{s} \LL f $$
+
+\section{P\^oles et z\'eros}
+
+Montrons que la fonction de transfert $G(s)$ d'une LTI s'\'ecrit : $G(s) = C(sI-A)^{-1}B$
+
+On part du syst\`eme suivant (avec pour hypoth\`ese $x(0)=0$) :
+\begin{align*}
+\dot{x} = & \; Ax + Bu \\
+y = & \; Cx
+\end{align*}
+
+Par transform\'ees de Laplace :
+\begin{align*}
+sX - x(0) & = Ax + Bu \\
+y & = Cx
+\end{align*}
+
+D'o\`u : 
+$$(sI-A)X=BU$$
+$$X=(sI-A)^{-1}BU$$
+$$Y=C(sI-A)^{-1}BU$$
+
+Finalement la fonction de transfert :
+$$G=\frac{Y}{U} = C(sI-A)^{-1}B$$
+
+\section{Contr\^olabilit\'e -- observabilit\'e}
+
+\subsection{Contr\^olabilit\'e}
+Le syst\`eme peut \^etre transf\'er\'e de tout \'etat  vers tout autre autre \'etat ssi la matrice de controlabilit\'e $W_c$ est de rang plein.
+$$W_c=\begin{bmatrix}
+B & AB & \ldots & AB^{n-1}
+\end{bmatrix}$$
+
+Dans le cas du pendule invers\'e (avec $\frac{mgl}{J} = \frac{ml}{J} = 1$) : 
+$$W_c=\begin{bmatrix}
+B & AB
+\end{bmatrix}$$
+
+Calculons :
+$$B =\begin{bmatrix}
+0 \\ 1
+\end{bmatrix}$$
+$$AB =\begin{bmatrix}
+1 \\ 0
+\end{bmatrix}$$
+
+Donc:
+$$W_c=\begin{bmatrix}
+0 & 1 \\
+1 & 0
+\end{bmatrix}$$
+
+Comme le rang de $W_c$ est $2$. Le syst\`eme est contr\^olable.
+
+\subsection{Observabilit\'e}
+
+L'\'etat peut \^etre calcul\'e \`a  partir de la sortie si la matrice d'observabilt\'e $W_o$ est de rang plein.
+$$W_o=\begin{bmatrix}
+C \\ CA \\ \vdots \\ CA^{n-1}
+\end{bmatrix}$$
+
+Dans le cas du pendule invers\'e :
+$$W_o=\begin{bmatrix}
+C \\ CA
+\end{bmatrix}$$
+
+Calculons :
+$$C =\begin{bmatrix}
+0 & 1
+\end{bmatrix}$$
+$$CA =\begin{bmatrix}
+0 & 1
+\end{bmatrix}$$
+
+Donc:
+$$W_o=\begin{bmatrix}
+1 & 0 \\
+0 & 1
+\end{bmatrix}$$
+
+Comme le rang de $W_o$ vaut $2$. Le syst\`eme est observable.
+
+\section{Forme diagonale}
+
+Rappel : la fonction de transfert du pendule invers\'e $G(s)=\frac{1}{s^2-1}$
+
+Elle s'\'ecrit aussi :
+$$G = \frac{1}{(s-1)(s+1)} = \frac{a}{s-1} + \frac{b}{s+1}$$
+
+Avec : $a=1/2$ et $b=-1/2$.
+
+\section{Contr\^oleur}
+
+La forme compagnon peut \^etre obtenue (en \'evitant les changements de bases) gr\^ace \`a :
+
+xxx FAURE xxx
+
+Par un changement de base $z=Fx$, d'o\`u :
+$z=f_1 x_1+f_2 x_2$, d'o\`u :
+ 
+ \begin{align*}
+\dot{z} & = FAF^{-1}z + TBu = Az + Bu
+\end{align*}
+
+\begin{align*}
+\dot{z} & = (A+BF)x + Bu\\
+& = \begin{bmatrix}
+0 & 1 \\
+1 & 0
+\end{bmatrix}
+\begin{bmatrix}
+x_1 \\
+x_2
+\end{bmatrix}
++ \begin{bmatrix}
+0 \\ 1
+\end{bmatrix}
+\begin{bmatrix}
+f_1 & f_2
+\end{bmatrix}
+\begin{bmatrix}
+x_1 \\ x_2
+\end{bmatrix}\\
+& = \begin{bmatrix}
+0 & 1\\
+1+f_1 & f_2 \\
+\end{bmatrix}
+\begin{bmatrix}
+x_1 \\ x_2
+\end{bmatrix}
+\end{align*}
+
+On voudrait que le polyn\^ome caract\'eristique ai les p\^oles $-2$ et $-2$ \`a savoir qu'il s'ecrive sous la forme :
+
+$$(s+2)^2=s^2+4s+4 = -s (f_2-s)-1-f_1 = s^2 -s f_2 -1 -f_2$$
+
+On en deduit $f_1=-5$ et $f_2=-4$.
+
+Donc
+
+\subsection{Scilab}
+\begin{verbatim}
+    sl=syslin('c', [0, 1; -10, -10], [0; 10], [1, 0]);
+    t=0:0.05:20;
+    a=csim("step",t,sl);
+    plot(a);
+
+    deff('u=input(t)','u=sin(t)')
+    t=0:0.05:20;
+    a = csim(input,t,sl)
+\end{verbatim}
+
+\section{Observateur}
+
+Soit :
+$$A = \begin{bmatrix}
+0 & 1 \\
+1 & 0
+\end{bmatrix}\!\!,\;
+B  = \begin{bmatrix}
+0 \\ 1
+\end{bmatrix}\!\!,\;
+C  = \begin{bmatrix}
+1 & 0
+\end{bmatrix}$$
+
+On calcule :
+$$A-KC = \begin{bmatrix}
+0 & 1 \\
+1 & 0
+\end{bmatrix} -
+\begin{bmatrix}
+k_1 \\ k_2
+\end{bmatrix}
+\begin{bmatrix}
+1 & 0
+\end{bmatrix} =
+\begin{bmatrix}
+-k_1 & 1 \\
+1-k_2 & 0
+\end{bmatrix}
+$$
+
+Le polyn\^ome caract\'eristique de $A-KC$ s'\'ecrit :
+$$P(\lambda) = (k_1 + \lambda) \lambda -1 + k_2 = \lambda^2 + \lambda k_1 -1 + k_2$$
+
+On veut que $P$ soit de la forme $(\lambda + 10)^2 = \lambda^2 + 20\lambda + 100$.
+On a donc : $k_1 = 20$ et $k_2 = 101$.
+
+On r\'eutilise l'expression de $U=FX+v$ avec $f_1 = 4$ et $f_2 = 5$ (cf. section pr\'ec\'edente).
+
+D'o\`u :
+\begin{align*}
+\dot{X} &= \begin{bmatrix}
+0 & 1 \\
+1 & 0
+\end{bmatrix}
+\begin{bmatrix}
+x_2 \\ x_1
+\end{bmatrix}
++
+\begin{bmatrix}
+0 \\ 1
+\end{bmatrix}
+\left(
+\begin{bmatrix}
+-5 & -4
+\end{bmatrix}
+\begin{bmatrix}
+\hat{x_1} \\ \hat{x_2}
+\end{bmatrix}
++ v
+\right)\\
+\dot{\hat{X}} &= \begin{bmatrix}
+0 & 1 \\
+1 & 0
+\end{bmatrix}
+\begin{bmatrix}
+x_2 \\ x_1
+\end{bmatrix}
++
+\begin{bmatrix}
+20 \\ 101
+\end{bmatrix}
+(x_1 - \hat{x_1})
++
+\begin{bmatrix}
+0 \\ 1
+\end{bmatrix}
+\left(
+\begin{bmatrix}
+-5 & -4
+\end{bmatrix}
+\begin{bmatrix}
+\hat{x_1} \\ \hat{x_2}
+\end{bmatrix}
++ v
+\right)\\
+y &=\begin{bmatrix}
+1 & 0
+\end{bmatrix}
+\begin{bmatrix}
+x_1 \\ x_2
+\end{bmatrix}
+\end{align*}
+
+Matriciellement l'observateur est :
+\begin{align*}
+\begin{bmatrix}
+X \\ \hat{X}
+\end{bmatrix} &=
+\begin{bmatrix}
+0 & 1 & 0 & 0 \\
+1 & 0 & -5 & -4\\
+20 & 0 & -20 & 1\\
+101 & 0 & -106 & -4
+\end{bmatrix}
+\begin{bmatrix}
+x_1 \\ x_2 \\ \hat{x_1} \\ \hat{x_2}
+\end{bmatrix} +
+\begin{bmatrix}
+0 \\ 1\\ 0 \\ 1
+\end{bmatrix} v \\
+y &= \begin{bmatrix}
+1 & 0 & 0 & 0
+\end{bmatrix}
+\begin{bmatrix}
+x_1 \\ x_2 \\ \hat{x_1} \\ \hat{x_2}
+\end{bmatrix}
+\end{align*}
+
+XXXX calculer $\dot{\tilde{X}}$ 
+
+\subsection{Scilab}
+\begin{verbatim}
+    sl=syslin('c', [0, 1, 0, 0; 1, 0, -5, -4; 20, 0, -20, 1; 101, 0, -106, -4],
+                   [0; 16/5; 0; 16/5], [1, 0, 0, 0]);
+    t=0:0.05:20;
+    a=csim("step", t, sl);
+    plot(a);
+    nyquist(sl, 0.01, 100);
+\end{verbatim}
+
+\section{Passer d'une fonction de transfert \`a un syst\`eme d'\'etats directement observable}
+\subsection{Exercice 1}
+
+Soit :
+$$Y(s)=\frac{s-1}{s^2+2} U(s)$$
+
+On le r\'eecrit diff\'eremment : $$\frac{(s^2+2)}{s-1} Y= U$$
+
+On pose :
+$$X_1 = \frac{s Y}{D} \text{ et } X_2 = \frac{Y}{D}$$
+
+On obtient les \'egalit\'es suivantes :
+$$sX_2 = X_1$$
+$$sX_1 + 2X_2 = U$$
+
+Soit :
+$$
+\begin{tabular}{cccc}
+$sX_2$ = & & $-2 X_2$ & $+ U$ \\
+$sX_1$ = & $X_1$ & & \\
+$Y$ = & $X_1$ - $X_2$
+\end{tabular}
+$$
+
+On obtient les matrices :
+$$A = \begin{bmatrix}
+0 & -2 \\ 1 & 0
+\end{bmatrix}\!\!,\;
+B  = \begin{bmatrix}
+1 \\ 0
+\end{bmatrix}\!\!,\;
+C  = \begin{bmatrix}
+1 & -1
+\end{bmatrix}$$
+
+\subsection{Exercice 2}
+
+Soit :
+$$Y(s)=\frac{s+1}{s^3+s^2+1} U(s)$$
+
+On le r\'eecrit diff\'eremment : $$\frac{s+1}{s^3+s^2+1} Y = U$$
+
+On pose :
+$$X_1 = \frac{s^2 Y}{D} \text{ et } X_2 = \frac{s Y}{D} \text{ et } X_3 = \frac{Y}{D}$$
+
+On a :
+\begin{align*}
+U &= sX_1 + X_1 + X_3\\
+X_1 &= sX_2\\
+X_2 &= sX_3\\
+Y &= X_2 + X_3
+\end{align*}
+
+D'o\`u : 
+$$
+\begin{tabular}{ccccc}
+$sX_1$ = & $-X_1$ & & $-X_3$ & $+ U$ \\
+$sX_2$ = & $X_1$ & & & \\
+$sX_3$ = & & $X_2$ & &  \\
+$Y$ = & & $X_2 $ & $+X_3$ &
+\end{tabular}
+$$
+
+Finalement, on obtient les matrices :
+$$A = \begin{bmatrix}
+-1 & 0 & -1 \\
+1 & 0 & 0 \\
+0 & 1 & 0
+\end{bmatrix}\!\!,\;
+B  = \begin{bmatrix}
+1 \\ 0 \\ 0
+\end{bmatrix}\!\!,\;
+C  = \begin{bmatrix}
+0 & 1 & 1
+\end{bmatrix}$$
+
+\section{Passer d'une fonction de transfert \`a un syst\`eme d'\'etats directement contr\^olable}
+\subsection{Exercice 1}
+
+Soit :
+$$Y(s)=\frac{s+1}{s^2+1} U(s)$$
+
+On le r\'eecrit diff\'eremment : $$(s^2+1) Y = (s+1)U$$
+
+$Y$ observe $X_1$, d'o\`u : $Y=X_1$
+
+On le r\'eecrit diff\'eremment : $$s^2 X_1 + X_1 =  s U + U$$
+
+On pose :
+$$sX_1 = \frac{-1}{s} X_1 + U + \frac{1}{s} U = U + \frac{1}{s} (U - X_1)$$
+
+Puis :
+$$X_2 = \frac{1}{s} (U - X_1)$$
+
+D'o\`u le syst\`eme :
+$$
+\begin{tabular}{cccc}
+$sX_1$ = & & $X_2$ & $+ U$ \\
+$sX_2$ = & $-X_1$ & & $+ U$ \\
+$Y$ = & $X_1$ & &
+\end{tabular}
+$$
+
+Finalement, on obtient les matrices :
+$$A = \begin{bmatrix}
+0 & 1 \\
+-1 & 0
+\end{bmatrix}\!\!,\;
+B  = \begin{bmatrix}
+1 \\ 1
+\end{bmatrix}\!\!,\;
+C  = \begin{bmatrix}
+1 & 0
+\end{bmatrix}$$
+
+\section{Nyquist}
+
+\subsection{Theoreme}
+
+Le diagrame de Nyquist permet de determiner graphiquement si un systeme est stable.
+
+Un modele est stable si le point de coordonnees ($-1$, $0$) est entoure dans le sens direct un nombre de fois \'egal au nombre de poles instables de la fonction de transfert. 
+
+Plus la courbe passe pres du point $-1$ moins le modele est stable par rapport aux erreurs de modelisations.
+
+\subsection{Scilab et diagramme de Nyquist}
+
+\begin{verbatim}
+    s=poly(0,'s');
+    h=syslin('c',1/(s^2+s+1))
+    nyquist(h,0.01,100);
+
+    t=0:0.05:20;
+    a=csim("step",t,h);
+    plot(a);
+\end{verbatim}
+
+\subsection{Tracer \`a la main un diagramme de Nyquist}
+
+Soit la fonction de transfert $G(s) = \frac{1}{s+1}$
+
+$$G(i\omega) = \frac{1}{1+i\omega} = \frac{1-i\omega}{1+\omega^2} = x(\omega) + i y(\omega)$$
+
+Avec : $x = 1/(1+\omega^2)$ et $y = -1/(1+\omega^2)$
+
+En mettant $y/x = -\omega$ on a : $x = x^2+y^2$
+
+Ou equivalent :
+$$(x-1/2)^2 + y^2 = 1/4$$
+
+C'est l'\'equation du cercle de coordonn\'ees $(1/2, 0)$ et de rayon $1/2$.
+
+\subsection{Exemple}
+
+\begin{verbatim}
+   s=poly(0,'s');
+   slin=(s+1)/(s^2+5*s+1-0.001*s^5);
+   Plant=syslin('c',slin);
+
+   t=0:0.1:50;
+   a=csim('step',t,Plant);
+   plot(a);
+
+  // poles et zeros
+  plzr(Plant);
+
+  //
+  // PID
+  //
+  // k: gain
+  // Ti: proportionnelle integrale
+  // Td: proportionnelle derivee
+  k=10; Ti=0.1; Td=0;
+
+  // controleur
+  con=k+1/(Ti*s)+s*Td;
+  //boucle fermee
+  bf=con*slin/(1+con*slin);
+  bflin=syslin('c',bf);
+  aa=csim('step',t,bflin);
+  plot(aa);
+
+  //nyquist
+  h=syslin('c',con*slin);
+  nyquist(h, 0.03,10);
+\end{verbatim}
+
+En conclusion: XXX
+
+\section{Equation de la programmation dynamique}
+
+On prend l'exemple de barrage o\`u $a(t)$ est l'apport d'eau dans le barrage. La quantit\'e d'eau est $x(t)$. Le barrage \'ecoule $u(t)$ d'eau (cf. Fig \ref{barrage}).
+
+On cherche \`a maximiser $\sum_{n=0}^{N} E_t$ o\`u l'\'energie $E_t = h(x_t)u_t$.
+
+\dessin{barrage}{0.85}{$a_t$ l'apport, $x_t$ le stock (ou quantit\'e), $u_t$ ce qui d\'ecoule}{barrage}
+
+A l'instant $t+1$ la quantit\'e d'eau est : $x(t+1) = x(t) + a(t) - u(t)$.
+
+On calcule la Fonction Valeur (ou Fonction de Bellman) \`a l'instant $t$ :
+$$V(x, t)=  Max \left\{
+\begin{array}{l|r}
+\sum_{n=t}^N E_t & X_t = x
+\end{array}
+\right\}$$
+
+On veut \'ecrire $V(x,t)$ en fonction de $V(x, t+1)$.  Pour cela, on prend une d\'ecision $u$ et $x$ sur 1 p\'eriode. On connait le co\^ut instantan\'e, c'est : $h(x)u$.  A l'instant $t+1$, j'arrive \`a l'\'etat : $V(x, t+1) = x+a(t)+u$. Par hypoth\`ese de r\'ecurrence, on connait le co\^ut jusqu'\`a la fin : c'est $V(t+1)$. On r\'esume ceci par le diagramme suivant (Fig. \ref{progdyna}).
+
+\dessin{progdyna}{0.85}{Principe de la prog dyna : faire une r\'ecurrence du futur vers le pass\'e}{progdyna}
+
+Donc :
+$$V(x,t) = Max\left\{ h(x) u + V(x+a(t)+u, t+1)\right\}$$
+\newpage
+
+\section{Pontriagyn}
+
+On cherche \`a minimiser $f(x)$ sachant $g_1(x) = 0, g_2(x) = 0$.
+
+Si j'ai des contraintes, je dualise le syst\`eme en utilisant le lagrangien. Sinon j'int\'egre les donn\'ees directement.
+
+Pour dualiser, il faut resoudre le systeme d'equation aux derivees partielles du Lagrangien egales a $0$.
+ 
+On rappelle que la formule du Lagrangien $\LL(x, \lambda)$ vaut :
+$$\LL(x_1, \ldots, x_n, \lambda_1, \ldots, \lambda_n) = f(x_1, \ldots, x_n) + \lambda_1 g_1(x_1, \ldots, x_n) + \ldots + \lambda_n g_n(x_1, \ldots, x_n).$$
+
+Donc le systeme a resoudre est :
+\begin{align*}
+\frac{\delta \LL}{\delta x_i} & = 0\\
+\frac{\delta \LL}{\delta \lambda_i} & = 0 \Rightarrow g_i(x) = 0
+\end{align*}
+
+\subsection{Exercice 1}
+
+Minimiser $x_1^2+x_2^2$ sachant $x_1+x_2 = 1$
+
+Le Lagrangien vaut :
+\begin{align*}
+\LL(x, \lambda) & = f(x) + \lambda g(x)\\
+\LL(x, \lambda) & = x_1^2+x_2^2 + \lambda (x_1 + x_2 -1)
+\end{align*}
+
+Le systeme a resoudre est :
+\begin{align*}
+\frac{\delta \LL}{\delta x_1} & = 0 \Rightarrow 2x_1 + \lambda = 0 \Rightarrow x_1 = -\lambda / 2\\
+\frac{\delta \LL}{\delta x_2} & = 0 \Rightarrow 2x_2 + \lambda = 0 \Rightarrow x_2 = -\lambda / 2\\
+\frac{\delta \LL}{\delta \lambda} & = 0 \Rightarrow x_1 + x_2 - 1 = 0 \Rightarrow -\lambda - 1 = 0\\
+\end{align*}
+
+Finalement on a: $\lambda = -1, x_1 = 1/2, x_2 = 1/2$.
+
+\subsection{Exercice 2}
+
+Minimiser $\int^1_0(x(t)^2+u(t)^2)dt$ sachant $\dot{x(t)} = u(t)$
+
+Par definition, le Lagrangien vaut ($C$ est le contour) :
+$$\LL(x,u,\lambda) = \int^T_0\left(C(x, u) + \lambda (\dot{x} - f(x, u)\right) dt$$
+
+Avec, dans notre cas : $C(x, u) = x^2 + u^2$ et $f(x, u)= \dot{x} - u.$
+
+On calcule : $\LL(x+\delta x,u + \delta u,\lambda + \delta \lambda)  - \LL(x,u,\lambda)$
+
+
+$$= \int_0^T\left(x+\delta x)^2 + (u+\delta u)^2 + (\lambda + \delta \lambda) (\dot{x+\delta x} - u - \delta u) - (x^2 + u^2 + \lambda (\dot{x} - u)\right) dt$$
+$$= \int_0^T\left( 2x\delta x + 2 u \delta u + \delta \lambda (\dot{x} - u) + \lambda (\dot{\delta x} - \delta u) \right) dt$$
+$$ = \int_0^T \left( (\delta x 2 x + \lambda \dot{\delta x}) + (2u - \lambda) \delta u + (\dot{x} - u) \delta \lambda \right) dt $$
+
+On integre par partie $\int_0^T \delta x 2 x + \lambda \dot{\delta x}$, et on obtient :
+$$\int_0^T \left( \delta x 2 x - \dot{\lambda} \delta x \right) dt+ \left[ \lambda \delta \lambda \right]^T_0
+=\lambda(T) \delta x(T) - \lambda(0) \delta x(0) = \int_0^T \left( (2x - \dot{\lambda}) \delta x \right) dt$$
+
+Donc :
+$$ = \int_0^T \left( (2x - \dot{\lambda}) \delta x + (2u - \lambda) \delta u + (\dot{x} - u) \delta \lambda \right) dt $$
+
+On veut que pour tout $\delta x, \delta u, \delta \lambda$ soit egale a zero. Donc on obtient le systeme suivant :
+\begin{align*}
+\dot{x} - u & = 0\\
+2 u - \lambda & = 0\\
+2x - \dot{\lambda} & = 0
+\end{align*}
+
+\subsection{Exercice 3}
+
+Minimiser $\int_0^T\left( (x^2+u^2) \right) dt + \left( x(t) \right)^2$ sacahant $\dot{x} = x + u$.
+
+On rappelle: $C=x^2+u^2$ et $f=x+u$
+
+$$\int_0^T = \left( (x+\delta x)^2 + (u+\delta u)^2 + (\lambda + \delta \lambda) (\dot{x} + \dot{\delta x} - x-\delta x - u -\delta u) - x^2 -u^2 -\lambda (\dot{x} - x -u) \right) dt + 2x(T)\delta x(T)$$ 
+
+
+$$=\int_0^T\left( 2x \delta x + 2u \delta u + \lambda \dot{\delta x} - \lambda \delta x - \lambda \delta u + \delta \lambda (\dot{x} - x -u)\right) dt + 2x(T)\delta x(T)$$ 
+
+Apres l'IPP :
+$$ = \int_0^T \left( (2x-\lambda -\dot{\lambda}) \delta x + (2u - \lambda)\delta u + (\dot{x} - x -u) \delta \lambda \right) dt + \left( 2x(T)+ \lambda(T) \right) \delta x(T)$$
+
+Finalement on a le systeme :
+\begin{align*}
+2x - \lambda - \dot{\lambda}& = 0\\
+2 u - \lambda & = 0\\
+\dot{x} - x -u & = 0 \\
+\lambda(T) & = -2x(T)
+\end{align*}
+\subsection{Exercice 4} \label{ex4}
+
+Sachant $x(0) = 0$ et $x(1) =1$ on veut : $Min_{x(.)}\left\{ J(x)= \int_0^T\left(x^2+\dot{x}^2 \right) dt \right\}$
+
+\begin{align*}
+\delta J  &= J(x+\delta x) - J(x) \\
+&= \int_0^T \left( (x+\delta x)^2 + (\dot{x} + \dot{\delta x})^2 \right) dt \\
+&= \int_0^T \left( 2x\delta x + 2\dot{x} \dot{\delta x}\right) dt
+\end{align*}
+
+
+Apr\'es int\'egration par partie:
+$$\left[ \dot{x}\delta x \right]^1_0 + \int_0^1\left( -2\ddot{x}\delta x + 2x \delta x\right) dt$$
+
+A cause de la classe de fonctions que l'on prend ($x(0) = 0$ et $x(1)=1$) toutes les fonctions v\'erifient cette propri\'et\'e : elles passent par ces 2 points.
+
+Donc: $\dot{x}(1)\delta x(1) - \dot{x}\delta x(0) = 0$.
+
+Pour tout $\delta x(.), \delta J$ doit valoir $0$. D'o\`u : $2x - 2\ddot{x} =0$
+
+Pour trouver les solutions de cette \'equation diff du deuxi\`eme ordre ce fait en deux temps :
+
+\begin{itemize}
+\item  La solution est du type (sans la constante) est : $e^{\lambda t}$.
+D'o\`u : $-\lambda e^{\lambda t} + \lambda e^{\lambda t}  = 0$
+Ce qui ce simplifie par $-\lambda^2 + 1 =0$
+\item La solution est du type avec la constante est : $A e^{\lambda t} + B  e^{\lambda t}$
+
+Pour $t=0$ on a : $A=-B$.
+
+Pour $t=1$ on a : $A e^{1} + B e^{-1} = 1$
+
+On en d\'eduit $A$ et $B$.
+\end{itemize}
+
+\subsection{Rappel sur comment faire une IPP}
+
+$$\begin{array}{ccc}
+&& G\\
+&& \Uparrow\\
+\int_a^b & f & g \\
+& \Downarrow& \\
+& \dot{f} &
+\end{array} = \left[ f G\right]^b_a - \int_a^b \dot{f}G$$
+
+Dans le cas de l'exercice \ref{ex4} on a :
+
+$$\begin{array}{ccc}
+&& \delta x\\
+&& \Uparrow\\
+\int_0^1 & \dot{x} & \dot{\delta x} \\
+& \Downarrow& \\
+& \ddot{x} &
+\end{array} = \left[ \dot{x} \delta x \right]^1_0 - \int_0^1 \ddot{x} \delta x$$
+
+\section{Application Scicos, SynDEx}
+
+Une voiture $V_2$ de position $x_2(t)$ suit une autre $V_1$ de position $x_1(t)$ et essaie de garder une distance $l$ entre elles. La voiture $V_1$ acc\'el\`ere ou ralentit al\'eatoirement. Les sorties $y_1(t)$ et $y_2(t)$ sont respectivement la vitesse de $V_1$ et la distance entre les deux voitures. La voiture $V_2$ contr\^ole l'acc\'el\'eration de $V_1$.
+
+On a le système suivant :
+\begin{align*}
+\ddot{x_1} &= k_1 u\\
+\ddot{x_2} &= k_2(x_1-x_2-l)\\
+y_1 &= \dot{x_1} \\
+y_2 &= x_1 - x_2 -l
+\end{align*}
+
+Pour simplifier le syst\`eme on fait un changement de variable: $z=x_2+l$, puis on renomme $z$ en $x_2$. On obtient alors le syst\`eme suivant :
+\begin{align*}
+\ddot{x_1} &= k_1 u\\
+\ddot{x_2} &= k_2(x_1-x_2)\\
+y_1 &= \dot{x_1} \\
+y_2 &= x_1 - x_2
+\end{align*}
+
+\newpage
+\section{Etude complËte d'un pendule inversÈ sur un chariot}
+\dessin{penduleinversechariot}{0.8}{ModËle}{pendulechariot}
+
+\subsection{Le modËle}
+\subsubsection{Les Ènergies}
+L'Ènergie cinÈtique du chariot : $$\EE_c^{chariot} = 1/2 M \dot{x}^2.$$
+
+L'Ènergie potentiel du chariot : $$\EE_p^{chariot} = u x.$$
+
+L'Ènergie cinÈtique du penduke : $$\EE_c^{pendule} = 1/2 m ((\dot{x+l sin\theta})^2 + (\dot{l cos \theta})^2),$$
+
+$$= 1/2 m (\dot{x}^2 + l^2 \dot{\theta} + 2\dot{x}\dot{\theta} l cos \theta.$$
+
+L'Ènergie potentiel du pendule : $$\EE_p^{pendule} = mgl cos \theta$$
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
