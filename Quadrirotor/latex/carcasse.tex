@@ -1,0 +1,212 @@
+%=======================================================================%
+\newpage
+\part*{Réalisation de la partie mécanique}\label{meca}
+\addcontentsline{toc}{part}{Réalisation de la partie mécanique}
+%\part{Construction hélicoptère et du banc d'essai}\label{matos}
+%-----------------------------------------------------------------------%
+%\section{Contexte}
+
+Ce chapitre explique comment la structure de l'hélicoptère a été
+construite. Son \emph{design} a été pensé pour que l'hélicoptère soit
+le plus simple possible à fabriquer, qu'il soit de petite taille et
+peu coûteux. Une journée suffit pour construire la croix, les pattes
+et les attaches des moteurs et attendre que la colle prenne.
+
+\dessin{img/h4h2}{0.5}{Prototype 1.}{h4h1}
+
+%=======================================================================%
+\section{Construction de la structure en croix}\label{croix}
+%=======================================================================%
+La structure de l'hélicoptère est constituée de deux tubes
+en fibre de carbone de 20 cm de longueur maintenus ensemble
+par deux pièces en aluminium fa\c connées à la main et collées
+ensemble. Voir photo (\ref{croix}). Les tubes sont creux
+(diamètre 6 mm) afin de pouvoir insérer des tiges de laiton qui
+serviront de pieds à la structure. Voir photo (\ref{h4h1}).
+
+Les fibres de carbone constituent un matériau très léger mais qui amortit
+peu les vibrations. Il faut donc être attentif aux modes propres de la
+structure. Dans notre cas, du fait de la petite dimension de l'hélicoptère,
+ces modes propres ne sont pas gênants.
+
+\dessin{img/croix2}{0.7}{Attache des tubes de carbone.}{croix}
+
+%%\\[0.5cm]
+%% \begin{minipage}[b]{.45\linewidth}
+%% \centering\epsfig{figure=img/h4h1, width=\linewidth}
+%% \caption{La carcasse terminée de l'hélicoptère.}\label{h4h1}
+%% \end{minipage}\hspace{0.5cm}
+%% \begin{minipage}[b]{.5\linewidth}
+%% \centering\epsfig{figure=img/croix2, width=\linewidth}
+%% \caption{Les deux pièces d'aluminium fixant ensemble les deux axes de
+%% l'hélicoptère.}\label{croix}
+%% \end{minipage}
+
+%%\\[0.5cm]
+%% \begin{minipage}[b]{.45\linewidth}
+%% \centering\epsfig{figure=img/h4h1, width=\linewidth}
+%% \caption{Helico avec ses pattes.}\label{croixfinale1}
+%% \end{minipage}\hspace{0.5cm}
+%% \begin{minipage}[b]{.5\linewidth}
+%% \centering\epsfig{figure=img/croix, width=\linewidth}
+%% \caption{Helico sans ses pattes.}\label{croixfinale2}
+%% \end{minipage}
+
+%Les deux axes de l'hélicoptère doivent être solidement attachés. Pour
+%cela, on devra usiner deux pièces de longueur arbitraire dans une
+%plaque d'aluminium selon le patron \ref{patroncroix} expliqué dans l'annexe
+%\ref{patrons}. Apres usinage, les deux plaques et les deux tubes en
+%fibre de carbone sont collées ensemble (photo \ref{croixfinale2}).
+
+%=======================================================================%
+\section{Construction des attaches des moteurs}\label{moteur}
+%=======================================================================%
+
+%% \subsection{Ancienne attache}\label{sectoldattache}
+%% L'ancienne version de l'helicoptere possedait des attaches adaptées
+%% pour les moteurs Speed-195 de Graupner. Vu qu'ils n'etaient pas assez
+%% puissants pour soulever et stabiliser la carcasse de l'helicoptere
+%% (ils etaient au max de leur puissance donc plus de marge de
+%% puissance), ils ont ete remplace par des Micro-Speed 6V de
+%% Graupner. Les attaches ont du etre repensees. De plus, des problemes
+%% de colle trop lâche rendaient trop fragile l'helicoptere.
+
+%% \dessin{img/attache}{0.5}{Ancienne attache pour moteur Speed-195}{oldattache}
+
+%% Le procédé à couper un rectangle (1cm x 4cm) d'alumium et de
+%% l'enrouller sur les tiges de carbone (avec l'aide de l'étau). Leur
+%% forme ressemblait à un grand oméga en 3D ($\Omega$, un anneau avec
+%% deux pattes horizontales). L'oméga était ensuite collé sur le
+%% moteur comme sur la photo \ref{attache} ci dessus.
+
+%% Comme l'une des tiges repose sur l'autre (et donc est plus 'haute' que
+%% l'autre), il faut faire attention (pour l'estétique) aux longeurs
+%% des pattes des oméga afin que les hélices soient toutes à la
+%% même hauteur.
+
+%% \subsection{Nouvelle attache}\label{sectnewattache}
+
+La première soutenance avait présentée une version de l'hélicoptère
+qui possédait des attaches adaptées aux les moteurs Speed 195 de
+Graupner \cite{graupner} (voir photo (\ref{oldattache})), elles se
+décollaient souvent. De nouvelles attaches (voir photo
+(\ref{newattache})) adaptées à la forme cylindrique des moteurs Micro
+Speed 6V de Graupner ont été réalisées. Elles ont une bien meilleure
+tenue mécanique que les précédentes même si les nouveaux moteurs
+utilisés sont plus puissants.\\[0.5cm]
+%\begin{itemize}
+%\item[$\bullet$] Les Speed-195 n'étaient pas assez puissants par rapport aux
+%  Micro-Speed 6V et ont donc été remplacés.
+%\item[$\bullet$] Les Micro Speed 6V ont une forme cylindrique alors
+%  que les Speed-195 sont de forme cubique.
+%\item[$\bullet$] La surface pour la colle des anciennes attaches
+%  n'étant pas assez grandes, la colle ne prenait pas et les attaches
+%  se détachait facilement des moteurs.
+%\end{itemize}
+%L'annexe \ref{patrons} explique le patron des nouvelles attaches
+%\ref{patron_attachemoteur} et comment les construire.
+\begin{minipage}[b]{.45\linewidth}
+\centering\epsfig{figure=img/attache, width=\linewidth}
+\caption{Anciennes attaches pour moteur Speed 195.}\label{oldattache}
+\end{minipage}\hspace{2cm}
+\begin{minipage}[b]{.4\linewidth}
+\centering\epsfig{figure=img/attache2, width=\linewidth}
+\caption{Nouvelle attache pour moteur Micro Speed.}\label{newattache}
+\end{minipage}
+
+%\dessin{img/attache}{0.5}{Nouvelle attache pour moteur Micro-Speed}{newattache}
+
+%\dessin{img/patron_attachemoteur}{1.0}{Patron des attaches pour moteur Micro-Speed.}{patronattache}
+
+%% \begin{minipage}[b]{.5\linewidth}
+%% \centering\epsfig{figure=img/patron_attachemoteur, width=\linewidth}
+%% \caption{Patron des attaches pour moteur Micro-Speed.}\label{patronattache}
+%% \end{minipage}\hspace{0.5cm}
+%% \begin{minipage}[b]{.5\linewidth}
+%% \centering\epsfig{figure=img/patron_attachemoteur, width=\linewidth}
+%% \caption{attache enroullee prete a coller sur le moteur.}\label{photopatron}
+%% \end{minipage}
+
+%% \section{Construction des pieds}\label{pieds}
+%% On coupe la tige de laiton en quatre morceaux. Parce que les axes sont
+%% superposés, on coupe deux tiges plus grandes de laiton que les deux
+%% autres (la différence des tailles est le diamètre des tiges de
+%% l'hélico). Avec un étau, on les plie.  On peut insérer puis
+%% coller un tube pour les vis (qui se mettent dans les murs) dans les
+%% pattes de laiton afin qu'elles puissent s'insérer dans les tiges de
+%% carbonne l'hélicoptère.
+
+%% \dessin{img/h4h1}{0.1}{Helcio avec pattes}{h4h1}
+
+%=======================================================================%
+\section{Construction de la carte des capteurs}\label{capt}
+%=======================================================================%
+
+Cette carte est une plaque d'essai en epoxy que l'on peut détacher de
+la croix. Elle contient, pour l'instant, un gyroscope, un
+accéléromètre et un capteur de distance infrarouge (voir
+photo~\ref{dessus}). Il reste de la place pour deux gyroscopes et un
+AOP avec ses résistances et condensateurs.\\[0.5cm]
+\begin{minipage}[b]{.45\linewidth}
+\centering\epsfig{figure=img/capteurdessus, width=\linewidth}
+\caption{Carte des capteurs vue de dessus.}\label{dessus}
+\end{minipage}\hspace{6mm}
+\begin{minipage}[b]{.51\linewidth}
+\centering\epsfig{figure=img/capteurdessous, width=\linewidth}
+\caption{Carte des capteurs vue de dessous.}\label{dessous}
+\end{minipage}
+
+Cette carte est placée au dessus la croix de l'hélicoptère. Une
+deuxième carte électronique détachable portant l'électronique de
+contrôle et de puissance (PIC, AOP, MOSFET, régulateur), plus lourde,
+sera placée en dessous.  Le centre de gravité de l'hélicoptère sera
+ainsi placé en dessous de la structure alors que le centre de poussée
+des hélices, lui, est placée au dessus. L'hélicoptère sera stable.  Les
+deux cartes s'emboîteront ensemble.
+
+En l'absence de la deuxième carte électronique, les moteurs sont
+retournés et la carte des capteurs se trouve en dessous de la
+structure.  Ainsi, lorsque l'hélicoptère est attaché sur le banc
+d'essai, son centre de gravité se trouve ainsi sous l'axe de rotation.
+A l'équilibre stable, les hélices sont dirigées vers le haut et
+l'hélicoptère se comporte mécaniquement comme un pendule standard.
+
+%=======================================================================%
+\section{Construction du banc d'essai}\label{balanc}
+%=======================================================================%
+
+Le but du banc d'essai et de limiter les degrés de liberté laissées
+aux mouvement de l'hélicoptère. Les degrés libres sont~: -- une
+rotation que l'on appellera tangage, -- une translation verticale
+pour pouvoir tester une version simplifiée du vol.
+
+Lorsque le banc d'essai permet le seul tangage, on parlera
+de \emph{balançoire} pour l'ensemnble hélicoptère-banc d'essai.  Le
+banc d'essai a été fait en Lego Technique pour des raisons de
+simplicité.  Il doit être suffisamment haut pour pouvoir tester le
+capteur de proximité commutant à quarante centimètre. Elle doit aussi
+être suffisamment large pour pouvoir l'utiliser avec les quatre
+moteurs.\\[0.1mm]
+%La forme
+%des pieds de la balançoire n'est pas importante tant qu'elle est assez
+%haute. Les trous dans les briques sont assez grands pour laisser
+%passer les pieds de l'hélicoptère qui seront orientés vers le haut.
+%L'ajout de tiges horizontales LEGO sur chacun des coins de la
+%balançoire permet de bloquer les pieds de l'hélicoptère s'il bascule
+%trop.
+\begin{minipage}[b]{.55\linewidth}
+\centering\epsfig{figure=img/balancoire, width=\linewidth}
+\caption{Version 1 -- Un modèle simple de rotule trois axes a été réalisée
+mais n'a pas encore servie.}\label{balv1}
+\end{minipage}\hspace{0.5cm}
+\begin{minipage}[b]{.4\linewidth}
+\centering\epsfig{figure=img/balancoire3_3, width=\linewidth}
+\caption{Version 2 -- Banc d'essai modifié permettant le mouvement vertical.}\label{balv2}
+\end{minipage}
+
+%La version 2 de la balan\c coire a été agrandi avec des briques DUPLO
+%et mesure maintenant 40 cm de haut. Deux barres verticales de LEGO,
+%lisses et parallèle entre elles, ont été ajoutées afin d'étudier la
+%régulation en altitude de l'hélicoptère. Le but est de laisser
+%l'hélicoptère coulisser verticalement où un elastique permet de
+%limiter sa chute.

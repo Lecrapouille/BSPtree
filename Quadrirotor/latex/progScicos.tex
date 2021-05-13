@@ -1,0 +1,179 @@
+%=======================================================================%
+\newpage
+\section{Programmer Scicos}
+
+%====================================================================
+\subsection*{La fonction de calcul Scicos}
+
+La fonction de calcul est la fonction C définie par l'utilisateur. La
+seule contrainte pour quelle soit accept\'ee est qu'elle doit prendre
+en param\`etre~:
+\begin{itemize}
+\item[$\bullet$] un flag {\tt flag} qui indique l'\'etat du bloc
+  (parmis les 6 presents : debut, fin de la simulation, execution du
+  calcul, ...);
+\item[$\bullet$] une structure Scicos {\tt block} contenant le flux de
+  donn\'ees.  Les champs les plus interessants sont :
+\begin{itemize}
+\item {\tt ipar} est un vecteur de parametres de type entier associes au block
+  diagramme (definis par la fonction d'interface);
+\item {\tt nipar} indique la taille de ce vecteur;
+\item {\tt inptr} sont les donnees vectorielles fournies en entree et
+  en sortie (a voir comme un bus de donnees en electronique);
+\item {\tt insz} et {\tt outsz} sont les tailles des donnees.
+\end{itemize}
+\end{itemize}
+
+Un exemple simple d'une fonction est :
+\begin{verbatim}
+void	foobar(scicos_block *block, int flag)
+{
+   switch (flag)
+   {
+     case 4:
+     /* Code pour l'initialisation de la simulation */
+     sciprint("Debut de la simul, j'ai %d param", block->ipar);
+
+     case 1:
+     /* Code pour le calcul des sorties */
+     block->outptr[i][j] = ... block->inptr[i][j];
+
+     case 5:
+     /* Code pour la terminaison de la simulation */
+
+     default:
+     break;
+   }
+}
+\end{verbatim}
+
+%====================================================================
+\subsection*{La fonction d'interface}
+%====================================================================
+La deuxi\`eme fonction est \'ecrite en langage Scilab. Elle permet de
+d\'efinir comment le bloc doit interagir avec l'IHM, sa g\'eom\'etrie,
+son nombre d'entr\'ees, de sorties pour les donnees et les evenements,
+la d\'efinition de la fen\^etre de configuration lorsqu'un utilisateur
+clique dessus, et le nom de la fonction de calcul.
+
+%====================================================================
+\subsection*{Le port serie Posix}
+%====================================================================
+
+%====================================================================
+\subsection*{Edition de liens avec Scilab}
+%====================================================================
+L'exemple donne en annexes B decrit comment faire directement dans
+l'IHM de Scilab. et d'automatiser la chose pour les utilisations
+futures de Scilab.
+
+%====================================================================
+\subsection*{Automatiser des tâches Scilab}
+%====================================================================
+Compiler une fois pour toute la libserie pour Scilab~:
+\begin{verbatim}
+    cd chemin_ou_se_trouve_les fichiers
+)    exec('builder.sce');
+\end{verbatim}
+
+Le fichier {\tt scilab.star} dans le repertoire {\tt \$SCI} permet de
+(configurer ??) le Scilab. On peut le modifier directement mais le
+plus simple est de creer un fichier {\tt .scilab} dans le dossier {\tt
+  .Scilab/version\_de\_scilab}
+
+\begin{verbatim}
+    cd chemin_ou_se_trouve_les fichiers
+    load lib;
+    exec loader.sce;
+\end{verbatim}
+
+et eventuellement la ligne :
+\begin{verbatim}
+    scicos Balancoire13quick.cos;
+\end{verbatim}
+
+%====================================================================
+\subsection*{Couleur du Multi-plot}
+%====================================================================
+
+TODO: mettre beau plot
+
+\subsubsection*{Plot 1}
+
+\begin{tabular}{|p{1.5cm}|p{5cm}|p{2cm}|p{1.5cm}|} \hline
+Num\'ero d'entr\'ee & Nom & Couleur & Num\'ero couleur \\ \hline\hline
+1 & Consigne inclinaison & Noir & 1 \\ \hline
+2 & Acc\'elerometre X & Vert & 3 \\ \hline
+3 & PWM Moteur 1 & Bleu & 2 \\ \hline
+4 & PWM Moteur 2 & Violet & 6 \\ \hline
+\end{tabular}
+
+\subsubsection*{Plot 2}
+\begin{tabular}{|p{1.5cm}|p{5cm}|p{2cm}|p{1.5cm}|} \hline
+Num\'ero d'entr\'ee & Nom & Couleur & Num\'ero couleur \\ \hline \hline
+1 & Courant moteur 1 & Bleu clair & 4 \\ \hline
+2 & Courant moteur 1 filtr\'e & Bleu & 2 \\ \hline
+3 & Consigne courant moteur 1 & Noir & 1 \\ \hline
+4 & Consigne courant moteur 2 & Violet & 6 \\ \hline
+5 & Courant moteur 2 filtr\'e & Rouge & 5 \\ \hline
+6 & Consigne courant moteur 2 & Noir & 1 \\ \hline
+\end{tabular}
+
+\subsubsection*{Plot 3}
+\begin{tabular}{|p{1.5cm}|p{5cm}|p{2cm}|p{1.5cm}|} \hline
+Num\'ero d'entr\'ee & Nom & Couleur & Num\'ero couleur \\ \hline \hline
+1 & Gyroscope Y & Vert & 3 \\ \hline
+2 & Gyroscope Y filtr\'e & Rouge & 5 \\ \hline
+3 & d\'eriv\'ee acc\'el\'erom\`etre X & Bleu & 2 \\ \hline
+\end{tabular}
+
+\subsubsection*{Plot 4}
+\begin{tabular}{|p{1.5cm}|p{5cm}|p{2cm}|p{1.5cm}|} \hline
+Num\'ero d'entr\'ee & Nom & Couleur & Num\'ero couleur \\ \hline \hline
+1 & Altimetre & Noir & 1 \\ \hline
+2 & Retard Scilab &  &  \\ \hline
+3 & Retard PIC 1 & &  \\ \hline
+3 & Mode PIC 1 & &  \\ \hline
+\end{tabular}
+
+%====================================================================
+%\subsection*{Détermination de la fonction non linéaire i2PWM}
+%====================================================================
+
+%% On envoie une consigne PWM et on mesure le courant du moteur gr\^ace
+%% \`a une resistance de puissance (comme l'explique la section
+%% \ref{puis}). Comme la tension moyenne et le courant resultant sont lus
+%% sur un convertisseur analogique 10 bits d'un PIC 16F876A, les valeurs
+%% sont donc comprises entre 0 et 1023.
+
+%% Conversion : PWM = 1024 == tension max.
+
+\begin{tabular}{|*{6}{c|}} \hline
+Consigne PWM & Exp. 1 & Exp. 2 & Exp. 3 & Exp. 4 & Exp. 5\\ \hline \hline
+1012 & 150 & 163 & 165 &  & 295 \\ \hline
+912 & 150 & 161 & 164 &  & 283 \\ \hline
+812 & 150 & 158 & 163 & 765 & 280 \\ \hline
+712 & 150 & 161 & 158 & 311 & 276 \\ \hline
+612 & 150 & 153 & 156 & 282 & 267 \\ \hline
+512 & 146 & 148 & 151 & 270 & 257 \\ \hline
+412 & 137 & 140 & 143.5 & 254 & 240 \\ \hline
+312 & 127 & 125.5 & 128.5 & 230 & 215 \\ \hline
+212 & 115 & 108 & 102.5 & 200 & 190 \\ \hline
+112 & 80 & 66 & 60 &  & 130 \\ \hline
+12  & 20 & 11 & 9.75 &  & 9 \\ \hline
+\end{tabular}\\[1mm]
+
+Note~:
+\begin{description}
+\item[Exp\'erience 1] Moteur Speed 195, r\'esistance de
+  puissance 1.8$\Omega$, tension fournie: +6V.
+\item[Exp\'erience 2] Moteur Micro Speed N. 1, r\'esistance de
+  puissance 1.8$\Omega$, tension fournie: +6V.
+\item[Exp\'erience 3] Moteur Micro Speed N. 2, r\'esistance de
+  puissance 1.8$\Omega$, tension fournie: +6V.
+\item[Exp\'erience 4] Moteur Micro Speed, r\'esistance de puissance
+  1$\Omega$, tension fournie: +9V.  L'experience a ete arret\'ee car
+  le moteur risquait la destruction.
+\item[Exp\'erience 5] Moteur Micro Speed, r\'esistance de
+  puissance 1$\Omega$, tension fournie: +8.5V.
+\end{description}

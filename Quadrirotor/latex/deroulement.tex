@@ -1,0 +1,88 @@
+\section{Prévision du déroulement du projet}
+Le projet se décompose en plusieurs étapes, chaque étape comprenant
+plusieurs phases.  Certaines phases peuvent être menées en parallèle
+d'autres demandent la réalisation de tâches préalables. Une tentative
+de planification avec affectation des tâches est réalisée pour simuler
+les contraintes d'un projet industriel à développement
+itératif. L'absence d'expérience rendant très peu précise les
+estimations de temps, ce planning ne sera qu'indicatif.
+
+\subsection*{Réalisation d'un demi hélicoptère}
+Le but de cette étape est d'obtenir un demi hélicoptère sur un banc
+d'essai capable de communiquer avec un ordinateur qui calcule la loi
+de stabilisation. Le demi hélicoptère est constitué de deux moteurs
+liées par un axe rigide sur lequel sont disposés un gyroscopes et un
+accéléromètre à deux degrés de libertés. La stabilisation consiste à
+maintenir l'axe horizontal attaché au banc en son centre de
+gravité. Le banc permettant un seul degré de liberté (rotation de
+l'axe autour de son centre de gravité dans un plan fixé.
+
+\begin{enumerate}
+\item La première tâche consiste à modéliser et à simuler la dynamique
+  d'un demi d'hélicoptère (que l'on appelle aussi balançoire). La
+  figure \ref{helicoiter} montre la demi balançoire. La simulation et
+  la conception de la commande est réalisée grâce à un logiciel de
+  calcul numérique (notre choix s'est porté sur le logiciel Scilab qui
+  est l'équivalent de Matlab mais qui est libre). La commande est du
+  type PID, placement de pôles ou LQG. La balançoire est modélisé
+  comme un système linéaire multi entrées (accéléromètre, gyroscope)
+  multi sorties (moteur/hélice). Le but de cette tâche est de simuler
+  la dynamique de la balançoire et sa stabilisation à l'horizontale.
+
+\item La deuxième tâche consiste à réaliser la communication entre
+  l'ordinateur et un microcontrôleur embarqué par leur port série. Le
+  microcontrôleur réalise les entrées-sorties et sous-traite à
+  l'ordinateur~:
+
+  \begin{itemize}
+  \item les calculs de la loi de commande (fonctionnement normal),
+  \item l'identification des paramètres le débogage de la loi de
+    commande (mode développement).
+  \end{itemize}
+
+  En effet, un PC standard dispose d'une puissance de calcul et d'un
+  environnement logiciel sans commune mesure avec ceux disponibles sur
+  un microcontrôleur. Cette tâche permet de se doter d'outils
+  analogues à ceux disponible dans les laboratoires d'électronique
+  disposant de générateurs de signaux, d'oscilloscope, d'analyseur de
+  spectre numériques (10 bits) dans une bande de fréquence de 0 à
+  10kHz. Le laboratoire numérique est alors la boîte à outils Scicos de
+  Scilab qui est l'analogue de Simulink pour Matlab (éditeur de blocs
+  diagrammes).
+
+\item La troisième tâche consiste à construire (matériellement) la
+  demi balançoire avec le microcontrôleur embarqué. Le bloc diagramme
+  'dynamique' du logiciel de simulation est alors remplacé par la
+  'véritable' dynamique de la balançoire acquise grâce au
+  microcontrôleur embarqué. Scicos calcule le feed-back en faisant des
+  calculs flottants et renvoie le résultat au microcontrôleur qui
+  implémente en ligne le résultat. En fin de compte le microcontrôleur
+  de la balançoire fait l'acquisition des données du gyroscope, les
+  envoie à l'ordinateur. Ce dernier calcule la commande et renvoie le
+  résultat au microcontrôleur. Celui-ci envoie par sa sortie PWM la
+  commande au moteur (et donc à l'hélice). La balançoire doit se
+  stabiliser.
+\end{enumerate}
+
+\subsection*{Réalisation de l'hélicoptère complet}
+
+Une réalisation complète du H4H sera faite en utilisant la
+méthodologie mise au point sur la balançoire. Elle se fera en
+plusieurs étapes.
+\begin{enumerate}
+\item Réalisation du simulateur de l'hélicoptère complet avec la
+  régulation des ses trois axes de libertés.
+\item Réalisation d'une autre balançoire identique à la première.
+  Puis assemblage de l'hélicoptère.
+\item Réalisation du circuit électronique assurant la stabilisation du
+  lacet en utilisant l'information d'un gyroscope supplémentaire.
+\item Teste sur le banc d'essai (sur une rotule).
+\item Réalisation de l'électronique de stabilisation de l'altitude et
+  essaie de vol libre.
+\end{enumerate}
+
+\newpage
+\pagestyle{empty}
+\dessinsscaption{img/helicoiter}{0.8}
+\newpage
+\pagestyle{plain}

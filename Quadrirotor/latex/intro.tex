@@ -1,0 +1,478 @@
+%=======================================================================%
+\part*{Introduction}
+\addcontentsline{toc}{part}{Introduction}
+\section{Présentation du projet}\label{intro}
+%=======================================================================%
+Ce document présente la réalisation d'un modèle réduit d'hélicoptère à
+quatre hélices avec son banc d'essai électromé\-canique.  Ce travail a
+été réalisé dans le cadre d'un projet de la spécialisation temps réel
+de l'EPITA.
+
+Les caractéristiques principales de l'hélicoptère sont les suivantes.
+Il est constitué d'une croix en fibre de carbone assemblée au moyen
+d'une pièce en aluminium fa\c connée à la main dans une plaque de ce
+métal. Quatre moteurs électriques à courant continu avec collecteur
+qui sont attachés sur la croix de fibre de carbone par des attaches en
+aluminium fa\c connées, elles aussi, à la main. Dans chacun des tubes
+creux en carbone sont insérées des pattes en laiton sur lesquelles
+peut reposer l'hélicoptère. Sur la croix est attachée une carte
+électronique contenant les capteurs servant à la stabilisation de
+l'appareil~: trois gyroscopes un axe, un accéléromètre deux axes, un
+capteur de proximité commutant à une quarantaine de centimètre d'un
+obstacle.  L'électronique de puissance, l'électronique de commande et
+la source d'énergie ne sont pas, pour l'instant,
+embarquées. L'alimentation électrique est assurée par une alimentation
+de PC standard 12V, suivi d'un régulateur, qu'il a fallu réaliser,
+fournissant du 5V et du 8.5V avec une intensité maximale de
+5A. L'électronique de puissance consiste en quatre MOSFET commandés
+par des entrées PWM. L'électronique de commande consiste en deux
+microcontrôleurs PIC 16F876 de Microchip \cite{microchip} reliés entre
+eux par un bus I$^2$C connectés à un PC standard par un bus série. Ces
+deux microcontrôleurs font l'acquisition des données et envoient au
+MOSFET les commandes PWM calculées par le PC. La stabilisation est
+calculée par le PC avec des logiciels de hauts niveaux Scilab-Scicos
+\cite{Scilab,Scicos} qui sont les analogues libres du couple
+Matlab-Simulink. Pour tester la stabilisation de l'appareil, un banc
+d'essai, réalisé en Lego, permet de maintenir et de limiter les
+mouvements de l'hélicoptère en lui laissant un nombre limité de degrés
+de liberté.
+
+
+% Les microcontrôleurs de l'hélicoptère et
+%l'ordinateur communiquent entre eux. Les données émises des différents
+%capteurs de l'hélicoptère sont reçues par l'ordinateur. Celui-ci
+%effectue les calculs numériques (loi de commandes, consignes) puis
+%renvoie les valeurs au microcontrôleur qui réalise les commandes de
+%stabilisation. Les moyens de calcul embarqués permettront dans une
+%deuxième phase de rendre autonome l'hélicoptère en lui permettant de
+%calculer lui même les lois de commande.
+
+%% La stabilisation de l'hélicoptère est calculée
+%%   par un ordinateur non embarqué avec des outils de hauts
+%%   niveaux.  La communication entre des microcontrôleurs et
+%%   l'ordinateur permet à ce dernier de recevoir les
+%%   données émises des différents capteurs de
+%%   l'hélicoptère et d'effectuer les calculs
+%%   numériques (loi de commandes, consignes) puis de renvoyer les
+%%   valeurs au microcontrôleur qui réalise les commandes de
+%%   stabilisation. Les moyens de calcul embarqués permettront
+%%   dans une deuxième phase de rendre autonome
+%%   l'hélicoptère en lui permettant de calculer lui
+%%   même les lois de commande.
+
+La construction de l'hélicoptère fait appel à plusieurs spécialités
+de l'ingénierie à savoir~: -- construction mécanique, -- électronique,
+-- informatique, -- automatique. Chacun de ces aspects seront discutés
+successivement dans la suite de ce document.
+
+
+Des projets similaires existent déjà sous la forme commerciale et sont
+connus sous les noms de Draganflyer \cite{draganflyer}, Engager
+\cite{engager}, X-UFO \cite{xufo}, Microdrones \cite{microdrones}. Il
+existe également des projets réalisés par des étudiants ou par des
+passionnés (références \cite{xbird} à \cite{josej}).  En général ces
+hélicoptères sont radio-commandés ce qui ajoute une difficulté
+supplémentaire dans la conception mais ce qui simplifie aussi la
+stabilisation car l'opérateur humain est capable d'observer et de
+compenser les dérives des gyroscopes \cite{xbird}.  En général ces
+hélicoptères possèdent deux moteurs tournant dans un sens et deux
+autres tournant dans l'autre afin de stabiliser le lacet. Parfois, sur
+des modèles de petites tailles, pour éviter l'inversion du sens de
+rotation des moteurs, ce qui implique l'utilisation d'hélices
+propulsives difficiles à trouver, les moteurs sont inclinés de fa\c
+con à créer une poussée compensant le lacet due à la rotation des
+moteurs (voir \cite{josej}). Nous adopterons ce point de vue faute
+d'avoir pu trouver des hélices propulsives de petites tailles.
+
+%%=======================================================================%
+%\section{Aperçu général d'un hélicoptère à quatre hélices}\label{apercu}
+%%=======================================================================%
+%%\subsection{Qu'est ce qu'un h4h ?}
+%%=======================================================================%
+
+%Un hélicoptère à quatre hélices est une plate-forme volante comprenant
+%une \href{meca}{partie mécanique} et une \href{electro}{partie
+%  électronique}.
+
+%La partie mécanique a la forme d'une croix (donc deux axes) sur
+%laquelle est attachée quatre moteurs.  En général, afin de réduire au
+%maximum le lacet de l'appareil, deux moteurs tournent dans un sens et
+%les deux autres dans le sens opposé. On devra donc utiliser deux types
+%d'hélices. Parfois, sur des modèles de petites tailles, pour éviter
+%l'inversion du sens de rotation des moteurs, on incline les moteurs
+%(voir
+%\href{http://www.rcgroups.com/forums/showthread.php?s=05bcbf26fe1c60ab6f128e5e38fc88c5&t=297067&pp=15}{le
+%  MicroHeli4 de JoseJ sur le forum Rcgroups}).
+
+%La partie électronique assure la stabilité de la plate-forme en
+%contrôlant la vitesse des moteurs en fonction des données d'une
+%centrale inertielle et des consignes envoyées par l'utilisateur
+%(généralement par radio-commande). Elle peut éventuellement
+%communiquer avec un ordinateur non embarqué au moyen d'un port série à
+%des fins de débogage, de chargement des programmes des
+%microcontrôleurs. Voir la section \href{asservi}{Asservissement}.
+
+%=======================================================================%
+%\subsection{Description du comportement de l'hélicoptère}
+%=======================================================================%
+%% Un hélicoptère n'est pas un système stable (deux moteurs d'une
+%% même série n'auront pas forcément le même comportement), il
+%% faut l'asservir, grâce à la carte électronique couplée à
+%% l'ordinateur, afin qu'il maintienne son attitude.
+
+%% Si l'on suppose que la dynamique de l'hélicoptère est
+%% idéale. Pour obtenir les comportements suivants, voici ce que l'on
+%% doit faire~:
+%% \begin{description}
+%% \item[Mouvement stationnaire] Si on considère que les quatre moteurs
+%%   tournent à la même vitesse et que tous les éléments sont
+%%   identiques (hélices, dimensions, équilibre des masses), le
+%%   mobile est stable sur ses 3 axes : il vole à plat
+%%   et ne tourne pas sur son axe central car, à vitesse égale pour
+%%   les quatre hélices, les couples de rotation générés par
+%%   paire de moteurs s'annulent. Pour cela, deux moteurs tournent
+%%   dans un sens et les deux autres dans le sens opposé. On devra donc
+%%   utiliser deux types d'hélices.
+%% \item[Monter et descendre] Pour le faire monter ou descendre, il
+%%   suffit d'augmenter ou de diminuer la puissance des quatre moteurs
+%%   (tous ensemble). Comme tous les rotors tournent à la même
+%%   vitesse, il n'y a pas de rotation horizontale.
+%% \item[Déplacement] Pour obtenir un mouvement de tangage ou roulis,
+%%   (avancer vers l'avant par exemple), il suffit d'augmenter la vitesse
+%%   du moteur arrière et diminuer celle du moteur avant (dans les
+%%   même proportions pour conserver la portance intacte) sans
+%%   modifier la vitesse des moteurs latéraux. On fera l'inverse pour
+%%   pencher vers l'arrière. Le roulis est obtenu avec les moteurs
+%%   gauche et droit.
+%% \item[Tourner] Pour le mouvement de lacet (rotation sur lui-même),
+%%   il faut augmenter la vitesse d'une paire de moteur et diminuer
+%%   d'autant celle de l'autre paire. Le sens du mouvement de lacet
+%%   dépendra du sens de rotation qu'on aura choisi pour les paires de
+%%   moteurs.
+%% \end{description}
+
+%% Des figures illustrant le comportement général de la dynamique
+%% d'un hélicoptère peuvent être trouvées sur les liens
+%% \cite{grzflyer, Latour, Noth}. Des articles \cite{helicodesign,
+%%   helicopid} décrivent le modèle physique de l'appareil ainsi que
+%% son contrôle avec les méthodes (PID et LQG).
+
+%=======================================================================%
+\section{Carctéristiques principales du projet}\label{contraintes}
+%=======================================================================%
+
+\begin{description}
+\item[Robustesse à son environnement.] L'appareil est
+    prévu pour fonctionner en intérieur, avec un minimum
+    de perturbation atmosphérique.
+
+\item[Contraintes de dimension et de poids de
+   l'hélicoptère.]  La plate-forme se veut être de
+   dimension et de poids le plus réduit possible (envergure
+   inférieure a 20 cm, poids en dessous des 200 g). On a choisi de ne
+   pas utiliser de cartes d'acquisitions à cause de leur poids et de
+   leur prix. L'acquisition des données est réalisée par les deux
+   microcontrôleur PIC.
+
+%% (type mini cartes mères
+%%    embarquées) est prohibée car elles sont trop
+%%    excessives (poids, volume, puissance de calculs) pour ce projet. La
+%%    partie électronique doit donc être fabriquée et
+%%    adaptée à l'hélicoptère. Elle doit
+%%    galement avoir une interface de communication avec l'ordinateur
+%%    (pour le débugage, chargement de programmes).
+
+\item[Communication avec un ordinateur non
+  embarqué.] L'hélicoptère communique avec un
+  ordinateur non embarqué au moyen d'un port série.  Le
+  microcontrôleur envoie les données de la centrale
+  inertielle à l'ordinateur.  Ce dernier fait les calculs
+  flottants de stabilisation et les communique au
+  microcontrôleur embarqué.
+
+\item[Source d'énergie.] L'hélicoptère ne
+  dispose pas de batterie, il est alimenté une source
+  d'énergie au sol au moyen de fils électriques. Ce qui
+  permet une économie de poids importante et une autonomie
+  beaucoup plus grande mais qui implique l'existence
+  des fils reliant l'hélicoptère au sol. L'embarquement de la source
+  d'énergie électrique pose en effet un gros problème, car les plus petits moteurs
+  consommant de l'ordre de 10W  chacun l'autonomie est souvent très réduite. Certains
+  modèles du commerce peuvent avoir une autonomie de quelques
+  minutes seulement.
+
+%%  {\tt Contrainte de l'ordinateur et de l'IHM.} L'interface homme
+%%    machine permet de simuler la plate-forme, puis de la
+%%    contrôler réellement tout en visualisant ses
+%%    états. L'ordinateur sera un modèle standard (PC,
+%%    Macintosh), avec éventuellement un OS temps réel dur
+%%    ou mou mais il devra être suffisamment réactif pour
+%%    assurer son rôle de gestion de la stabilité.
+\end{description}
+
+
+
+%\part{Travail réalisé}\label{apercu}
+
+%=======================================================================%
+\section{Avancement du projet}
+%=======================================================================%
+\subsection{Première soutenance (début septembre)}
+%=======================================================================%
+La première soutenance a présenté l'hélicoptère avec seulement deux
+moteurs sur un banc d'essai qui permettait un seul degré de liberté~:
+le tangage.
+
+L'hélicoptère avait un de ses axes maintenus par le banc autour duquel
+il pouvait tourner. Il se comportait comme une balançoire (photo
+\ref{v1}) où les deux moteurs commandaient l'inclinaison de la balan\c
+coire.  Cette inclinaison était acquise par l'accéléromètre grâce à un
+PIC, était communiquée, par le port série, au PC qui calculait la
+sortie PWM à envoyer aux moteurs. Cette commande était fournie au PIC
+par l'intermédiaire du port série et le PIC mettait en forme, sur ses
+deux sorties PWM, le signal à envoyer au MOSFET, commandant ainsi deux
+moteurs.
+
+Sur ce premier prototype, seul l'accéléromètre était embarqué.  Les
+fils liant la carte d'essai à l'hélicoptère étaient assez rigides.
+Ils se comportait comme des ressorts non-linéaires, difficilement
+modélisables, tendant à maintenir l'hélicoptère dans une position plus
+ou moins inclinée contribuant à la stabilité de l'appareil.\\[3mm]
+\begin{minipage}[b]{.45\linewidth}
+\centering\epsfig{figure=img/balancoire1, width=\linewidth}
+\caption{Prototype 1}\label{v1}
+\end{minipage}\hspace{6mm}
+\begin{minipage}[b]{.5\linewidth}
+\centering\epsfig{figure=img/balancoire2, width=\linewidth}
+\caption{Prototype 2}\label{v2}
+\end{minipage}
+
+Les courants dans les moteurs n'étaient pas observés, la boucle de
+régulation élaborait la commande PWM à partir de la seule donnée
+d'inclinaison en calculant un PID réglé empiriquement.  La poursuite
+des consignes d'inclinaison était suivie avec une qualité jugée pas
+complètement satisfaisante.
+
+
+Un deuxième prototype a été ensuite réalisé (photo \ref{v2}). Les fils
+ont été remplacés par des fils plus souples et plus longs. Une carte
+électronique contenait en plus de l'accéléromètre, un gyroscope un axe
+et un capteur de proximité infrarouge.
+
+Monté sur le même banc, l'hélicoptère avait deux positions possibles~:
+-- l'une stable où le centre de gravité est au dessous de l'axe de
+rotation, maintenu par le banc; -- l'autre, instable en absence de
+poussée des moteurs, dans laquelle le centre de gravité est au dessus
+de l'axe de rotation.  Il est beaucoup plus facile de commander
+l'hélicoptère dans la première position au moins dans les situations
+de faible poussée des moteurs.
+
+Afin d'améliorer la qualité de la régulation les courants ont été
+observés.  La commande était alors réalisée grâce à deux boucles~: --
+une première boucle interne poursuit une consigne de courant en
+agissant sur la commande PWM, -- une deuxième boucle poursuit
+l'inclinaison en envoyant les consignes de courant à la deuxième
+boucle. Malgré la sophistication de cette régulation, recommandée par
+les spécialistes de ces problèmes pour élargir la bande passante de la
+régulation donc la réactivité de la commande, l'amélioration observée
+n'a pas été très importante. Une des raisons probables, restant à
+confirmer par l'expérience, est la lenteur de la boucle de courant due
+à sa réalisation dans le PC. Le remède étant de faire la boucle de
+courant dans le PIC plutôt que dans le PC.
+
+
+Après la réalisation de ce deuxième prototype la régulation de la
+balan\c coire restait donc pas complètement satisfaisante, bien que
+susceptible de pouvoir maintenir en l'air l'hélicoptère. Des
+oscillations non voulues restaient visibles à l'oeil, mais ne
+semblaient pas compromettre la stabilité de l'appareil.  Au cours de
+ces étapes les deux moteurs, utilisés sous 6V, de faible puissance,
+étaient insuffisants pour pouvoir soulever l'appareil.
+
+
+%=======================================================================%
+\subsection{Deuxième soutenance (fin octobre)}
+%=======================================================================%
+Le travail de la deuxième période (photo \ref{v3}) a eu pour but
+d'améliorer la qualité de la régulation et d'essayer de faire voler
+l'hélicoptère en ne lui laissant que deux degrés de liberté~: -- le
+tangage décrit dans la première partie -- un mouvement vertical dans
+une glissière de l'axe en fibre de carbone autour duquel peut tourner
+l'hélicoptère. Pour cela il a fallu progresser sur plusieurs points.
+
+Il a fallu obtenir une poussée plus importante en changeant les
+moteurs. Les nouveaux moteurs consommant plus et fonctionnant avec une
+tension différente il a fallu changer l'alimentation.  Le banc d'essai
+a du être modifié pour réaliser le deuxième degré de liberté~: le
+mouvement vertical.
+
+Les non-linéarités entre la correspondance courant et consigne PWM ont
+été étudiées en régime stationnaire. Elles sont dues aux charges
+aérodynamiques sur l'hélice et ont été compensées dans le régulateur
+de la boucle de courant.
+
+L'utilisation de Scicos dans les boucles d'asservissement introduit
+des retards importants du fait de~: -- de la vitesse de la liaison
+série entre le PIC et le PC, -- des contraintes temporelles sur la
+gestion des processus de linux, -- des visualisations graphiques dans
+le scope et des temps de calcul de Scicos.  L'influence de ce retard
+sur les boucles d'asservissement a été analysée. Pour améliorer cette
+vitesse, un changement d'ordinateur et d'OS a été nécessaire
+(cf. section (\ref{asser})). Au cours de ce travail quelques bogues de
+Scicos sont apparus et ont été signalés puis résolus par les auteurs
+de Scicos.
+
+Les niveaux de bruit sur la mesure de l'inclinaison et des courants
+ainsi que la dérive de l'accéléromètre en fonction de l'intensité du
+courant passant dans les moteurs ont été grandement améliorés en
+modifiant les circuits de masse et d'alimentation des composants.
+
+\dessin{img/balancoire3}{0.8}{Prototype 3 et son électronique}{v3}
+
+La dérive basse fréquence du gyroscope a été partiellement filtrée, il
+reste toutefois des bruits importants et inexpliqués qui limite pour
+l'instant l'utilisation des gyroscopes (contrairement au signal de
+l'accéléromètre qui est maintenant satisfaisant).
+
+La fonction de transfert du comportement mécanique a été explicitée.
+Une boucle de régulation simplifiant la partie stable da la fonction
+de transfert en boucle ouverte a été essayée dans le but d'améliorer
+le gain de boucle tout en assurant une marge de stabilité
+satisfaisante. L'idée était d'améliorer la régulation pour éliminer
+des oscillations résiduelles autour des consignes demandées. Les gains
+obtenus restent médiocres. Une meilleure modélisation électromécanique
+sera tentée pour la troisième soutenance.
+
+Malgré les résultats relativement décevant de la régulation du tangage,
+les premiers essais de vols dans la glissière ont été réalisés.
+%Mais deux moteurs
+%restent insuffisants pour que l'hélicoptère puisse voler avec une marge suffisante pour pouvoir
+%réguler son altitude. Il faut encore augmenter la poussée.
+
+
+%=======================================================================%
+\subsection{Troisième soutenance (début décembre)}
+%=======================================================================%
+Deux moteurs arrivent à soulever la carcasse de l'hélicoptère mais
+sont en limite de puissance, il n'est donc pas possible
+de réaliser l'asservissement d'altitude. Pour pouvoir voler dans
+cette espace à deux degrés de liberté (tangage, altitude) il faut
+les quatre moteurs. Leur mise en oeuvre implique de gros changements.
+
+
+Il faut modifier le banc d'essai afin qu'il continue à limiter les
+mouvements de l'hélicoptère tout en permettant aux quatre moteurs de
+tourner afin d'obtenir une poussée suffisante pour pouvoir voler.  Il
+faut réaliser une nouvelle carte électronique semblable à la première
+et doubler la puissance électrique disponible ce qui suppose réaliser
+une nouvelle alimentation capable de supporter 5A sous 8.5V. Voir
+photo (\ref{alim}).
+
+Les PIC 16F876A possédant seulement deux sorties PWM, l'utilisation de
+quatre moteurs impose l'ajout d'un nouveau PIC de même type ou le
+passage à un processeur plus puissant comme le dsPIC. Si le dsPIC est
+beaucoup plus puissant il est aussi plus compliqué à programmer.  Par
+exemple l'assembleur passe de 30 à plus de 80 instructions.  C'est
+donc un changement de technologie dont la maîtrise demande un minimum
+de temps incompatible avec les échéances à respecter. Il a donc été
+décidé d'utiliser un deuxième PIC 16F876A et de faire communiquer les
+deux PIC au moyen d'un bus I$^2$C. Voir photo (\ref{i2c}).
+
+\dessin{img/alim}{0.45}{Nouvelle alimentation 8.5V 5A.}{alim}
+
+Il faut doubler la complexité du schéma Scicos avec les problèmes de
+vitesse que cela impose puisque~: -- on demande à la liaison série de
+transmettre un flux double de celui nécessaire aux deux moteurs, -- on
+doit faire un calcul et un affichage deux fois plus long.  D'autre
+part, il reste à améliorer la régulation de du tangage en faisant un
+meilleur modèle de la fonction de transfert courant-inclinaison.  La
+boucle de courant reste aussi améliorable à condition de la réaliser
+par les PICs au lieu de Scicos. De même des filtres anti-repliement de
+spectre doivent être implémentés au niveau du PIC.
+
+\dessin{img/i2c}{0.5}{Carte à essai pour la communication
+  I$^2$C.}{i2c}
+
+De ce vaste programme, seule une faible partie a été réalisée dans le
+temps imparti (le reste sera réalisé pendant le stage de fin d'année)
+à savoir~: -- la nouvelle alimentation a été construite, -- la liaison
+I$^2$C entre 2 PIC a été programmée mais reste boguée (elle fonctionne
+dans le cas d'un PIC et d'une EPROM, mais pas entre 2 PIC), -- les
+fixations en aluminium pour les deux autres moteurs ont été faites et
+collées sur les moteurs, -- la modélisation électromécanique du couple
+balan\c coire moteur a été étudiée et les paramètres correspondants
+ont été estimés sur le banc d'essais, -- une nouvelle régulation du
+tangage a été réalisée, -- la nouvelle carte d'essai électronique a
+été commencée, elle n'a pas été connectée avec l'ancienne afin de
+préserver le prototype à deux moteurs pour la démonstration.
+
+
+
+\dessin{img/balancoire3_2}{1.2}{Dernière version du prototype.}{picbal1}
+
+%% \section{Résumé des réalisations}
+%% \subsubsection{Première soutenance}
+%% Pour la première soutenance, les points suivants ont été
+%% réalisés :
+%% \begin{itemize}
+%% \item[$\bullet$] la construction de la partie mécanique constituée
+%%   d'une croix en carbone et en aluminium, de quatre moteurs Speed-195
+%%   Graupner et d'une carte contenant les capteurs (un accéléromètre
+%%   et un gyroscope);
+%% \item[$\bullet$] la construction du banc d'essai en Lego Technique;
+%% \item[$\bullet$] la construction de la partie électronique (non
+%%   embarquee) constituée d'une partie logique gérant les
+%%   entrées/sorties et une interface de puissance;
+%% \item[$\bullet$] un protocole de communication entre l'ordinateur et
+%%   un microcontrôleur via un port série;
+%% \item[$\bullet$] la création du début du schéma block pour
+%%   stabiliser l'hélicoptère.
+%% \end{itemize}
+
+%% \subsection{Deuxième soutenance}
+%% Pour la deuxième soutenance, les points suivants ont été
+%% réalisés :
+%% \begin{itemize}
+%% \item[$\bullet$] Remplacement des vieux moteurs Speed-195 par des
+%%   Micro-Speed 6V Graupner plus puissants. Nouvelles attaches pour
+%%   moteurs plus solides.
+%% \item[$\bullet$] Modification de la balançoire pour permettre la
+%%   regulation en altitude.
+%% \item[$\bullet$] Duplication de l'électronique. Mise en place de la
+%%   communication I$^2$C entre les deux PIC 16F876A. Correction du
+%%   problème de parasites dans la masse, généré par les moteurs en
+%%   séparant au mieux les masses (branchement en étoile).
+%% \item[$\bullet$] Amélioration de la vitesse d'échantillonnage en
+%%   passant d'un Machintosh iBook G4 933 MHz à un PC 1.2 Ghz sur une
+%%   Ubuntu patchee pour le temps réel. Un gain de 4 sur la vitesse
+%%   d'échantillonnage a été constate.
+%% \item[$\bullet$] Meilleure compréhension du modèle physique et des
+%%   retards pour la partie automatique (utilisation de feedforward).
+%% \end{itemize}
+
+%\section{Apercu des anciennes versions de l'hélicoptère}
+%% \begin{minipage}[b]{.45\linewidth}
+%% \centering\epsfig{figure=img/balancoire1, width=\linewidth}
+%% \caption{Version 1.}\label{v1}
+%% \end{minipage}\hspace{6mm}
+%% \begin{minipage}[b]{.5\linewidth}
+%% \centering\epsfig{figure=img/balancoire2, width=\linewidth}
+%% \caption{Version 2.}\label{v2}
+%% \end{minipage}\\[0.5mm]
+
+
+%Ce document, dans le cadre de l'année de spécialisation en temps réel
+%de l'EPITA, présente un projet mettant en oeuvre l'étude et la
+%réalisation d'un hélicoptère modèle réduit à quatre hélices (que l'on abrégera, par la suite, par le mot hélicoptère ou H4H) et de son banc d'essai électromécanique et logiciel. Le but du projet est d'arriver à stabiliser le vol de l'hélicoptère.
+
+%Un hélicoptère à 4 hélices est une plate-forme volante qui a la forme d'une croix sur laquelle est attachée, à chacune de ses extrémités, une paire moteur-hélice. La partie électronique de l'hélicoptère, située au centre de la croix, contrôle la vitesse des moteurs en fonction des consignes envoyées par l'utilisateur. En général, elle possède un port de communication avec le PC permettant de débuger ou de charger des programmes.
+
+%Dans le cadre de ce projet, la stabilisation est calculée par un ordinateur non embarqué avec des logiciels de hauts niveaux. Les microcontrôleurs de l'hélicoptère et l'ordinateur communiquent entre eux. Les données émises des différents capteurs de l'hélicoptère sont reçues par l'ordinateur. Celui-ci effectue les calculs numériques (loi de commandes, consignes) puis renvoie les valeurs au microcontrôleur qui réalise les commandes de stabilisation. Les moyens de calcul embarqués permettront dans une deuxième phase de rendre autonome l'hélicoptère en lui permettant de calculer lui même les lois de commande.
+
+%%----------------------------------------------------------------------------------------------------------------------------------%
+%\section{Contraintes du projet}
+%\begin{description}
+% \item[Robustesse à son environnement.] L'appareil est prévu pour fonctionner en intérieur, avec des conditions météorologiques idéales (donc sans contraintes et sans perturbations).
+% \item[Contraintes de dimension et de poids l'hélicoptère.] L'engin se veut être de dimension et de poids le plus réduit possible (ordre d'idée : envergure en dessous des 30 cm, poids en dessous des 200 g). L'utilisation de cartes commerciales d'acquisitions (type mini cartes mères embarquées) est prohibée car elles sont trop excessives (poids, volume, puissance de calculs) pour ce projet. La partie électronique doit donc être fabriquée et adaptée à l'hélicoptère. Elle doit également avoir une interface de communication avec l'ordinateur (pour le débugage, chargement de programmes).
+% \item[Contrainte de l'ordinateur et de l'IHM.] L'interface homme machine permet de simuler la plate-forme, puis de la contrôler réellement tout en visualisant ses états. L'ordinateur sera un modèle standard (PC, Macintosh), avec éventuellement un OS temps réel dur ou mou mais il devra être suffisamment réactif pour assurer son rôle de gestion de la stabilité.
+%\end{description}

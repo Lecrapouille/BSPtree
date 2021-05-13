@@ -7,3 +7,4 @@ Topics are:
 * Law control,
 * Principle of least action,
 * Simulated annealing.
+* Quadrirotor.

@@ -1,0 +1,114 @@
+\newpage
+%=======================================================================%
+\section{Specification SART}
+
+%=======================================================================%
+\subsection{Diagramme préliminaire}
+%=======================================================================%
+
+\dessin{img/DiagPreleminaire}{0.7}{Diag préliminaire SART}{prel}
+
+L'interface homme machine (IHM) permet à l'utilisateur d'envoyer des
+consignes au calculateur de la loi de commande et de visualiser sous
+forme de graphes les valeurs des états du système.
+
+Pour stabiliser l'hélicoptère, nous avons besoin de cinq acquisitions
+provenant de trois types de capteur (qui seront donc les entrées de
+notre asservissement). Une première acquisition analogique est la
+projection de l'accélération sur le plan défini par la croix. Elle est
+fournie par un accéléromètre. Trois acquisitions de vitesse angulaire
+mesurant le roulis et le lacet et le tangage sont données sous forme
+analogique par trois gyroscopes. Enfin, une acquisition numérique
+d'altitude est fournie par un altimètre commutant de 0 à 1 à une
+distance de 40 cm du sol.  Comme l'hélicoptère possède quatre moteurs
+nous devons calculer les quatre tensions déterminant la vitesse des
+moteurs (sortie de l'asservissement).
+
+%=======================================================================%
+\subsection{Diagramme à plat}
+%=======================================================================%
+
+Détaillons le processus {\tt STABILISATION d'un hélicoptère à 4 hélices} de
+la figure (\ref{prel}). Il se décompose en trois sous processus : deux
+processus de transformation de données ({\tt GERER entrée/sortie} et
+{\tt CALCULER la loi de commande} que l'on numérotera respectivement
+par $1.0$ et $2.0$) et un processus de contrôle ({\tt
+  SUPERVISEUR}). Cf. figure (\ref{stab}).
+
+\dessin{img/DiagStabilisation}{0.7}{Détail du processus {\tt STABILISATION}}{stab}
+
+Le microcontrôleur de l'hélicoptère va gérer les entrées sorties des
+cinq capteurs et des quatre moteurs (processus $1.0$). Un ordinateur
+externe de l'hélicoptère va s'occuper du processus $2.0$ du calcul de
+la loi de commande (asservissement). Il va retourner au
+microcontrôleur soit des vitesses moteurs à mettre sous forme PWM,
+soit des consignes. L'utilisateur indique au superviseur le mode de
+fonctionnement choisi. En plus des événements marche et arrêt, il
+existe deux modes (événements) supplémentaires qui sont {\tt mode
+  ordi} et {\tt mode autonome}. Ces modes en activant (A) ou inhibant
+(I) des sous processus de $1.0$ et $2.0$ vont rendre l'hélicoptère
+indépendant (ou dépendant) de l'ordinateur. La machine à état du {\tt
+  SUPERVISEUR} est donnée en section \ref{mef}.
+
+\subsection{Processus de gestion des entrées sorties}
+
+Les acquisitions analogiques de l'accéléromètre et des gyroscopes sont
+transformées en valeurs numériques grâce aux convertisseurs analogique
+numérique (CAN) du microcontrôleur. Selon l'état courant du {\tt
+  SUPERVISEUR} (et donc de la machine à état), le micro\-contrôleur va
+:
+\begin{itemize}
+\item[$\bullet$] soit dialoguer avec l'ordinateur, à savoir envoyer
+  les valeurs des capteurs ({\tt Entrées}) à l'ordinateur puis
+  recevoir les vitesses des moteurs calculées par l'ordinateur;
+\item[$\bullet$] soit recevoir les consignes venant de l'ordinateur
+  puis réaliser sa propre loi de commande.
+\end{itemize}
+Au final le microcontrôleur retourne une vitesse moteur sous forme
+d'impulsion PWM (Pulse Width Modulation) qui sera transformée en
+tension exploitable par les moteurs grâce une électronique de
+puissance utilisant des MOSFET (Metal Oxyde Semiconductor Field Effect
+Transistor). Cf. figure (\ref{gio}).
+
+\dessin{img/DiagMC}{0.7}{Processus de gestion des entrées sorties}{gio}
+
+\subsection{Processus d'asservissement}
+
+\dessin{img/DiagOrdi}{0.7}{Processus d'asservissement}{ass}
+
+Un ordinateur avec un logiciel spécialisé dans le calcul numérique, va
+effectuer l'asservissement de l'hélicoptère. Il prend en entrée les
+valeurs des capteurs fournies par le microcontrôleur de l'hélicoptère
+puis retourne les vitesses des quatre moteurs nécessaires à la
+stabilisation. Une IHM (interface homme machine) va permettre à
+l'utilisateur de fournir une consigne à l'hélicoptère, de modifier la
+loi de commande, de voir sous forme de graphiques les valeurs des
+états du système. Cf. figure (\ref{ass}).
+\section{Machine à états}\label{mef}
+
+Comme nous l'avons dit précédemment, le {\tt SUPERVISEUR} est une
+machine à états finis avec trois états différents : arrêt, mode
+autonome et mode ordinateur (c'est à dire dépendant de l'ordinateur)
+et formant un graphe fortement connexe.
+
+L'activation en mode {\tt autonome} va inhiber l'asservissement fait
+par l'ordinateur et activer celui du microcontrôleur. L'hélicoptère
+garde, cependant, la possibilité de communiquer avec l'ordinateur
+(recevoir des consignes envoyer les informations fournies par les
+capteurs).
+
+Dans le mode {\tt ordi}, la loi de commande est uniquement calculée
+par l'ordinateur, l'hélicoptère dialogue avec l'ordinateur mais
+désactive ses propres calculs d'asservissements. Il envoie à
+l'ordinateur les valeurs des capteurs et reçoit la consigne des
+vitesses des moteurs. Cf. figure (\ref{mef}).
+
+\dessin{img/DiagMEF}{0.7}{Machine à état du {\tt SUPERVISEUR}}{mef}
+
+
+
+
+
+
+
+

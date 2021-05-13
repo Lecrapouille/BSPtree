@@ -1,0 +1,154 @@
+\documentclass[a4paper, 11pt]{article}%{report}
+\usepackage{fullpage}
+\usepackage[latin1]{inputenc}
+\usepackage[french]{babel}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{picins}
+\usepackage{hyperref}
+%\usepackage{makeidx}
+%\usepackage{showlabels}
+\usepackage{epsfig}
+\hypersetup{
+backref=true,    %permet d'ajouter des liens dans...
+pagebackref=true,%...les bibliographies
+hyperindex=true, %ajoute des liens dans les index.
+colorlinks=true, %colorise les liens
+breaklinks=true, %permet le retour à la ligne dans les liens trop longs
+urlcolor= blue,  %couleur des hyperliens
+linkcolor= blue, %couleur des liens internes
+bookmarks=true,  %créé des signets pour Acrobat
+bookmarksopen=true, %si les signets Acrobat sont créés, les afficher complètement.
+pdftitle={Projet H4H}, %informations apparaissant dans
+pdfauthor={Quentin QUADRAT},     %dans les informations du document
+pdfsubject={Mac OS X}          %sous Acrobat.
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\dessin}[4]{
+\begin{figure}[htb]
+\centering
+\includegraphics[scale= #2]{#1}
+\caption{#3}
+\label{#4}
+\end{figure}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\dessinsscaption}[2]{
+\begin{figure}[htb]
+\centering
+\includegraphics[scale= #2]{#1}
+\end{figure}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newtheorem{remarque}{Remarque} \newcommand{\AAA}{{\mathcal A}}
+\newcommand{\BB}{{\mathcal B}} \newcommand{\CC}{{\mathcal C}}
+\newcommand{\DD}{{\mathcal D}} \newcommand{\EE}{{\mathcal E}}
+\newcommand{\FF}{{\mathcal F}} \newcommand{\GG}{{\mathcal G}}
+\newcommand{\HH}{{\mathcal H}} \newcommand{\II}{{\mathcal I}}
+\newcommand{\JJ}{{\mathcal J}} \newcommand{\KK}{{\mathcal K}}
+\newcommand{\LL}{{\mathcal L}} \newcommand{\MM}{{\mathcal M}}
+\newcommand{\NN}{{\mathcal N}} \newcommand{\OO}{{\mathcal O}}
+\newcommand{\PP}{{\mathcal P}} \newcommand{\QQ}{{\mathcal Q}}
+\newcommand{\RR}{{\mathcal R}} \newcommand{\SSS}{{\mathcal S}}
+\newcommand{\TT}{{\mathcal T}} \newcommand{\UU}{{\mathcal U}}
+\newcommand{\VV}{{\mathcal V}} \newcommand{\WW}{{\mathcal W}}
+\newcommand{\XX}{{\mathcal X}} \newcommand{\ZZ}{{\mathcal Z}}
+\newcommand{\bbR}{{\mathbb R}} \newcommand{\bbD}{{\mathbb D}}
+\newcommand{\bbO}{{\mathbb O}} \newcommand{\bbS}{{\mathbb S}}
+\newcommand{\bbE}{{\mathbb E}} \newcommand{\bbN}{{\mathbb N}}
+\newcommand{\bbM}{{\mathbb M}} \newcommand{\bbV}{{\mathbb V}}
+\newcommand{\bbC}{{\mathbb K}} \newcommand{\bbF}{{\mathbb F}}
+\newcommand{\bbP}{{\mathbb P}}
+\newcommand{\www}{{\mathfrak w \;}} \newcommand{\fff}{{\mathfrak f \;}}
+\newcommand{\nnn}{{\mathfrak n \;}} \newcommand{\aaa}{{\mathfrak a \;}}
+\newcommand{\hhh}{{\mathfrak h \;}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\title{Stabilisation d'un hélicoptère 4 hélices sur une rotule grâce à un ordinateur}
+%\title{Stabilisation et pilotage d'un hélicoptère à quatre hélices}
+
+\makeindex
+
+\begin{document}
+%\pagestyle{empty}
+\title{\vskip -2cm
+  \Large \sl \bf  Quentin QUADRAT\\
+    Login: quadra\_q, UID: 17115, Promo: 2007 \\
+    \vspace{0.5cm}\hrule
+  \vskip 3.2cm
+  {\Large CAHIER DE CONCEPTION -- révision \No 3}\\
+  \today \\
+  \vskip 1cm
+  {\LARGE {\textsc{\'Etude et réalisation d'un modèle réduit d'hélicoptère à quatre hélices}}}
+  \vskip 2cm
+  \dessinsscaption{img/titre}{0.8}
+}
+
+\date
+{
+\vspace{1cm}
+      \begin{minipage}[b]{.2\linewidth}
+\centering\epsfig{figure=img/epita, width=\linewidth}
+\end{minipage}\hspace{1cm}
+\begin{minipage}[b]{.3\linewidth}
+\centering\epsfig{figure=img/gistr, width=\linewidth}
+\end{minipage}\\
+      %\large EPITA \\
+  \large \textbf{École Pour l'Informatique et les Techniques
+  Avancées} \\
+}
+
+\maketitle
+\strut\thispagestyle{empty}
+\setcounter{page}{0}
+\newpage
+
+\begin{quote}
+\og \emph{La théorie, c'est quand on sait tout et que rien ne fonctionne. La
+pratique, c'est quand tout fonctionne et que personne ne sait
+pourquoi. Ici, nous avons réuni théorie et pratique : Rien ne
+fonctionne... et personne ne sait pourquoi !}\fg
+\end{quote}
+
+Albert Einstein
+\newpage
+
+\tableofcontents
+\newpage
+
+\include{intro}
+
+\include{carcasse}
+
+%\include{pic}
+
+\include{electro}
+
+\include{asservis}
+
+\newpage
+\include{conclu}
+
+%\printindex
+
+%=======================================================================%
+%% \newpage
+%% \part{Annexes}
+%% \include{deroulement}
+%% \include{sart}
+%% \include{progScicos}
+%% \include{bricolage}
+%% \include{listematos}
+%% %=======================================================================%
+\include{biblio}
+\end{document}
+
+
+
+
+
+
+
+
+

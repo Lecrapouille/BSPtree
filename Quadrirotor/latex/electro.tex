@@ -1,0 +1,676 @@
+\newpage
+%=======================================================================%
+\part*{Réalisation de l'électronique}\label{electro}
+\addcontentsline{toc}{part}{Réalisation de l'électronique}
+%=======================================================================%
+\section{Spécifications de l'électronique}
+%=======================================================================%
+Les cartes électroniques embarquées de l'hélicoptère (confère le
+schéma complet page \ref{h4hschema}) doivent comprendre :
+\begin{itemize}
+\item[$\bullet$] Une partie contenant tous les capteurs (un
+  accéléromètre, trois gyroscopes, un altimètre infrarouge),
+\item[$\bullet$] Une partie logique contenant les microcontrôleurs,
+  la mise en forme des signaux et le port de communication avec
+  l'ordinateur,
+\item[$\bullet$] Une partie électronique de puissance qui alimente
+  les quatre moteurs contrôlés par les microcontrôleurs.
+\end{itemize}
+
+\dessin{img/electrov2}{0.7}{Le circuit à embarquer.}{pcirc}
+
+Elles doivent pouvoir gérer :
+\begin{itemize}
+  \item[$\bullet$] neuf entrées analogiques :
+    \begin{itemize}
+      \item les courants circulant dans les moteurs soit quatre
+      entrées analogiques,
+      \item les vitesses angulaires données par les gyroscopes
+      soit trois entrées analogiques,
+      \item l'orientation par rapport à la verticale (roulis,
+	tangage) donnée par
+	l'accéléromètre, soit deux entrées
+	analogiques.
+      \item L'altitude soit une entrée numérique.
+    \end{itemize}
+  \item[$\bullet$] quatre sorties PWM (Pulse Width Modulation) contrôlant
+  la vitesse des moteurs.
+  \item[$\bullet$] un port série de communication avec l'ordinateur.
+  \item[$\bullet$] un bus I$^2$C de communication entre
+    les microcontrôleurs.
+\end{itemize}
+
+
+
+
+%=======================================================================%
+\section{Les microcontrôleurs PIC}\label{choix}
+%=======================================================================%
+\subsection{Choix des microcontroleurs}
+%=======================================================================%
+Les microcontrôleurs de Microchip \cite{microchip} ont été
+  choisis à cause de leur prix, de la disponibilité de
+  la documentation et de la distribution gratuites des logiciels (PC
+  et Linux) pour les programmer et les déboguer. Parmi les
+  microcontrôleurs de Microchip, deux choix sont possibles :
+\begin{itemize}
+  \item[$\bullet$] Soit utiliser deux PIC 16F876A,
+  \item[$\bullet$] Soit utiliser un dsPIC 30F3011.
+\end{itemize}
+
+En effet, les PIC 16F876A ont deux sorties PWM et cinq entrées
+analogiques alors que le dsPIC 30F3011 a au moins quatre sorties PWM
+et neuf entrées analogiques.
+
+Le choix s'est porté sur le PIC 16F876A plutôt que sur le dsPIC
+30F3011. Etant novice dans ce domaine, ce choix était le plus simple
+(quitte à devoir re-écrire le programme ASM pour le dsPIC) sachant que
+l'excellent cours sur les PIC de Bigonoff \cite{bigonoff} est une aide
+précieuse pour la compréhension des PIC 16F84 et 16F87x. Par contre,
+pour le dsPIC, on ne dispose que de la documentation du constructeur
+Microchip, qui bien que très riche, est beaucoup moins pédagogique que
+le cours de Bigonoff. Avant d'utiliser des dsPIC, il est préférable de
+maîtriser le fonctionnement des PIC.  Dans une deuxième version du
+projet, on utilisera un unique dsPIC car, en plus du très grand nombre
+d'entrées/sorties disponibles il dispose d'un multiplieur intégré qui
+permet de mettre en oeuvre plus facilement les contrôleurs et les
+filtres nécessaires.
+
+On a choisi le 16F876A au lieu du 16F877 pour son meilleur compromis
+puissance/poids (format PDIP). Le 16F877 est beaucoup plus lourd (40
+pattes contre 28).
+
+Un PIC 16F876A est suffisant pour contrôler un axe de
+l'hélicoptère. Dans le cas de deux axes à la communication I$^2$C près
+les programmes de chaque PIC sont les mêmes.
+
+%=======================================================================%
+\subsection{Communication inter-composants}
+%=======================================================================%
+De nombreuses communications entre les différents composants (capteur,
+actionneur, processeur) doivent être établies.  Le diagramme
+(\ref{comm}) définit les différents acteurs, les communications à
+réaliser avec leur sens et les ordres temporels à respecter (les
+numéros entourés).
+
+\dessin{img/comm}{0.5}{Chronologie de la communication inter
+  composants}{comm}
+
+\begin{enumerate}
+\item Le PIC maître et le PIC esclave lisent les valeurs analogiques
+  (sauf l'altimètre) des capteurs (accéléromètre, gyroscopes).
+\item Scilab envoie au PIC maître les consignes des signaux PWM des
+  quatre moteurs.
+\item Pendant que le PIC maître envoie au PIC esclave, via le module
+  I$^2$C, les consignes PWM des moteurs 3 et 4,  les
+  consignes sont envoyés aux MOSFET commandant  les moteurs 1 et 2.
+\item Une fois terminé la réception des consignes PWM pour les moteurs 3 et 4
+ le PIC esclave les fait suivre aux moteurs et envoie
+  les conversions analogiques de ses capteurs au PIC maître.
+\item Pendant que le PIC maître envoie à Scicos ses acquisitions
+  analogiques et celles du PIC esclave.
+\end{enumerate}
+
+\subsubsection{La communication USART avec l'ordinateur}
+Le PIC, configuré en mode USART (Universal Synchronous Asynchronous
+Receiver Transmitter) communication série asynchrone de type RS232
+avec un ordinateur via ses pattes Rx (réception) et Tx (transmission)
+branchées sur un port série. La vitesse de transmission est de 19200
+bauds, 8 bits de données, parité paire, 1 bit de stop et aucun
+contrôle de flux.  Le composant MAX232 convertit les signaux du port
+série (+12V/-12V) en signaux adaptés au PIC (0V/+5V). Le cours de
+Bigonoff \cite{bigonoff} explique en détail comment fonctionne
+l'ensemble et fournit un programme type à charger sur le
+microcontrôleur et un programme PC pour tester la communication série.
+
+\subsubsection{La communication I$^2$C entre les deux PIC}
+Pour faire communiquer les deux PIC, deux choix sont possibles~: --
+soit utiliser le protocole SPI, -- soit utiliser le protocole I$^2$C.
+Bien que la communication SPI soit beaucoup plus simple (chaque PIC
+écoute et envoie un octet de donnée simultanément), il a
+l'inconvénient d'utiliser deux pattes analogiques du PIC esclave (à
+cause de l'utilisation des ports \emph{Slave Select}). Puisque neuf
+entrées analogiques sont nécessaires, il n'est pas possible d'utiliser
+le mode SPI. Le cours de Bigonoff \cite{bigonoff} explique en détail
+ce protocole.
+
+La communication I$^2$C est également une communication de type série
+multi-maîtres, multi-esclaves fonctionnant avec deux fils (horloge et
+données). Seul le protocole mono-maître et multi-esclave nous
+intéresse. Les esclaves ont tous un numéro d'identification
+différent. Le PIC maître est l'unique chef d'orchestre, il ne sait
+faire que deux actions différentes~: désigner un esclave pour lui
+envoyer des données (on dit qu'il est en mode écriture) et désigner un
+esclave pour recevoir des données (on dit qu'il est en mode
+lecture). L'esclave ne peut donc pas choisir l'instant d'envoi
+d'une donnée.
+
+La communication se fait de la fa\c con suivante~: le PIC maître
+commence toujours une communication en envoyant un bit de start suivit
+du numéro d'identification d'un esclave puis d'un bit qui indique
+s'il va envoyer des données ou que c'est à l'esclave de lui envoyer des
+données. L'esclave envoie alors un bit d'acquiescement pour dire qu'il
+est présent. Le maître, selon le cas envoie un paquet de données ou
+attend que les données arrivent. Lorsqu'une donnée est re\c cue,
+un bit d'acquiescement est envoyée. Seul le maître décide quand se
+termine la communication.
+
+Du point de vue du câblage électrique, un bus I$^2$C utilise sur
+chaque ligne une résistance de rappel (d'au moins 1700 $\Omega$)
+branchée sur le 5V afin d'éviter des
+courts circuits. Un bit de niveau bas met au niveau bas la ligne
+quelque soit les autres envois. Le cours de
+Bigonoff \cite{bigonoff} détaille le protocole I2C et donne des
+exemples d'utilisation que nous avons adapté à notre application.
+
+% \section{Diagramme de flot données}
+
+%=======================================================================%
+\subsubsection{Chronogramme des interruptions}
+%=======================================================================%
+
+Les PIC permettent de lancer plusieurs opérations en parallèle. Les
+fins de ces calculs sont signalées par des interruptions. Les PIC ont
+été programmés pour faire tourner en parallèle deux timers,
+une conversion analogique, la génération de deux signaux PWM, la
+réception et l'émission d'un octet sur le port série et le
+module I$^2$C. Le chronogramme des interruptions est illustré sur la
+figure \ref{chrono}.
+
+\dessin{img/chronointerrup}{0.6}{Chronograme des interruptions du PIC
+maître.}{chrono}
+
+Le PIC maître contient deux buffers permettant de communiquer avec
+l'ordinateur~:
+\begin{itemize}
+\item[$\bullet$] un premier pour la réception, que l'on appellera
+  \emph{BufRec};
+\item[$\bullet$] un deuxième pour l'émission, que l'on appellera
+  \emph{BufEm}.
+\end{itemize}
+
+Chaque résultat des conversions analogiques est sauvegardé dans
+\emph{BufEm}. Une interruption (représentée par une flèche noire
+sur le chronogramme \ref{chrono}). Le PIC permet une seule conversion
+à la fois. On doit alors changer de patte analogique. Il faut
+attendre que~:
+\begin{itemize}
+\item[$\bullet$] les condensateurs de la nouvelle patte se chargent;
+\item[$\bullet$] la conversion analogique se fasse.
+\end{itemize}
+Comme ces durées dépendent de la tension et de la chaleur du PIC,
+on utilise le timer 0 avec une période assez grande pour pouvoir
+relancer une nouvelle lecture (interruption en vert sur le chrono).
+
+Scilab envoie alors les consignes PWM par le port série, ce qui crée
+une interruption (orange sur le chrono). Le PIC maître les lie et les
+stocke dans \emph{BufRec}. Il profite de cette interruption pour
+envoyer le contenu de \emph{BufEm}.
+
+Les consignes PWM, stockées dans \emph{BufRec}, sont les nouvelles
+valeurs des comparateurs du PIC. Deux comparateurs sont présents et
+peuvent fonctionner avec le timer 2. Lorsque la valeur du timer 2
+atteint celle du comparateur $x$ , +5V est généré sur la patte CCP$x$
+du PIC jusqu'au débordement du Timer 2, qui permet de terminer un
+cycle d'un signal PWM, en mettant à la masse les sorties des pattes
+CCP. La vitesse de notre signal PWM est de 5 kHz avec un PIC possédant
+un quartz de 20MHz. Enfin, avant qu'une interruption de débordement du
+Timer 2 soit lancée, quatre interruptions de débordement du Timer 0
+sont lancées.
+
+Le chronogramme des interruptions du PIC esclave est équivalent au
+schéma (\ref{chrono}). Les routines d'interruptions sont les mêmes. La
+seule différence est l'interruption USART qui est alors remplacée par
+une interruption I$^2$C.
+
+
+%=======================================================================%
+\subsection{Interface de programmation}\label{icsp}
+%=======================================================================%
+Une technique, où un microcontrôleur est programmé après qu'il ai été
+soudé sur une carte est appelé \emph{In Circuit Programming}
+(ICP). La programmation et le déboguage du PIC se fait grâce à une
+interface à 5 fils, reliée en série avec une autre carte électronique
+appelée programmateur.
+
+Lorsque la pin VPP du PIC est à +12V (au lieu du +5V), le PIC se met
+en mode \emph{programmation} et charge le nouveau programme par la
+patte ICSPDAT, synchronisé par ISPCLK.
+
+\dessin{img/icsp}{0.45}{Cablage ICSP d'un PIC}{icsp}
+
+Un programmateur PIC que l'on branche sur un port série d'un PC peut
+être facilement fabriqué comme l'explique le site \cite{jdm}. D'autres
+programmateur, plus évolués, permettant le débogage en ligne sont
+disponibles chez le constructeur et des vendeurs indépendants
+accessibles sur Ebay. La photo (\ref{pjdm}) et le schéma (\ref{sjdm})
+montrent mon premier programmeur JDM. Les composants ont été placés par
+rapport au JDM original afin de pouvoir accéder au PIC directement sur
+la carte.\\[0.5mm]
+\begin{minipage}[b]{.5\linewidth}
+\centering\epsfig{figure=img/jdm_schematic, width=\linewidth}
+\caption{Schéma électronique du programmateur JDM modifié.}\label{sjdm}
+\end{minipage}\hspace{0.5cm}
+\begin{minipage}[b]{.5\linewidth}
+\centering\epsfig{figure=img/jdm, width=\linewidth}
+\caption{Premier programmateur JDM.}\label{pjdm}
+\end{minipage}
+
+
+
+%\section{Apercu de la carte electronique}\label{aop}
+%=======================================================================%
+%Voici la carte électronique contrôlée par le PIC maître. Cette carte
+%permet de contrôler un des deux axes de l'hélicoptère.
+
+%\dessinsscaption{img/h4h_schematic}{0.14}\label{h4hschema}
+
+%PARLER: filtre AOP accelerometre, modifier valeur resistances. Ajouter
+%communication inter PIC: i2C parceque SPI on pert 2 analogiques.
+%\section{Schéma de la carte électronique}\label{schema}
+%=======================================================================%
+\section{Les capteurs}\label{capteur}
+%=======================================================================%
+
+%=======================================================================%
+\subsection{L'accéléromètre}
+%=======================================================================%
+\subsubsection{Le capteur}\label{acc}
+%=======================================================================%
+Un accéléromètre deux axes placé horizontalement au centre de gravité
+(supposé immobile) de l'hélicoptère, permet de détecter la
+verticale. C'est le capteur le plus important dans la phase d'essai où
+le centre de gravité de l'hélicoptère sur son banc d'essai est
+maintenu immobile (cas de la balançoire). Un unique accéléromètre
+5G ADXL320 de AnalogDevice est alors suffisant pour
+stabiliser l'hélicoptère.  Malheureusement, les accéléromètres
+disponibles bons marchés existent sous formes de petites tailles
+($4 \times 4$ mm) et sont très difficiles à souder sur une carte epoxy
+standard.
+
+\dessin{img/accelero}{0.7}{Carte accéléromètre 1.5cm $\times$ 1.5cm.}{pacc}
+
+L'accéléromètre choisi donne un signal utile compris entre +1.3V (à
+l'horizontale) et +1.7V (à 90 degrés) qui doit donc être recentré et
+normalisé entre 0V et +5V afin d'avoir une précision maximale avec le
+convertisseur analogique numérique 8 ou 10 bits disponibles sur le PIC.
+
+%=======================================================================%
+\subsubsection{Amplification du signal}\label{aopaccelro}
+%=======================================================================%
+
+Un AOP est un composant électronique qui permet d'amplifier un signal
+continu ce qui permet au final de créer des fonctions mathématiques
+(d'où le mot opérationnel) telles que la dérivée, l'intégrale,
+l'addition, le log, des filtres ... Le sites \cite{aop1,aop2,aop3}
+étudient les AOP et expliquent les différents montages possibles. Des
+AOP sous la forme de composants à deux sorties (LM358) ou à quatre
+sorties (LM324) consommant du +5V sont utilisés pour la carte de
+l'hélicoptère. Voici le schéma caractéristique (\ref{aop1})~:
+
+%% Dans le cadre de ce projet, seuls les montages AOP permettant de faire
+%% des transformations affines nous intéressent, en effet le filtrage
+%% des bruits des signaux des capteurs ou bien l'application d'un PID sur
+%% un signal se fait par logiciel sur un ordinateur non embarqué
+%% (voir chapitre \href{asservissement}{asservissement}) (ou directement
+%% sur un dsPIC pour une version future). Par contre, pour garder la
+%% précision maximale des calculs, les signaux doivent être centrés
+%% et normalisés.
+
+
+\dessin{img/aop1}{0.5}{AOP en montage soustracteur.}{aop1}
+
+On obtient la sortie Vout = G (V$_1$-V$_2$) avec un gain G =
+R$_2$/R$_1$. En pratique, les valeurs des résistances R$_1$ et R$_2$
+seront choisies de l'ordre de 100 K$\Omega$.
+%CENTER(\dessin{helico/schemas/aopsoustracteur2.jpg}{0.8}{toto}{label})
+%% L'utilisation d'un AOP en montage soustracteur
+%%   \href{helico/schemas/aopsoustracteur.jpg}{figure de droite} est
+%%   utilisé.
+Pour connaître les valeurs des résistances R1 et R2, on résout le
+système suivant, où $G$ est le gain et $r$ la tension de référence.
+
+$$G (1.3 - r) = 0$$
+$$G (1.7 - r) = 5$$
+
+D'où : $G = 12.5$ et $r = 1.3$ D'où les valeurs R$_1$ = x, R$_2$ =
+x, R$_a$ = x et R$_b$ = x sur le schéma (\ref{aop2}). La sortie
+amplifiée Vout est branchée directement sur une des pattes
+analogiques d'un PIC.
+
+\dessin{img/aop2}{0.5}{AOP en montage soustracteur et son pont diviseur.}{aop2}
+
+%=======================================================================%
+\subsubsection{Filtre anti-repliement de spectre}\label{filtreacceler}
+%=======================================================================%
+La fréquence d'échantillonnage de l'ordinateur est limité à 50Hz
+à cause du débit de la liaison série.
+Les PIC feront eux les acquisitions à une fréquence de 5kHZ.
+Nous devons couper les signaux de fréquence supérieure à 25Hz afin d'éviter de
+les retrouver sous forme de signaux parasites dans le signal échantillonné (repliement de spectre).
+
+Nous utilisons un filtre anti-repliement de spectre d'ordre 4. Pour
+le réaliser nous le décomposons en un filtre d'ordre 2
+réalisé électroniquement (en utilisant l'AOP) et un deuxième filtre d'ordre 2 écrit en assembleur dans les PICs.
+Le filtre électronique assure également la coupure à 2.5kHz nécessaire
+à l'acquisition analogique des PICs.
+
+\subsubsection*{Filtre électronique}
+Pour réaliser ces filtre des condensateur $C_1$ et $C_2$ sont ajoutés
+au circuit de montage l'AOP (\ref{aop2}) ce qui donne le nouveau
+schéma (\ref{aop3}).
+
+\dessin{img/aop3}{0.5}{AOP en montage soustracteur et avec filtre anti-repliement de spectre.}{aop3}
+
+\begin{itemize}
+\item[$\bullet$] Pour trouver la valeur de $C_2$, sachant que
+  $\omega=25\times 2\pi$ et $R_2$ est fixé à 250k$\Omega$, il faut résoudre
+  l'équation suivante~:
+  \begin{equation}
+    \left(\frac{1}{R_2C_2\omega}\right)^2=\frac{1}{\sqrt{256}}
+  \end{equation}
+
+
+% Cette formule se justifie. Comme $R_2$ et $C_2$ sont en parallèle,
+% nous avons la formule suivante : $\frac{R_2}{R_2C_2\omega+1}$. Pour
+% $\omega$ grand (les fréquences que l'on supprime) et que seul le
+% dénominateur nous intéresse, on s'implifie par
+% $\frac{1}{R_2C_2\omega}$. Enfin, $\frac{1}{256}$ vient du fait que la
+%sortie de l'AOP sera convertie sur 8 bits (8 bits suffisent au lieu de
+%10 bits).
+%$R_2C_2=\frac{16}{\omega}=\frac{16}{25 \times
+
+On en déduit~:
+$R_2C_2=0.025$ et
+$C_2=4/(250\times 10^3\times 25\times 2\pi)=100$nF
+
+\item[$\bullet$] Pour déterminer $C_1$, le calcul est le même sachant
+  que la résistance de l'accéléromètre est de 32k$\Omega$~:
+  $C_1=0.025/(32\times 10^3) = 800$nF.
+\end{itemize}
+
+\subsubsection*{Filtre logiciel}
+Suivant le même principe, le filtre logiciel du second ordre
+$y=(\frac{u}{1+0.025\omega})^2$, s'écrit~:
+\begin{align*}
+z_{n+1} &= z_n\left(1-\frac{1}{128}\right)+\frac{u_n}{128} \\
+y_{n+1} &= y_n\left(1-\frac{1}{128}\right)+\frac{z_n}{128}
+\end{align*}
+où $\frac{1}{128}$ est le pas de temps et $u_n$ est le signal
+analogique de l'AOP et $y_n$ le résultat à envoyer à l'ordinateur.
+
+%=======================================================================%
+\subsection{Les gyroscopes}
+%=======================================================================%
+\subsubsection{Le capteur}\label{gyro}
+%=======================================================================%
+Il existe maintenant des composants électroniques contenant des
+gyroscopes capable de mesurer la vitesse angulaire grâce à
+l'observation des forces de Coriolis sur une barre vibrante.  Ils sont
+beaucoup moins coûteux que les gyroscope mécanique qui eux sont
+capable de mesurer les variations angulaire d'un mobile par rapport à
+une direction fixe obtenue par une toupie tournant à grande vitesse.
+Les prix des gyroscopes mécanique étant trop élevé pour ce projet,
+trois gyroscopes piézo-électriques un axe Gyrostar (séries
+ENC) de Murata sont utilisés.
+
+ Ces gyroscopes donnent un signal utile dans une bande de
+fréquence de l'ordre de l'hertz à quelques dizaines de hertz,
+en particulier la mauvaise qualité du signal à basse fréquence
+induit une dérive difficile à filtrer. Cette dérive est très gênante
+pour maintenir l'hélicoptère dans une position stationnaire
+(objectif principal de ce projet). Néanmoins le signal
+de vitesse angulaire est de bien meilleure qualité que la vitesse
+obtenue en dérivant les données venant de l'accéléromètre
+
+D'autre part certains auteurs affirment
+qu'il n'est pas possible
+de stabiliser la plate-forme avec les seuls accéléromètres
+à cause des accélérations du centre de gravité supposées
+perturber l'information sur la verticale fournie par l'accéléromètre.
+Ces affirmations sont douteuses dans notre cas puisque l'accéléromètre
+étant supposé fixé approximativement au centre de gravité dans une position
+perpendiculaire à la poussée des moteurs l'accélération du mobile à une
+contribution sur l'accéléromètre.
+
+A priori, une fois maîtrisé la dérive du gyroscope, la meilleure fa\c
+con de concevoir le régulateur est d'utiliser le signal donné par le
+gyroscope et de le recaler par celui donné par l'accéléromètre.
+
+\begin{minipage}[b]{.4\linewidth}
+\centering\epsfig{figure=img/gyro, width=\linewidth}
+\caption{un GWS MPG10 contenant un gyro Murata.}\label{pgyro1}
+\end{minipage}\hspace{3cm}
+\begin{minipage}[b]{.3\linewidth}
+\centering\epsfig{figure=img/gyro1, width=\linewidth}
+\caption{La sortie analogique récupérée par le fil blanc.}\label{pgyro2}
+\end{minipage}
+
+Les capteurs Gyrostar sont difficiles à trouver, mais sont le coeur de
+gyroscopes utilisés en aéromodélisme comme les GWS PG03. Les
+PG03 sont conçus pour être branchés entre la télécommande et modifier
+le signal envoyé aux servomoteurs. Ils disposent donc de
+l'électronique pour moduler le signal de télécommande. Deux choix sont
+alors possibles :
+\begin{itemize}
+\item[$\bullet$] récupérer le signal analogique du Gyrostar avec la
+  carte du PG03 (image \ref{pgyro2}),
+\item[$\bullet$] utiliser directement la sortie du PG03 (à savoir la
+modulation PWM pour servomoteur).
+\end{itemize}
+
+Le premier choix élimine la contrainte de vitesse du signal
+télécommandé modulé à 50Hz des PG03 mais n'utilise plus son circuit
+d'amplification. Il semble facile de dessouder le Gyrostar du PG03
+mais il est moins dangereux de souder un fil sur la patte Out (numéro
+4) du Gyrostar directement sur la carte du PG03 figure
+(\ref{pgyro2}). C'est la méthode utilisée ici (image \ref{pgyro2}).
+
+%=======================================================================%
+\subsubsection{Amplification du signal}\label{aopgyro}
+%=======================================================================%
+Le document \cite{latour} de l'EPFL \cite{epfl} donne le filtre passe
+bande suivant (\ref{fgyro}) pour éliminer les dérives et filtrer les
+bruits du gyroscope.
+\begin{itemize}
+\item[$\bullet$] Le filtre passe haut coupe les fréquences en dessous
+  de 0.33Hz pour réduire la dérive;
+\item[$\bullet$] Le filtre passe bas élimine les fréquences au dessus
+  de 588Hz;
+\item[$\bullet$] le signal est amplifié d'un facteur 9.
+\item[$\bullet$] le signal est centré sur VDD/2 (soit +2.5V en entrée).
+\end{itemize}
+
+\dessin{img/filtregyro}{0.5}{Filtre pour gyroscope de l'EPFL.}{fgyro}
+
+Malheureusement le signal de notre gyroscope reste encore
+perturbé par un bruit de taille fixe apparaissant de fa\c con aléatoire.
+D'autre part une dérive gênante reste présente. Il reste encore
+du travail à faire pour exploiter au mieux le signal du gyroscope.
+%=======================================================================%
+\subsection{L'altimètre infrarouge}\label{alti}
+%=======================================================================%
+
+  L'altimètre infrarouge Sharp GP2Y0D340K est le plus petit
+  et le moins cher des capteurs IR. Il commute de 0 à
+  1 en présence d'un obstacle à moins de
+  40cm. Il se branche sur une patte numérique du PIC. La
+  distance de commutation semble dépendre de la couleur de
+  l'obstacle. Le capteur sera dirigé vers le haut de
+  l'hélicoptère (et non vers le bas) afin qu'un
+  utilisateur puisse contrôler l'altitude de la plate-forme en
+  présentant au dessus un obstacle que l'hélicoptère essaiera de poursuivre.
+  Dans la phase d'essai, il est dirigé vers le bas, l'hélicoptère essaie
+  de se maintenir à 40cm du sol.
+
+
+%=======================================================================%
+\section{L'électronique de puissance}\label{puis}
+%=======================================================================%
+Le but de l'électronique de puissance est d'alimenter et de commander
+les moteurs. Pour des raisons de simplicité, cette version
+d'hélicoptère utilise uniquement des moteurs électriques à collecteur alimentés
+en courant continu (MDC) tournant dans un seul sens. Il suffit donc
+de 4 MOSFET pour les commander à partir des commandes PWM envoyées par les
+PICs.
+
+Les moteurs fonctionnent sous 7V et consomment 4A.
+Pour pouvoir observer les courants passant dans les moteurs, des résistances
+de 1 Ohm sont mise en série avec les moteurs. Les courants passant
+dans chaque moteur étant de l'ordre de 1A, on choisit d'alimenter
+sous 8.5. Une alimentation capable de fournir 5A sous 8.5V est donc nécessaire.
+D'autre part l'électronique de commande (par exemple les PICs) doit
+être alimentée en 5V. Ce 5V est obtenu à partir du 8.5V
+grâce à un régulateur L78S05.
+
+
+%=======================================================================%
+\subsection{Schémas de base}
+%=======================================================================%
+La documentation de Microchip \cite{microchip,AN905} \og Brushed DC
+Motor Fundamentals\fg montre deux schémas ((\ref{highside}) et
+(\ref{lowside})) pour contrôler un MDC selon le type de MOSFET
+utilisé.\\[0.5cm]
+\begin{minipage}[b]{.35\linewidth}
+\centering\epsfig{figure=img/highside, width=\linewidth}
+\caption{High side.}\label{highside}
+\end{minipage}\hspace{4cm}
+\begin{minipage}[b]{.35\linewidth}
+\centering\epsfig{figure=img/lowside, width=\linewidth}
+\caption{Low side.}\label{lowside}
+\end{minipage}
+
+Dans ces deux schémas, le signal PWM est envoyé par les pattes CCP1 ou CCP2 (Compare
+Capture PWM) d'un PIC. Afin d'obtenir la précision
+maximum (10 bits) le signal PWM (créneaux 5V/0V) est envoyé avec une fréquence de
+5kHz). En faisant varier le rapport cyclique du
+signal PWM (rapport entre le temps de l'état haut et le temps de
+l'état bas), on fait varier la tension au borne du moteur supposé
+approximativement constante grâce à la self du moteur et la capacité rajoutée
+filtrant le courant. Le cours
+de \cite{bigonoff} explique comment générer un signal en mode
+compare ou en mode PWM.
+
+La résistance R$_1$ protège le PIC des surtensions et la résistance
+R$_2$ empêche le MOSFET d'être passant à
+l'initialisation du PIC. La diode, dite de roue libre, qui
+doit être capable commuter rapidement, protège le MOSFET des surtensions
+qui apparaîtrait en son absence au instant de commutation du signal PWM.
+En effet, la bobine accumule l'énergie magnétique qui doit pouvoir
+se décharger au moment ou l'alimentation du moteur est coupé par
+le MOSFET.
+
+On utilise des MOSFET P plus facile à trouver en boîtier TO 220.
+L'inconvénient du MOSFET P, dans le schéma (\ref{highside}), est la
+tension de la gâchette du MOSFET à 8.5V incompatible
+avec la tension haute (5V) du PIC. Ce problème se résout
+facilement par l'adjonction d'un transistor ouvert/ferme par
+le signal PWM.
+possible d'utiliser un MOSFET P, à condition d'utiliser un transistor
+NPN et trois résistances. Voir schéma (\ref{intpuiss1}).
+
+%\dessin{img/moteur1}{0.4}{Schéma utilisé pour commander les MOSFET P.}{mot1}
+
+Un condensateur placé en parallèle au moteur permet de filtrer ses
+parasites du moteur.
+
+%=======================================================================%
+\subsection{Rôle de la \og roue libre \fg}
+%=======================================================================%
+La tension $u$ aux bornes d'une bobine vaut $L\frac{di}{dt}$. A
+l'instant ou le MOSFET coupe le courant $u$ devient un Dirac
+négatif. Ce qui signifie en pratique qu'une grosse surtension $V_B
+>>V_A$ est créée avec des risques d'apparition d'arcs électriques dans
+l'interrupteur ici le MOSFET.  La diode protège le circuit en
+renvoyant le courant dans la bobine de B vers A, courant qui va
+s'amortir progressivement à cause des résistances électriques.
+
+\dessin{img/bobdiode}{0.5}{Interruption de courant passant dans une self.}{bobdiode}
+
+%=======================================================================%
+\subsection{Mesure du courant dans les moteurs}
+%=======================================================================%
+
+%% On impose une vitesse au moteur en fonction d'une tension. Le
+%% problème est que la bobine d'un moteur se comporte comme un filtre
+%% passe bas. Le moteur est un système en boucle fermée stable : un
+%% signal PWM d'une fréquence suffisante va générer un courant
+%% stable dans la bobine du moteur. Après plusieurs essais de
+%% l'hélicoptère sur son banc d'essai (mode balançoire) en utilisant
+%% la figure de gauche et un logiciel de calcul numérique, la
+%% stabilisation de l'hélicoptère n'était pas idéale. Une des
+%% raisons est que le contrôle du moteur était en boucle ouverte.
+
+
+%dessin{img/moteur1}{0.4}{Interface de puissance.}{moteur1}
+
+L'asservissement des moteurs se faisant en courant, on doit l'observer.
+Le capteur correspondant est constituée d'une résistance dont on
+mesure la tension aux bornes. La loi d'Ohm donne alors le courant
+cherché. On utilise donc le schéma suivant (\ref{intpuiss2}).\\[0.5cm]
+%\dessin{img/moteur2}{0.4}{Interface de puissance et lecture du courant.}{moteur2}
+\begin{minipage}[b]{.35\linewidth}
+\centering\epsfig{figure=img/moteur1, width=\linewidth}
+\caption{Interface de puissance.}\label{intpuiss1}
+\end{minipage}\hspace{3cm}
+\begin{minipage}[b]{.45\linewidth}
+\centering\epsfig{figure=img/moteur2, width=\linewidth}
+\caption{Interface de puissance et AOP.}\label{intpuiss2}
+\end{minipage}\\[0.5mm]
+
+La lecture de la tension se fait grâce à un AOP en montage soustracteur.
+L'inconvénient de ce montage est la perte de puissance par effet joule
+dans la résistance. D'autres possibilités existe pour observer le courant
+en consommant moins de puissance mais ne seront pas discutés ici.
+On aurait pu placer $R_2$ entre le moteur et la masse, ce qui aurait
+évité d'avoir à faire la soustraction réalisée par l'AOP. Ce
+montage différentiel peu sensible aux perturbations a été choisi
+ici  surtout pour économiser la pose d'un fil supplémentaire
+entre la plaque à essais et l'hélicoptère.
+
+%% L'ajout d'une résistance de puissance Rxx
+%% (2W, 1$\Omega$) permet également de limiter l'intensité dans le moteur
+%% (si l'hélice se bloque, la force électromotrice devient nulle et
+%% l'intensité dans le moteur devient grande ce qui peut
+%% l'endommager). Un AOP en montage soustracteur sur la résistance de
+%% puissance permet de normaliser et centrer la tension
+%% électromagnétique. La sortie de l'AOP est branchée sur une patte
+%% analogique d'un PIC. Le chapitre
+%% \ref{asservi} de ce document explique
+%% comment fonctionne le feed-back.
+%% TODO
+%% expliquer pourquoi choper la différence de tension (masse) est moins
+%% bon que s'utiliser un aop: --> c plus stable : un pariste apprait.
+%% TODO
+%% expliquer que les moteurs crachent des parasites --> condo 4700uF
+%% TODO
+%% expliquer que c quand meme bien de mettre un transistor pour decoupler
+%% un mosfet.
+
+\section{Alimentation électrique}
+Comme nous l'avons vu précédemment, les moteurs doivent être alimentés
+avec une tension de 8.5V et avec une intensité maximale de 4A. Le
+composant LM338K est capable de fournir 5A. Un
+potentiomètre (R66 sur le schéma (\ref{h4hschema})) permet de régler la
+tension de sortie à 8.5V. Un condensateur C25 de grande capacité
+(0.1F) permet de filtrer les parasites et micro coupures.
+Un régulateur  LM7805 permet d'obtenir
+du 5V (1A) à partir du 8.5V pour alimenter les PIC et les capteurs.
+Comme le LM338K est alimenté en 12V (grâce  une alimentation PC 12V 9A)
+il doit dissiper une puissance allant jusqu'à 14W, un gros radiateur
+est nécessaire. On a choisi un radiateur dont la température augmente
+de 2 degrés par W. Il ne devrait donc pas dépasser 50 degrés à la
+charge maximale.
+
+
+\dessin{img/alim}{0.4}{Nouvelle allimentation 8.5V 5A.}{alim2}
+
+\newpage
+\pagestyle{empty}
+\dessinsscaption{img/h4h_schematic}{0.19}\label{h4hschema}
+\newpage
+\pagestyle{plain}
+
+
+
+

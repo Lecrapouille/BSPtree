@@ -1,0 +1,52 @@
+%=======================================================================%
+\part*{Conclusion}
+\addcontentsline{toc}{part}{Conclusion}
+%=======================================================================%
+
+Ce rapport a présenté l'évolution de l'étude et de la réalisation d'un
+hélicoptère à quatre hélices sur une période effective de travail
+d'environ quatre mois. Une partie du cahier des charges a été
+réalisée. La balan\c coire un axe a été faite assez complètement.
+Seules les préalables à la stabilisation deux axes (réalisation de
+l'alimentation 8.5V pour pouvoir alimenter les quatre moteurs, la
+programmation de la liaison I$^2$C des deux PIC en cours de debogage)
+ont été faits. Par contre des essais de vols avec la balancoire un axe
+ont été commencés (la puissance des deux moteurs, en limite de
+puissance, empêche de mettre en oeuvre la régulation d'altitude mais le
+capteur fonctionne et l'information d'altitude est envoyée
+correctement au contrôleur).
+
+Les retards dans la réalisation, en fait prévus,
+(puisque au départ le minimum annoncé était
+la réalisation de la balan\c coire) sont dus à la sous-estimation de la
+difficulté de faire une stabilisation de qualité de la balan\c coire
+un axe. Les difficultés sont multiples~: -- lenteur de la liaison
+série, -- lenteur de Linux-Scicos pour faire du temps réel,
+-- difficultés à obtenir un modèle fiable,
+-- non linéarité du système, -- perturbation électrique ou
+aérodynamique, -- précision des capteurs, -- dérive des capteurs,
+-- difficulté de la programmation en assembleur des microcontrôleurs,
+-- nécessité de commander en courant qui oblige à gérer plus d'entrées
+que prévues et à faire des boucles rapides.
+
+Toutes ces difficultés ont ralenti le projet mais ont
+été très formatrices car elles font toucher du doigt les différences
+existantes entre une simulation d'un logiciel et la réalisation
+physique d'un prototype.
+
+La construction de cet hélicoptère a fait appel
+à plusieurs spécialités de l'ingénierie à
+savoir~: -- la construction mécanique, -- l'électronique, -- l'informatique,
+-- l'automatique. Ensemble de domaines beaucoup trop vaste pour être
+maîtrisé en peu de temps mais qu'un tel projet permet d'aborder
+de fa\c con très agréable.
+
+Ce projet va continuer d'évoluer, puisque pendant la période du stage
+des améliorations vont être apportées comme~: -- terminer la communication
+I$^2$C entre les deux PIC, -- finir de stabiliser l'hélicoptère
+complet, -- apprendre la programmation des dsPIC, -- embarquer
+l'asservissement de l'hélicoptère par un dsPIC, -- utiliser des
+modules XBee pour la communication sans fil -- et, pourquoi pas,
+remplacer les moteurs par des moteurs brushless.
+
+L'aventure continue donc. Merci pour la création de la motivation !!!

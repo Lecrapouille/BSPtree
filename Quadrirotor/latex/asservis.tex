@@ -1,0 +1,564 @@
+\newpage
+%=======================================================================%
+\part*{Réalisations des asservissements}\label{asser}
+\addcontentsline{toc}{part}{Réalisations des asservissements}
+%=======================================================================%
+Les microcontrôleurs PIC 16F876A embarqués sur l'hélicoptère,
+permettent de réaliser facilement l'acquisition des signaux
+analogiques et la génération des signaux PWM. Par contre ils ne
+disposent pas module DSP intégré et donc sont mal adaptés pour faire
+du calcul numérique en ligne.
+
+L'utilisation d'un ordinateur non embarqué mais connecté par une
+liaison série avec les microcontrôleurs permet d'ajouter au système
+la puissance de calcul manquante. Il existe des logiciels libres
+spécialisés au calcul numérique à la commande et traitement du signal
+comme Scilab permettant de programmer aisément les lois de commandes
+et de les mettre en oeuvre en temps réel.
+%=======================================================================%
+\section{L'ordinateur dans la boucle}
+%=======================================================================%
+\subsection{Scilab et Scicos}
+%=======================================================================%
+Il existe deux types de programmes scientifiques~:
+\begin{itemize}
+\item[$\bullet$]les logiciels
+algébriques faisant essentiellement du calcul symbolique (Maple,
+Mathematica, Maxima, Axiom, et MuPad);
+\item[$\bullet$]les logiciels de calcul
+scientifique faisant essentiellement de l'analyse numérique (Scilab,
+Matlab).
+\end{itemize}
+
+Scilab \cite{Chancelier, Scilab} est un logiciel libre pour le calcul
+scientifique. C'est un interpréteur de langage manipulant des
+objets typés dynamiquement. Il inclut de nombreuses fonctions
+spécialisées pour le calcul numérique organisées sous forme de
+librairies ou de boites à outils qui couvrent des domaines tels que
+la simulation, l'optimisation, et le traitement du signal et du
+contrôle.
+
+Une des boîtes à outils les plus importantes de Scilab est
+Scicos \cite{Chancelier, Scicos}. Scicos est un simulateur hybride
+avec un éditeur graphique de bloc diagrammes permettant de modéliser
+et de simuler des systèmes dynamiques. Il est particulièrement utilisé
+pour modéliser des systèmes où des composants temps-continu et
+temps-discret sont inter-connectés.
+
+%=======================================================================%
+\subsection{Port série sous Scicos}
+%=======================================================================%
+Bien que Scicos possède des moyens de communication avec l'extérieur,
+il ne possédait pas de module tout fait pour communiquer par les port série.
+Il a donc fallu rajouter à Scicos
+un bloc diagramme qui puisse envoyer et écouter des données sur un
+port série.
+
+Ceci est facilement réalisable, car Scilab permet de faire de
+l'édition de liens sur des fonctions C et de les lier à des blocs
+diagrammes Scicos. Pour construire un bloc Scicos, deux fichiers sont
+nécessaires, donc deux fonctions : \emph{fonction de calcul}
+et \emph{fonction d'interface}.
+
+En créant la fonction de calcul et d'interface pour le port série,
+Scicos devient un oscilloscope numérique 50 Hz. Il lit les données des
+capteurs de l'hélicoptère sur le port série, les affiche sous forme de
+courbes, calcule la loi de commande et envoie les consignes PWM sur le
+port série. La vitesse du port série est de 19200 bauds, 8 bits de
+données, 1 bit de stop et aucun flot de contrôle (ni matériel ni
+logiciel).
+
+%=======================================================================%
+\subsection{Vitesse de Scicos}
+%=======================================================================%
+\subsubsection{Le temps réel sous Scicos}
+%=======================================================================%
+Une des difficulté de ce projet a été d'obtenir et d'assurer
+une vitesse suffisante d'exécution des calculs des affichages
+et des transmissions des données. Ces difficultés proviennent
+des limitations de vitesse du port série, de l'ordonnanceur de Linux,
+et de la vitesse d'affichage de Scicos.
+
+Scicos permet de lancer une simulation en  temps
+réel \footnote{en modifiant la valeur {\tt Real Time Scaling} du menu
+{\tt <Simulate><Setup>}.}. Une seconde Scilab correspond alors au mieux à une
+seconde réelle. Scicos peut être ralenti durant la simulation
+d'un buffer graphique
+trop petit ou à cause de bloc diagramme écrit en langage Scilab
+(bloc {\tt Sciblock}) que Scicos doit interpréter\footnote{Les {\tt
+Sciblock} sont à éviter. Il vaut mieux utiliser {\tt Mathematical
+Expression} ou {\tt C block} qui sont beaucoup plus rapides.}.
+
+Ces restriction sur la fréquence d'échantillonnage induit à cause du
+théorème de Shannon (la fréquence d'échantillonnage doit être
+plus du double de la fréquence maximale du signal pour pouvoir le restituer
+complètement) que la bande de fréquence qui peut être traitée est inférieure
+à 25 Hz. Bande de fréquence suffisante pour la régulation du tangage
+mais insuffisante pour la boucle de courant.
+
+%=======================================================================%
+\subsubsection{Vitesse d'échantillonnage obtenues}
+%=======================================================================%
+Les vitesses d'échantillonnage ont été obtenues sous Scicos avec un
+port série à 19200 bauds~:
+\begin{itemize}
+\item[$\bullet$] 20 Hz sur un Macintosh iBook G4 cadencé à 933 MHz.
+\item[$\bullet$] 50 Hz sur un PC 1.2 GHz avec un Linux Ubuntu recompilé en
+                 mode 1 kHz.
+\end{itemize}
+
+%=======================================================================%
+\subsubsection{Définition d'un période et fréquence Scicos}
+%=======================================================================%
+Dans l'utilisation du temps de Scicos, il faudra prendre garde à ce
+qui est appelé une fréquence est en fait une pulsation et que les
+périodes réfèrent aux événements générées par l'horloge (un cycle d'un
+signal carré {\tt square wave generator} nécessite deux tops d'horloge
+pour être généré.
+
+%% \section{Asservissement de l'hélicoptère}
+%% L'approche expérimentale a été utilisée afin de
+%% déterminer le comportement de l'hélicoptère et de le stabiliser. La
+%% partie théorique est bien pour comprendre un comportement de
+%% l'hélicoptère, mais en pratique d'autres phénomènes peuvent intervenir
+%% et au final le comportement attendu n'est plus le même. Ce chapitre
+%% explique comment l'asservissement de cet hélicoptère fonctionne. Le
+%% seul vrai avantage
+
+%=======================================================================%
+\section{Asservissement des moteurs}
+%=======================================================================%
+Il existe deux méthodes pour contrôler un moteur~:
+\begin{itemize}
+\item[$\bullet$] soit l'asservissement en vitesse (alias
+  asservissement en tension). Son avantage est que la consigne PWM
+  s'obtient linéairement en fonction de la tension. Son inconvénient
+  est que la charge (qui varie proportionnellement à la vitesse au
+  carré de l'hélice) du moteur est non linéaire par rapport à la
+  tension.
+\item[$\bullet$] soit l'asservissement en couple (alias asservissement
+  en courant). Son avantage est que le couple (et donc la charge) est
+  une fonction linéaire du courant. Son inconvénient est qu'une
+  consigne PWM est une fonction non linéaire du courant.
+\end{itemize}
+
+%L'asservissement en courant permet d'obtenir une plus grande bande
+%passante que l'asservissement en vitesse.
+Dans notre cas, à cause de la lenteur de Scilab qui nous empêche
+de réaliser une bonne boucle de courant, la supériorité de
+l'asservissement en courant sur l'asservissement en
+tension n'est pas claire. Dans le futur la boucle de courant
+sera réalisée dans le PIC. L'avantage de la boucle de courant
+devrait apparaître plus nettement.
+
+
+%% L'avantage deDans la première méthode, si on fixe la tension, le
+%% moteur la FEM est proportionnelle la vitesse du moteur
+%% Dans la deuxième, si on fixe le courant, on fixe le couple et le
+%% couple et proportionnel
+%% tens: les PWM commande direct la tension des mot
+%% inconvénient: charge mot est non lin
+%% cour:propo a la charge modilise la baln de facon lineair
+%% il faut convertir en tension et les non linearites seront la
+%% La deuxième bande passante plus grande mais Scicos ...
+%% + la portance est proportionnelle a la vitesse au carre. donc linéaire
+%% alors que la vitesse sera non lineaire
+
+%% on va modeliser la fct non linéaire en statique on suppose que
+
+
+%=======================================================================%
+\subsection{Étude théorique d'un moteur DC}\label{mot}
+%=======================================================================%
+Cette section, tirée d'un cours de EPFL \cite{epfl},
+explique le modèle d'un moteur à courant continu. Un moteur est constitué de deux parties~:
+\begin{itemize}
+\item[$\bullet$] une partie tournante appelée \emph{rotor} qui
+  contient une  bobine appelée \emph{induit}. Cette bobine est
+  caractérisée par sa résistance $R$ et son inductance $L$.
+  Du fait de son mouvement elle est le siège d'une force contre
+  électromotrice $e$ proportionnelle à sa vitesse angulaire.
+ \item[$\bullet$] une partie fixe appelée \emph{stator} qui dans
+notre cas sera un aimant permanent caractérisé par un coefficient
+appelé \emph{excitation magnétique} $\Phi$ .
+\end{itemize}
+
+La tension au borne de l'induit est alors donnée par
+\begin{align}
+u(t) & = R i(t) + L di/dt + e(t),\\
+e(t) & = k\;\Phi\;\omega(t).
+\end{align}
+
+Le courant dans le rotor dans le champ magnétique du stator est le
+siège de force électromagnétique induisant un  couple
+électromagnétique $T_e(t)$.
+Il est proportionnel au
+courant induit $i(t)$. Il vaut~:
+\begin{align}
+T_e(t) & = k\;\Phi\;i(t).\label{eqcouple}
+\end{align}
+
+Notant $J$ l'inertie du moteur sa dynamique s'écrit~:
+\begin{align}
+J\frac{d\omega}{dt} & = T_e - R_{f}\;\omega(t)-T_{r}.
+\end{align}
+
+Où, $T_{r}$ est un couple résistant et $R_f$ un couple caractérisant
+les frottements. En posant $K_e = K_t = k\Phi$, on obtient le schéma
+bloc suivant (\ref{mottheo1}) modélisant le moteur. Le moteur est un système
+en boucle fermé.
+
+\dessin{img/moteurtheo}{0.6}{Schéma théorique d'un moteur.}{mottheo1}
+
+Les fonctions de transfert des blocs $A$ et $B$ s'écrivent~:
+$$H_{A}=\frac{1/R}{1 + s L/R},\quad H_{B=}\frac{1/Rf}{1 + s J/Rf}.$$
+
+Dans notre cas, quatre moteurs Graupner Micro Speed sont utilisés et
+sont alimenté par une tension 7V (courant 1.2A) hachée par un
+signal PWM à 5kHz. L'impédance de la bobine du moteur est de 0.2 mH et
+sa résistance interne est de 2$\Omega$. Le paramètre $k$ n'a pas été
+identifié.
+
+%=======================================================================%
+\subsection{Asservissement en courant}\label{pidtheocourant}
+%=======================================================================%
+%\subsubsection{Differentes fa\c con d'asservir un moteur}
+
+La régulation théorique d'un moteur avec un PID se fait selon le
+schéma (\ref{pidmot1}) suivant.
+
+\dessin{img/pidmoteurtheo1}{0.6}{Régulation d'un moteur avec un feedback.}{pidmot1}
+
+Le PID de ce diagramme corrige l'{\tt erreur} et la fait converger
+vers 0 (si le PID est bien réglé). La fonction du bloc {\tt
+  Conversion courant vers consigne PWM} se comporte, dans notre cas,
+de fa\c con non linéaire.
+
+Cependant, dans notre cas, nous voulons que la sortie du régulateur
+PID soit la valeur de la {\tt Consigne de courant}. Pour cela, nous
+devons modifier le schéma bloc (\ref{pidmot1}) en ajoutant un
+feedforward. Le nouveau schéma bloc ressemble donc à l'image
+(\ref{pidmot2}). La notion de feedforward est très bien expliquée sur le
+cours d'automatique d'\.Astr\"om \cite{Astrom}, gratuit et disponible
+sur son site web.
+
+\dessin{img/pidmoteurtheo2}{0.6}{Régulation d'un moteur avec un
+  feedforward et feedback.}{pidmot2}
+
+\.Astr\"om résume les différences entre feedback et feedforward~:\\[0.5mm]
+\begin{tabular}{|p{7cm}|p{7cm}|} \hline
+Feedback & Feedforward \\ \hline
+Est utilisé en boucle fermée & Est utilisé en boucle ouverte \\ \hline
+Réagit seulement quand il y a des perturbations & Réagit avant que les
+perturbations arrivent\\ \hline
+Est robuste aux erreurs de modélisation & Est non robuste aux erreurs de
+modélisation \\ \hline
+Pose des risques d'instabilité & Pose aucun risque d'instabilité \\ \hline
+\end{tabular}
+
+
+Pour atténuer la perturbation, le feedforward s'utilise de la fa\c con
+suivante~:
+
+\dessin{img/feedforward}{0.4}{Atténuation de la perturbation.}{feed2}
+
+où la perturbation est totalement éliminée mais le {\tt process}
+$P_1$ doit être bien compris puisqu'il doit être explicitement inversé
+dans le bloc $P_1^{-1}$.
+
+%\section{Étude pratique d'un moteur}\label{mot}
+
+%% Malheureusement, la pratique est beaucoup plus pénible que la
+%% théorie. En effet~:
+%% \begin{itemize}
+%% \item[$\bullet$] la fonction qui convertit un courant en une consigne
+%%   PWM dún moteur avec son hélice est non linéaire. D'après les
+%%   expériences, elle a la forme d'une racine carrée. On la démontre
+%%   dans la section suivante.
+%% %  $\left(\frac{i}{60}\right)^7+2i$.
+%% \item[$\bullet$] Les moteurs crachent des parasites dans la masse qui
+%%   est commune aux capteurs. Leurs sorties sont parasitées. Le faite
+%%   d'ajouter une capacité en parallèle au moteur élimine ces parasites
+%%   mais change l'ordre du moteur. L'ordre du moteur passe de un a deux.
+%% \end{itemize}
+
+%=======================================================================%
+\subsection{Déterminer la fonction non linéaire PWM-Courant
+en régime établi}\label{nonlin}
+%=======================================================================%
+Une série de mesure sur des réponses indicielles à permis de déterminer
+le courant en fonction de consignes de PWM. Après inversion de la
+fonction on obtient la fonction en statique du bloc {\tt conversion
+ courant vers PWM}. On supposera que cette fonction en dynamique se
+comporte linéairement entre les points mesurés (le régulateur PID
+jouera ce rôle).
+
+En reprenant l'étude du moteur section (\ref{mot}). Le circuit induit
+d'un moteur en régime établi se comporte, du point de vue électrique,
+comme une résistance $R$ et d'une FEM en série.
+% (cf. secion \ref{mot}). En effet la self agit que dans les régimes
+%transitoires.
+Le couple $C$ de l'équation (\ref{eqcouple}), en régime établi, est
+proportionnel au courant et s'écrit donc $C=k\;i$.
+
+On trouve dans des documents que le couple (traînée, portance) sur une
+hélice est également une fonction dépendante du carré de la vitesse de
+l'hélice (donc du rotor $\omega$), d'où $C=k_1\;\omega^2$. On en déduit la
+vitesse $\omega$ en fonction du courant : $\omega=\sqrt{i\;k/k_1}$.
+
+La tension $u$ aux bornes du circuit induit vaut
+$u=Ri+e=Ri+k_2\sqrt{i\;k/k_1}$.
+Soit plus simplement~:
+$$u=K\sqrt{i}+R\;i$$
+
+Les mesures obtenues figure (\ref{i2p}), lors des expériences
+confirment la théorie. Pour obtenir ces mesures, on donne une consigne
+de PWM sur 10 bits sur un moteur avec son hélice et on observe le
+courant obtenu.\\[0.5mm]
+\begin{minipage}[b]{.48\linewidth}
+\centering\epsfig{figure=img/i2p, width=\linewidth}
+\caption{PWM (ordonnées) en fonction du courant (abscisses).}\label{i2p}
+\end{minipage}
+\begin{minipage}[b]{.5\linewidth}
+\centering\epsfig{figure=img/i1i2, width=\linewidth}
+\caption{Correspondance des courants entre 2
+  moteurs.}\label{diffcourant}
+\end{minipage}%\hspace{0.5cm}
+%\dessin{img/i2p}{0.4}{PWM (ordonnées) en fonction du courant (abscisses).}{i2p}
+
+%=======================================================================%
+\subsection{Non linéarité entre les moteurs}\label{nonlin}
+%=======================================================================%
+Les quatre moteurs du même type ne proviennent pas de la même série et
+présente des caractéristiques légèrement différentes. Si la rotation d'une hélice est plus dure, le moteur tourne moins vite
+et la FEM induite est plus faible. Soumis à la même tension externe le courant
+est plus grand.
+
+%\dessin{img/i1i2}{0.4}{Correspondance des courants entre 2 moteurs}{diffcourant}
+
+Afin d'équilibrer la poussée des deux moteurs gérant un axe de
+l'hélicoptère, une fonction statique établissant la correspondance entre
+courants des deux moteurs a due être déterminée.
+% (cf annexes\ref{}).
+On voit sur la courbe (\ref{diffcourant}), que pour des
+courants importants (haut droit), un des deux moteurs sature.
+
+Le graphique (\ref{courant}) a été obtenu en simulation réelle du schéma
+(\ref{pidmot2}). On envoie une consigne de courant aux deux moteurs
+(signal carré en noir). On voit que les courants (rouge et bleu)
+arrivent à suivre les consignes. Ce résultat a été obtenu
+essentiellement avec un feedforward statique compensant la
+non-linéarité, seul un terme intégral a été ajouté pour assurer erreur
+asymptotique nulle.
+
+\dessin{img/courant}{0.6}{Consignes de courant et courant obtenus.}{courant}
+
+%=======================================================================%
+\section{Asservissement du tangage}
+%=======================================================================%
+
+%=======================================================================%
+\subsection{Modèle de l'hélicoptère}\label{modelh4h}
+%=======================================================================%
+
+On obtient la réponse indicielle de l'hélicoptère (figure (\ref{sysdyna})) en
+regardant comment il oscille lorsqu'on le laisse se balancer sur le
+banc d'essai.
+
+%% Dans le chapitre \ref{matos} lié à la construction de la mécanique de
+%% l'hélicoptère, on a vu que la carte des capteurs, selon l'endroit où
+%% elle se place, peut rendre l'hélicoptère naturellement stable (carte
+%% placée en dessous de la croix) ou instable (carte placée au dessus de
+%% la croix).
+
+\dessin{img/reponseindic}{0.4}{Réponse indicielle de
+  l'hélicoptère stable.}{sysdyna}
+
+De cette courbe, on en déduit la fonction de transfert $H(s)$ qui au
+courant associe l'inclinaison de
+l'hélicoptère~:
+$$H(s) = \frac{300}{s^2+1.28s+31}$$
+Cette formule a été obtenue en supposant que la poussée était proportionnelle
+au courant ce qui n'est vrai qu'en régime établi.
+
+On peut essayer d'améliorer le modèle en ajoutant la dynamique du
+rotor. En effet la charge est une fonction non linéaire de la vitesse
+du moteur alors que le courant agit sur son accélération. Une
+linéarisation autour d'un régime donné montre que le comportement
+dynamique serait mieux modélisé par
+$$\frac{300}{(s^2+1.28s+31)(1+ks)}$$
+formule dans laquelle il faut estimer $k$.
+Après mesure de la fonction de transfert il apparaît qu'elle n'est pas
+d'ordre 3 dans la zone de fréquence utile. Cette fonction de transfert
+a été alors estimé en envoyant une séquence de sinusoïdes et en
+observant le gain de la réponse. Une bonne approximation de ce
+transfert est~:
+$$G(s)=\frac{240+40s}{s^2+1.28s+31}$$
+
+%On en déduit la fonction de transfert $G(s)$ pour l'hélicoptère instable~:
+%$$G(s) = \frac{12}{s^2+0.7s-25}$$
+
+On vérifie que le système $G(s)$ est stable car il n'a que des pôles
+négatifs.
+
+%\dessin{img/balanBF}{0.5}{Simulation de l'hélicoptère.}{simubf}
+
+%% La réalité est tout autre~: les retards accumulés dans le transition
+%% des données entre PIC et Scicos ainsi que la faible fréquence
+%% d'échantillonnage du à Scilab font qu'il est difficile de stabiliser
+%% correctement l'hélicoptère. La section \ref{black} explique le
+%% comportement du modèle en fonction de la longueur du retard ainsi
+
+%=======================================================================%
+%\subsection{Feedforward}\label{feed}
+%=======================================================================%
+%% Dans ses notes de cours d'automatique, Karl Johan \.Astr\"om
+%% \cite{Astrom} résume les différences entre feed-back et feed-forawrd.
+
+%% \begin{tabular}{|p{7cm}|p{7cm}|} \hline
+%% Feed-back & Fedd-forward \\ \hline
+%% Utilisé en boucle fermée & en boucle ouverte \\ \hline
+%% Réagit seulement quand il y a des perturbations & Réagit avant que les
+%% perturbations arrivent\\ \hline
+%% Robuste aux ereurs de modèlisation & Non robuste aux erreurs de
+%% modèlisation \\ \hline
+%% Risque d'instabilité & Aucun risque d'instabilité \\ \hline
+%% \end{tabular}
+
+%=======================================================================%
+\subsection{Etude de l'influence néfaste du retard}\label{black}
+%=======================================================================%
+En simulation, il est facile de stabiliser l'hélicoptère, mais dans la
+réalité, les retards accumulés (transition des données entre PIC et
+Scicos, faible fréquence d'échantillonnage de Scilab) font qu'il est
+difficile de stabiliser correctement l'hélicoptère.  Etudions
+l'influence des retards sur un transfert obtenu précédemment (ancienne
+étude datant de la révision 2 de ce rapport)~:
+$$G(s)=\frac{192}{s^2+0.7s+25}.$$
+%avec un seul moteur grâce au schéma bloc suivant.
+
+A cause des retards, la fonction de transfert $G(s)$ du modèle de
+l'hélicoptère stable doit être modifiée~:
+$$J(s)=G(s)\exp^{-\tau s}$$
+
+Pour $\tau=0.02$ et en utilisant la formule du développement limité
+$\exp^{-\tau s}\simeq 1-\tau s\simeq\frac{1-\tau/2 s}{1+\tau/2 s}$,
+$J(s)$ s'écrit~:
+
+$$J(s)=G(s)\left(\frac{1-0.005s}{1+0.005s}\right)^2$$
+
+Soit $F(s)$ la fonction de transfert, utilisée dans le feedforward,
+qui inverse le modèle de l'hélicoptère (avec plus ou moins
+d'exactitude) comme expliqué dans la section \ref{pidtheocourant}. Si
+on suppose que modèle $G(s)$ est exact, on a alors~:
+$$F(s) = J(s)^{-1} = \frac{(s^2+0.7s+25)}{192}$$
+
+On introduit la fonction de transfert du filtre anti-repliement de
+spectre vue dans le chapitre concernant l'électronique
+(chapitre \ref{electro})~:
+$$A(s) = \left(\frac{1}{1+0.025s}\right)^4$$
+
+Nous obtenons la fonction de transfert de l'hélicoptère et
+modifié par un contrôleur (on a ignoré le modèle d'un bloqueur échantillonneur
+({\tt Sample/Hold}) parce qu'il serait trop compliqué à utiliser)~:
+$$K(s) = A(s)F(s)J(s)$$
+
+En tra\c cant le diagramme de Nyquist et de Black de $K(s)$~:\\[0.5mm]
+\begin{minipage}[b]{.5\linewidth}
+\centering\epsfig{figure=img/ny1, width=\linewidth}
+\caption{Tracé de Nyquist de $K(s)$.}\label{ny1}
+\end{minipage}\hspace{0.2cm}
+\begin{minipage}[b]{.48\linewidth}
+\centering\epsfig{figure=img/black1, width=\linewidth}
+\caption{Tracé de Black de $K(s)$.}\label{bl1}
+\end{minipage}
+
+Le tracé du lieu de Nyquist de la fonction de transfert $K$ nous montre qu'à
+cause du retard nous ne pouvons pas
+reboucler ce système avec des gains trop forts (la courbe de Nyquist
+risquerait d'entourer le point $(-1;0)$).
+
+En modifiant les différents paramètre comme~: la longueur du retard,
+la vitesse échantillonnage, la précision du modèle $G(s)^{-1}$ on se
+fait une bonne idée de la valeur des gains possibles du régulateur.\\[0.5mm]
+\begin{minipage}[b]{.5\linewidth}
+\centering\epsfig{figure=img/ny2, width=\linewidth}
+\caption{Tracé de Nyquist de $K(s)$ avec une imprécision de 30\% sur $G(s)^{-1}$.}\label{ny1}
+\end{minipage}\hspace{0.2cm}
+\begin{minipage}[b]{.48\linewidth}
+\centering\epsfig{figure=img/black2, width=\linewidth}
+\caption{Black de $K(s)$ avec une imprécision de 30\% sur
+  $H(s)^{-1}$ et gain proport. de 3}\label{bl1}
+\end{minipage}
+%================================
+\subsection{Le contrôleur adopté}
+%===============================
+La fonction de transfert identifiée~: $$G(s)=\frac{240+40s}{S^2+1.28s+31}$$
+étant stable et d'inverse stable, le correcteur adopté est la somme de~:
+$$\frac{31}{(240+40s)(1+0.025)^2}$$ appliqué au signal de~:
+l'accéléromètre et de $$\frac{s+1.28}{(240+40s)(1+0.025s)^2}$$
+appliqué au signal venant du gyroscope. Le résultat de cette
+correction est de placer les pôles du système en boucle ouverte
+corrigé à -40. Un feedback de gain 1/2 a été utilisé. Les résultats
+obtenus sont donnés dans la figure (\ref{resul}). Le schéma scicos
+déterminant complètement le régulateur est donné dans les schémas
+Scicos (\ref{scipic}), (\ref{scimot1}), (\ref{scimot2}), (\ref{scimain}).
+
+%================================
+\subsection{Résultats obtenus}
+%===============================
+Dans la figure (\ref{resul}), le premier diagramme (celui du haut)
+montre l'inclinaison (en vert), observée par l'accéléromètre, obtenue
+en réponse à des échelons de consigne d'inclinaison (en noir) envoyé
+par le PC. Les consignes PWM pour les deux moteurs sont de couleur
+rouge et bleue.
+
+Le deuxième diagramme (celui du milieu) montre les deux consignes de
+courants (en noir) et les courants observés dans les deux moteurs (en
+bleu et rouge).
+
+Le deuxième diagramme (celui du bas) montre le signal du gyroscope (en
+vert) et la dérivée du signal de l'accéléromètre (en violet).
+
+%================================
+\section{Schéma bloc Scicos}
+%================================
+Dans les schémas Scicos (\ref{scipid}), (\ref{scipic}),
+(\ref{scimot1}), (\ref{scimot2}), (\ref{scimain}), les blocs sont
+coloriés pour une meilleure compréhension.
+
+En jaune, les schémas blocs correspondant à la communication avec le
+PIC maître. En gris, les consignes. En rose pâle, les signaux arrivant
+au plot. En vert, les signaux du gyroscope et de l'accéléromètre
+(cette couleur correspond aussi au courbe obtenue sur la
+figure (\ref{resul}). En bleu et rouge, les signaux correspondant aux
+courants des moteurs 1 et 2. En violet, les régulateurs.
+
+\dessin{img/graphzoom}{0.7}{Résultats obtenus lors d'une simulation.}{resul}
+
+\dessin{img/scicospid}{0.6}{Super bloc du régulateur de l'inclinaison
+de l'hélicoptère.}{scipid}
+
+\dessin{img/scicospic}{0.7}{Super bloc pour la communication avec le
+PIC maître.}{scipic}
+
+\dessin{img/scicosmot1}{0.7}{Super bloc régulant le moteur 1.}{scimot1}
+
+\dessin{img/scicosmot2}{0.65}{Super bloc régulant le moteur 2.}{scimot2}
+
+\dessin{img/scicosmain}{1.05}{Schéma bloc principal stabilisant
+l'hélicoptère.}{scimain}
+
+%=======================================================================%
+%\section{Asservissement en altitude}
+%=======================================================================%
+
+%% %\section{TODO: Feedforward vs. feedback}
+%% \dessin{img/echantillon}{0.3}{jjj}{echan}
+%% helico + Scilab = simulation PIC + echanti + retard = instable avec
+%% echant faible; stable avec plein echanti; PID=0 donc .
+%% feedforward --> satbilise mais feedback inutile
+%% %\section{Plus d'une fa\c con de representer un PID}
+%% Decrire PID normal
+%% Decrire PID avec approximation/filtre de chaque morceaux
+%% Le PID qui filtre les hautes fonctions (truc d'arnaud)
