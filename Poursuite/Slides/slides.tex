@@ -1,0 +1,555 @@
+\documentclass[a4paper,11pt]{amsart}
+\def\choix{1}
+\usepackage[latin1]{inputenc}
+\usepackage[pdftex]{graphicx}
+\usepackage{picins}
+\usepackage{epsfig}
+\newcommand{\difference}[2]{\ifcase\choix#1\or#2\fi}
+\difference{\renewcommand{\slide}{}\renewcommand{\endslide}{}}{}
+\usepackage{multicol}
+%% IMPORTANT
+\usepackage[screen,sectionbreak,gray,panelright,paneltoc]{pdfscreen}
+\input{preambule3}
+%% IMPORTANT
+\newcommand{\dessin}[4]{
+\begin{figure}[htb]
+\begin{center}
+\includegraphics[scale=#2]{#1}
+\caption{#3}
+\label{#4}
+\end{center}
+\end{figure}}
+
+\newcommand{\dessinsscaption}[2]{
+\begin{figure}[htb]
+\centering
+\includegraphics[scale= #2]{#1}
+\end{figure}}
+%
+\pagestyle{empty}
+\begin{document}
+%======================================================================
+
+\title{Développement d'un train virtuel de CyCabs avec Scilab/Scicos/SynDEx}
+\author{Quentin Quadrat}
+
+\maketitle
+\begin{center} 
+Stage de fin d'étude,\\1er Janvier au 1er Juillet 2007\\ --- 
+\end{center}
+Supervisé par~:\\-- Yves Sorel, Directeur de Recherche à l'INRIA,\\
+-- Patrice Bodu, Ingénieur expert à l'INRIA.\\[10mm]
+
+\begin{minipage}[b]{.15\linewidth}
+\centering\epsfig{figure=../figures/inria, width=\linewidth}
+\end{minipage}\hfill
+\begin{minipage}[b]{.2\linewidth}
+\centering\epsfig{figure=../figures/epita, width=\linewidth}
+\end{minipage}
+
+\newpage
+%\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Sommaire}
+\begin{itemize}
+\item Présentation de la voiture électrique CyCab.
+\item Méthodologie AAA.
+\item Logiciels Scilab, Scicos, SynDEx.
+\item Application de conduite manuelle.
+\item Application de conduite automatique.
+\item Conclusion.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\section{INRIA}
+%\begin{itemize}
+%\item \textbf{I}nstitut \textbf{N}ational de \textbf{R}echerche en \textbf{I}nformatique et en %\textbf{A}utomatique créé en 1967 il est placé sous la double tutelle du ministre chargé de la
+%%Recherche et de l'Industrie.
+%\item L'INRIA accueille dans ses 6 unités de recherche : Rocquencourt, Sophia Antipolis, Grenoble ...
+%\item Budget total: 135 M Euros HT (janvier 2005),
+%\item 2 700 scientifiques, dont 950 doctorants et 500 contractuels (post doctorants et ingénieurs),
+%\item 120 logiciels distribués en accès libre ou commercialisés,
+%\item 124 projets de recherche.
+%\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{INRIA, AOSTE, IMARA}
+\subsection{INRIA}
+\begin{itemize}
+\item \textbf{I}nstitut \textbf{N}ational de \textbf{R}echerche en \textbf{I}nformatique et en \textbf{A}utomatique (créé en 1967)
+\item Il est placé sous la double tutelle du ministre chargé de la
+Recherche et de l'Industrie.
+\end{itemize}
+
+\subsection{L'équipe AOSTE}
+\begin{itemize}
+\item \textbf{A}nalysis \textbf{O}ptimisation of \textbf{S}ystems
+with real-\textbf{T}ime and \textbf{E}mbedded constraints,
+\item Méthodologie AAA (Adéquation Algorithme Architecture),
+\item  \emph{SynDEx} : logiciel de CAO pour l'aide à l'implantation de systèmes distribués
+temps réel embarqués.
+\end{itemize}
+
+\subsection{L'équipe IMARA}
+\begin{itemize}
+\item Domaine de la "Route Automatisée".
+\item Contrôle-commande du véhicule, outils de programmation temps réel distribués, traitement du signal.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{CyCab}
+
+\begin{minipage}[b]{.3\linewidth}
+\centering\epsfig{figure=../figures/cycab/cycab1, width=\linewidth}
+\end{minipage}\hspace{3mm}
+\begin{minipage}[b]{.3\linewidth}
+\centering\epsfig{figure=../figures/cycab/cycab2, width=\linewidth}
+\end{minipage}\hspace{3mm}
+\begin{minipage}[b]{.3\linewidth}
+\centering\epsfig{figure=../figures/cycab/cartes, width=\linewidth}
+\end{minipage}
+
+\subsubsection{Architecture}
+\begin{itemize}
+\item 1 PC embarqué, Linux temps réel (RTAI).
+\item 2 cartes à coeur PowerPC,
+\item Communication par protocole CAN.
+\end{itemize}
+
+\subsubsection{Capteurs, Actionneurs}
+\begin{itemize}
+\item 4 roues motrices, 2 vérins de direction.
+\item 6 contrôleurs / amplificateurs moteurs.
+\item 6 encodeurs incrémentaux / absolus.
+\item 1 joystick de direction, 1 caméra FireWire.
+\end{itemize}
+
+\subsubsection{Type de conduite}
+\begin{itemize}
+\item Logiciel applicatif de conduite \emph{manuelle} (joystick).
+\item Logiciel applicatif de conduite \emph{automatique} (bas coût : caméra).
+%\item SynDEx : distribution, synchronisation et communication du logiciel applicatif sur l'architecture.
+\end{itemize}
+
+\subsubsection{But du stage}
+\begin{itemize}
+\item \emph{Remplacer} le joystick par une caméra pour faire du \emph{suivi automatique} de CyCab.
+\item Mettre en place un régulateur pour \emph{maintenir une distance fixe} entre les 2 CyCab.
+\item \emph{Simuler} l'algorithme de suivi avec Scicos et de distribuer l'algorithme avec SynDEx.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Problématique des systèmes temps réel embarqués}
+
+\begin{itemize}
+\item Une opération doit pouvoir être exécutée \emph{avant} un temps prévu à
+  l'avance.
+ \item Il faut une \emph{puissance} de calcul embarqué \emph{suffisante} 
+  souvent à faible coût.
+  \item Cette puissance de calcul est obtenue avec \emph{plusieurs processeurs} embarqués.
+\item Il faut donc répartir les tâches sur les différents processeurs embarqués et les faire communiquer (logiciel SynDEx permet de le faire automatiquement).
+\end{itemize}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Méthodologie AAA}
+{\large
+\begin{center}
+\begin{tabular}{ccc}
+& {\sc Adéquation}\\
+{\sc Algorithme} & $\longleftrightarrow$ & {\sc Architecture}\\
+$\downarrow$ & & $\downarrow$\\
+parallélisme & & parallélisme\\
+potentiel & $\stackrel{reduction}{\longrightarrow}$ & disponible\\
+$\downarrow$ & & $\downarrow$\\
+graphe & & graphe\\
+logiciel & $\stackrel{transformation}{\longrightarrow}$ & matériel\\
+& $\Downarrow$\\
+& {\sc exécutif}
+\end{tabular}
+\end{center}
+}
+
+\begin{itemize}
+\item Algorithme : graphe d'ordonnancement  des tâches.
+\item Architecture : graphe des ressources et des moyens de communication.
+\item Exécutifs : affectation temporelle des tâches aux ressources.
+\item Adéquation : générer l'exécutif.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Exemple de distribution}
+\dessinsscaption{../figures/syndex/exemple}{0.75}
+\begin{itemize}
+\item 4 opérations : A, B, C, D.
+\item 2 processeurs~: P$_1$, P$_2$.
+\item 1 bus de communication.
+\item Durée des opérations~: \emph{1 unité} de temps.
+\item Durée d'une communication~: \emph{1 unité} de temps.
+\end{itemize}
+
+D s'exécute \emph{après} B et C qui s'exécutent \emph{après} A.
+\newpage
+Distribution de l'opération A :
+\dessinsscaption{../figures/syndex/schedul_iter1}{0.35}
+
+Distribution de l'opération B :
+\dessinsscaption{../figures/syndex/schedul_iter2}{0.35}
+
+Distribution de l'opération C :
+\dessinsscaption{../figures/syndex/schedul_iter3}{0.35}
+
+Distribution de l'opération D : etc ...\\[0.5cm]
+
+\section{SynDEx}
+%Logiciel de Conception Assisté par Ordinateur (CAO) :
+\begin{itemize}
+\item \emph{Met en oeuvre la méthodologie AAA}.
+\item Utilise des entrées graphiques pour représenter l'algorithme et l'architecture.
+\item Génère les exécutifs distribués temps réel, sans inter\-blocage et statiques écrits en macro-code m4.
+\item Visualise la prédiction des performances temps réel pour le
+  dimensionnement de l'architecture.
+\item Utilise des \emph{heuristiques} pour trouver une bonne solution de distribution (glouton, génétique, ...) car \emph{problème NP-complet}.
+\item Utilise des \emph{bibliothèques} de noyaux d'exécutifs génériques pour~: Linux, RTAI, MPC 555, bus CAN, TCP/IP, ...
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Exemple de graphe d'algorithme SynDEx}
+\vspace{0.4cm}
+\begin{itemize}
+\item Un graphe hiérarchique définit l'algorithme.
+\item Les \emph{noeuds} sont les tâches (\emph{opérations}) à réaliser et les \emph{arcs} définissent les \emph{relations de précédence}.\\[0.5cm]
+\end{itemize}
+\begin{minipage}[b]{.5\linewidth}
+\centering\epsfig{figure=../figures/syndex/syndex_algomain, width=\linewidth}
+\end{minipage}\hspace{6mm}
+\begin{minipage}[b]{.5\linewidth}
+\centering\epsfig{figure=../figures/syndex/algo1, width=\linewidth}
+\end{minipage}
+
+\section{Exemple  de graphe d'architecture SynDEx}
+\vspace{0.4cm}
+\begin{itemize}
+\item Un graphe non hiérarchique définit l'architecture.
+\item Les \emph{noeuds} sont les \emph{ressources} (soit des opérateurs soit des médias de communication).
+\item Les \emph{arcs} les \emph{communications} entre les ressources.
+\end{itemize}
+\vspace{0.4cm}
+\dessinsscaption{../figures/syndex/archi}{0.75}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Diagramme temporel}
+La \emph{synchronisation} des exécutions des tâches
+peut être visualisée sous forme d'un \emph{diagramme temporel} :
+\dessinsscaption{../figures/syndex/schedule}{0.4}
+\begin{itemize}
+\item Colonnes : ressources disponibles.
+\item Contenu des colonnes : agenda des tâches à exécuter. 
+\item Epaisseur des opérations : durée des opérations.
+%\item Abscisses : ressources disponibles.
+%\item Ordonnées : agenda des tâches à exécuter. 
+%\item Epaisseur des opérations : durée.
+\end{itemize}
+
+\section{Exécutif}
+\dessinsscaption{../figures/syndex/executifs}{0.35}
+Les opérations et les synchronisations sont spécifées en macro-code m4.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Exécution}
+
+\begin{itemize}
+\item Compiler les executifs.
+\item Flasher les différents programmes sur l'architecture.
+\item Lancer l'exécutif distribué.
+\end{itemize}
+
+\dessinsscaption{../figures/syndex/mulot}{0.7}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Scilab/Scicos}
+
+\begin{itemize}
+\item Le logiciel standard utilisé pour faire du calcul numérique en ligne et hors ligne et générer le code embarqué est~: Maltlab/Simulink.
+\item L'analogue libre développé à l'INRIA est Scilab/Scicos.
+\end{itemize}
+
+\dessinsscaption{../figures/syndex/ScSc}{0.45}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Scilab/Scicos/SynDEx}
+
+$\bullet$ \emph{Simulation/validation} du régulateur, capteurs, actionneurs et du modèle physique dans Scilab/Scicos.
+
+\dessinsscaption{../figures/retro/scicos}{0.75}
+
+
+\newpage
+\vspace{0.5cm}
+$\bullet$ Traduction de la partie à embarquer en algorithme SynDEx (\emph{régulateur, capteurs, actionneurs}).
+
+\vspace{1cm}
+\begin{minipage}[b]{.5\linewidth}
+\centering\epsfig{figure=../figures/syndex/algo2, width=\linewidth}
+\end{minipage}\hspace{2mm}
+\begin{minipage}[b]{.5\linewidth}
+\centering\epsfig{figure=../figures/syndex/algo1, width=\linewidth}
+\end{minipage}
+
+Régulateur sous Scicos.\hfill
+Régulateur sous SynDEx.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section{Contexte du stage}
+
+\subsection{Ce qui existait avant le stage}
+\begin{itemize}
+\item Applicatif SynDEx de conduite \emph{manuelle} de CyCab.
+\item \emph{Ebauche} d'applicatif SynDEx de conduite \emph{automatique} de CyCab.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Problèmes à résoudre}
+\begin{itemize}
+\item \emph{Pas} de possibilité \emph{de simulation} dans SynDEx.
+\item Les tâches des algorithmes SynDEx pour la conduite manuelle du CyCab \emph{écrites en assembleur MPC555}, donc difficile à comprendre.
+\item Les \emph{plages} des différents signaux n'étaient \emph{pas spécifiés}, donc difficile de régler les gains des régulateurs.
+\end{itemize}
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Travail effectué} 
+\begin{itemize}
+\item \emph{Traduction} de l'application de conduite manuelle SynDEx vers une application Scicos.
+\item \emph{Traitement d'images} pour la détection de la distance entre 2 CyCabs.
+\item Réalisation du \emph{régulateur de la distance} entre 2 CyCabs.
+\item \emph{Mise à jour du matériel/logiciel embarqué} (achat de cartes et de PC, installation de Linux et RTAI).
+\item \emph{Nombreuses pannes électroniques} des noeuds MPC 555 à \emph{détecter et à faire réparer}. 
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Traduction de l'application de conduite manuelle SynDEx vers une application Scicos}
+\begin{itemize}
+\item Programme permettant d'\emph{observer les signaux} réels et de les sauvegarder.
+\item \emph{Traduction} du code asm MPC555 en blocs Scicos.
+\item \emph{Identification} du modèle physique du CyCab.
+\end{itemize}
+
+\dessinsscaption{../figures/retro/Robucos_super}{0.45}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Problème rencontré}
+Les signaux simulés  ne \emph{corres-pondaient} pas aux signaux réels à cause des
+problèmes d'arrondis (MPC555 32 bit, Scicos: flottant).\\[0.5cm]
+\dessinsscaption{../figures/retro/Robucos_sim}{0.55}
+
+Qualité de la simulation après résolution des \emph{problèmes d'arrondis} (noir~: signaux observés, rouge et bleu~: signaux simulés).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Régulation de la distance}
+\subsection{Principe du platooning}
+
+\begin{itemize}
+\item Un Cycab \emph{Suiveur} suit un autre \emph{Leader}  avec une consigne de distance $\bar{d}$ à respecter.
+
+\dessinsscaption{../figures/regulateur/suivi_principe}{0.7}
+
+\item La \emph{vitesse} $v$ du Leader \emph{varie arbitrairement}. Elle est inconnue. C'est une \emph{perturbation à rejeter}.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\subsection{Bloc diagramme du sytème régulé avec Scicos} Les blocs bleus du régulateur sont à embarquer grâce à SynDEx.
+
+\dessinsscaption{../figures/regulateur/regulateur_distance}{0.4}
+
+\dessinsscaption{../figures/retro/Robucos_super2}{0.35}
+
+\newpage
+\dessinsscaption{../figures/regulateur/regul_plot}{0.6}
+En rouge~: la vitesse du Leader. En vert~: la disatance entre les 2 CyCab.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Estimation de la distance entre 2 CyCab}
+
+\subsection{Comment obtenir la distance $d$ ?}
+
+\begin{itemize}
+\item Pas simple de calculer directement $d$ (projection, ...)
+\item Idée utiliser la \emph{hauteur} $h$ du CyCab \emph{comme distance}.
+\end{itemize}
+
+\begin{minipage}[b]{.4\linewidth}
+\centering\epsfig{figure=../figures/cycab/grand, width=\linewidth}
+\end{minipage}\hspace{15mm}
+\begin{minipage}[b]{.4\linewidth}
+\centering\epsfig{figure=../figures/cycab/petit, width=\linewidth}
+\end{minipage}
+
+$d$ est petit, $h$ est grand.\hfill $d$ est grand, $h$ est petit.
+
+\subsection{Comment obtenir la hauteur $h$ ?}
+
+Par traitement de l'image~: -- contours (filtre de Sobel), -- lignes horizontales (histogramme), -- prédiction des positions des raies (Kalman).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Détection de contours}
+
+\dessinsscaption{../figures/filtre/serie2/debut}{0.75}
+\newpage
+
+\subsection{Filtre de Sobel} Visualisation du \emph{gradient vertical} des couleurs pour faire apparaître les \emph{contours horizontaux}.
+
+\begin{center}
+\begin{minipage}[b]{.35\linewidth}
+\centering\epsfig{figure=../figures/filtre/serie2/sobelhs, width=\linewidth}
+Gradient signé
+\end{minipage}\hspace{7mm}
+\begin{minipage}[b]{.35\linewidth}
+\centering\epsfig{figure=../figures/filtre/serie2/sobelh, width=\linewidth}
+Valeur absolue
+\end{minipage}
+\\[0.5cm]
+\begin{minipage}[b]{.35\linewidth}
+\centering\epsfig{figure=../figures/filtre/serie2/signe, width=\linewidth}
+Signe du gradient
+\end{minipage}\hspace{10mm}
+\begin{minipage}[b]{.35\linewidth}
+\centering\epsfig{figure=../figures/filtre/serie2/fin, width=\linewidth}
+Gradient couleur
+\end{minipage}
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Histogramme}
+
+Histogramme des pixels rouges et bleus rencontrés dans les ignes horizontales.
+
+\dessinsscaption{../figures/filtre/histoh}{0.75}
+\newpage
+
+\begin{itemize}
+\item Les grandes raies correspondent \emph{en principe} aux contours du CyCab.
+\item L'environnement \emph{peut aussi} créer des raies.
+\item Pour \emph{filtrer l'environnement} on considère uniquement l'histo\-gramme des pixels à l'\emph{intérieur des cadres}.
+\item Pour \emph{suivre les cadres}, on prédit leur centre grâce à un filtre de \emph{Kalman}.
+\end{itemize}
+\vspace{0.5cm}
+
+\begin{center}
+\begin{minipage}[b]{.45\linewidth}
+\centering\epsfig{figure=../figures/filtre/lassot, width=\linewidth}
+\end{minipage}\hspace{6mm}
+\begin{minipage}[b]{.45\linewidth}
+\centering\epsfig{figure=../figures/filtre/histo_lassot, width=\linewidth}
+\end{minipage}
+\end{center}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\subsection{Filtre de Kalman}
+Modèle du déplacement de la raie dans l'image. La vitesse $v$ de \emph{déplacement} vertical des raies est \emph{supposée localement constante} ($\dot{v}=0$) et donc, leurs positions $x$ vérifient $\dot{x}=v$, soit en temps discret le modèle~:
+
+$$\begin{cases}
+v_{n+1}=v_{n}, \\
+x_{n+1}=x_{n}+hv_n,\\
+y_{n}=x_n+w_n.
+\end{cases}$$
+
+On peut calculer l'observateur optimal donné  par le filtre Kalman en résolvant une équation de Ricatti dans Scilab.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\subsection{Résultat expérimental} Lors d'un déplacement du CyCab, les raies correspondant au bord du CyCab sont suivies correctement.
+
+\begin{center}
+\begin{minipage}[b]{.48\linewidth}
+\centering\epsfig{figure=../figures/regulateur/exp1_1, width=\linewidth}
+\end{minipage}\hspace{1mm}
+\begin{minipage}[b]{.47\linewidth}
+\centering\epsfig{figure=../figures/regulateur/exp2_2, width=\linewidth}
+\end{minipage}
+\end{center}
+
+\begin{itemize}
+\item La couleur rouge ou bleue permet de mieux détecter la raie à suivre.
+\item La différence de hauteur observée entre deux raies donne l'observation de distance cherchée.
+\end{itemize}
+
+\newpage
+\subsection{Résultat expérimental}
+\begin{center}
+\begin{minipage}[b]{.475\linewidth}
+\centering\epsfig{figure=../figures/regulateur/exp1, width=\linewidth}
+\end{minipage}\hspace{1mm}
+\begin{minipage}[b]{.48\linewidth}
+\centering\epsfig{figure=../figures/regulateur/exp2, width=\linewidth}
+\end{minipage}
+\end{center}
+
+De la même façon, le suivi de raies verticales permettrait la poursuite 2D.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Type de tâches sous Linux temps réel}
+
+On distingue 4 types de tâches selon les contraintes temporelles et d'espace (noyau/utilisateur) dans lequel elles s'exécutent~:
+
+\begin{center}
+\begin{tabular}{|c|c|c|} \hline
+ & non TR & TR \\ \hline
+Noyau & module & module RTAI \\ \hline
+Utilisateur &  processus & processus LXRT \\ \hline
+\end{tabular}
+\end{center}
+
+%\begin{itemize}
+%\item Processus : espace utilisateur sans contraintes de temps réel.
+%\item Module : espace noyau sans contraintes de temps réel.
+%\item Processus LXRT : espace utilisateur avec contraintes de temps réel.
+%\item Module RTAI : espace noyau avec contraintes de temps réel.
+%\end{itemize}
+
+Avantages/inconvénients~:
+\begin{itemize}
+\item Modules : pas de protection mémoire, pas d'appels au fonctions de programmation utiles (open, write, printf, ...).
+\item Processus : protection mémoire, appels au fonctions de programmation utiles (open, write, printf, ...).
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Application au CyCab}
+\begin{itemize}
+\item Modules RTAI du CyCab~: timer 10 ms pour les noeuds MPC555 (choix historique douteux).
+\item Processus LXRT~: gestion de la caméra FireWire, traitement de l'image, IHM (choix intéressant car il permet à la fois de respecter les contraintes temporelles et donne accès aux fonctions de programmation Linux).
+\item A cause du manque de puissance de calcul, les contraintes temporelles ne pouvaient être satisfaites avec le matériel existant. Il a fallu acheter un PC plus puissant et installer un Linux temps réel RTAI.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusion}
+
+\begin{itemize}
+\item Responsabilité d'une application temps réel complète (traitement d'images, régulation, électronique, OS).
+\item Héritage d'un travail existant sans que les auteurs des travaux précédents ne soient accessibles (RobotSoft, stagiaires AOSTE).
+\item J'ai pu mener à bien la partie traitement de l'image et la partie régulation en simulation.
+\item Des pannes matérielles ont retardées la mise en oeuvre du régulateur (en cours).
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{FIN}
+\vspace{2cm}
+\begin{center}
+\LARGE{Questions ?}
+\end{center}
+
+\end{document}
+
+
+
+
+
+
+

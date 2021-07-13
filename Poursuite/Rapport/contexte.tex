@@ -1,0 +1,265 @@
+%%====================================================================
+%%====================================================================
+%\chapter{SynDEx}
+%expliquer la hierarchie des ope. 1 fct = 1 oper specialisee.
+%+ expliquer les 2 types de graphes
+%+ ordre partiel ordre total.
+%\section{Exemple de scheduling et de macro génération avec SynDEx}
+%image Archi + Algo + schedule + M4
+%mettre le vieux dessin de fct de Syn
+\chapter{Contexte}
+%\section{Système temps réel}
+%\chapter{Système temps réel}
+%==================================================
+\section{Systèmes réactifs temps réel embarqués}
+On s'intéresse dans ce document à la programmation de systèmes
+informatiques pour des applications de commande et de traitement du
+signal et des images, soumises à des contraintes temps réel et
+d'embarquabilité \cite{Yves}.  Dans ces applications, le système commande son
+environnement en produisant, par l'intermédiaire d'actionneurs, une
+commande qu'il calcule à partir de son état interne et de l'état
+de l'environnement, acquis par l'intermédiaire de capteurs.
+
+Les systèmes informatiques étant numériques, les signaux
+d'entrée acquis par les capteurs, ainsi que ceux de sortie produits
+par les actionneurs, sont discrétisés
+(échantillonnage-blocage-quantification), aussi bien dans l'espace
+des valeurs que dans le temps.  La précision de la commande dépend
+de la résolution de cette discrétisation.
+
+Réagir trop tard peut conduire à des conséquences
+catastrophiques pour le système lui-même ou son environnement.
+Une analyse mathématique utilisant la théorie de la commande
+permet de déterminer d'une part une borne supérieure sur le
+délai qui s'écoule entre deux échantillons (cadence), et d'autre
+part une borne supérieure sur la durée du calcul (latence) entre
+une détection de variation d'état de l'environnement (stimulus) et
+la variation induite de la commande (réaction).
+
+En plus de ces contraintes temps réel, l'application est soumise à
+des contraintes technologiques d'embarquabilité et de coût, qui
+incitent à minimiser les ressources matérielles (architecture)
+nécessaires à sa réalisation (l'architecture peut être
+composée de plusieurs processeurs, et de circuits spécialisés,
+pour satisfaire les contraintes temps réel).
+
+%==================================================
+% \section{Implantation distribuée optimisée}
+%
+% Bien que les processeurs d'usage général soient de plus en plus
+% performants, certaines applications de traitement du signal et des
+% images nécessitent une puissance de calcul largement supérieure
+% à celle actuellement disponible sur les processeurs les plus
+% rapides, utilisés au c{\oe}ur des stations de travail.   C'est
+% pourquoi, pour atteindre les objectifs imposés par ces demandes en
+% puissance de calcul, il faut recourir à des calculateurs à
+% architecture parallèle. Malheureusement, les contraintes temps
+% réel et d'embarquabilité sont parfois tellement fortes que les
+% processeurs disponibles sur le marché ne suffisent plus. Cela
+% conduit donc à utiliser, en complément des processeurs, des
+% circuits intégrés spécialisés.
+
+Dans ce document, comme nous nous intéressons uniquement aux
+processeurs, plutôt qu'aux circuits intégrés spécialisés,
+l'implantation de l'algorithme sur l'architecture consiste donc à
+traduire (coder) l'algorithme de commande en programmes à charger
+dans les mémoires des processeurs pour que ceux-ci les
+exécutent.
+
+%--------------------------------------------------
+\section{Parallélisation}
+Pour une architecture monoprocesseur, l'algorithme serait traduit en
+un seul programme, c'est-à-dire codé en un ensemble d'instructions
+exécutées séquentiellement par le séquenceur d'instructions du
+processeur.  Pour une architecture multiprocesseur, composée de
+plusieurs séquenceurs d'instructions opérant en parallèle, ainsi
+que de médias de communication leur permettant d'échanger des
+données, il faut partitionner l'ensemble des instructions en
+fonction du nombre de séquenceurs d'instructions, allouer un
+séquenceur d'instructions à chacun des sous-ensembles
+d'instructions et enfin ajouter des instructions de synchronisation et
+de transfert de données, et leur allouer des médias de
+communication, pour supporter les dépendances de données entre les
+instructions de l'algorithme qui sont exécutées par des
+séquenceurs d'instructions différents.
+
+Un partitionnement simple, par découpage linéaire du programme
+séquentiel en étapes successives exécutées chacune par un
+séquenceur d'instructions différent, permet rarement une
+exploitation efficace du parallélisme disponible de l'architecture,
+car les dépendances de données entre étapes sont alors souvent
+telles que les séquenceurs d'instructions passent une partie
+importante de leur temps à exécuter les instructions de
+synchronisation ajoutées pour supporter les dépendances de
+données entre étapes.  Pour permettre une exploitation plus
+efficace du \emph{parallélisme disponible} de l'architecture, il faut
+étendre l'\emph{ordre total}, d'exécution
+des instructions du programme séquentiel monoprocesseur, à un emph{ordre partiel} extrait par une analyse
+de dépendances de données entre instructions, exhibant le emph{parallélisme potentiel} de l'algorithme, et permettant une
+distribution (partitionnement ou ``allocation spatiale'') et un
+réordonnancement (``allocation temporelle'', limitée au respect de
+l'ordre partiel) individuel des instructions.
+
+La parallélisation est donc un problème d'allocation de
+ressources, que l'on désire réaliser de manière efficace,
+o\`u les ressources sont les séquenceurs d'instructions et les
+médias de communication inter-séquenceurs, et o\`u les tâches à
+allouer à ces ressources sont les instructions de l'algorithme ainsi
+que celles de synchronisation et de communication.
+
+%--------------------------------------------------
+% \subsection{Optimisation}
+% Pour un codage monoprocesseur d'un algorithme donné, on peut choisir
+% n'importe quelle architecture cible multiprocesseur, et pour chaque
+% architecture choisie il existe un grand nombre d'implantations
+% possibles (c'est-à-dire de distributions et d'ordonnancements des
+% instructions, qui respectent l'ordre partiel).  Parmi toutes ces
+% implantations possibles, seules sont éligibles celles dont les
+% performances temps réel (calculées à partir des durées connues
+% d'exécution des instructions et des transferts de données
+% interprocesseurs) respectent les contraintes temps réel.  Parmi les
+% implantations éligibles, pour satisfaire les contraintes
+% technologiques d'embarquabilité et de coût, il faut choisir celle
+% qui minimise les ressources matérielles (nombre de processeurs, de
+% médias de communication interprocesseur, et de cellules mémoire).
+
+% Le plus difficile n'est pas de comparer les coûts de deux
+% architectures (il suffit d'en sommer les coûts des composants), ni
+% même de vérifier si une implantation respecte les contraintes
+% temps-réel (ce qui nécessite un modèle prédictif des
+% performances temps-réel de n'importe quelle implantation possible),
+% c'est d'éliminer rapidement les solutions inadéquates, afin
+% d'aboutir dans un temps raisonnable au choix d'une bonne implantation.
+% Or ce problème s'apparente aux problèmes d'allocation de
+% ressources, reconnus NP-complets, et est en général de taille
+% gigantesque (variant exponentiellement avec le nombre de processeurs
+% et d'instructions de l'algorithme), ce qui justifie l'utilisation
+% d'heuristiques pour le résoudre.
+
+% %--------------------------------------------------
+% \subsection{Minimisation de l'exécutif}
+% Tout d'abord, pour minimiser les ressources, on commence par minimiser
+% leur gaspillage Pour cela, il faut~:
+% \begin{itemize}
+% \item d'une part équilibrer la charge des ressources (mémoires,
+%   séquenceurs d'instructions et médias de communication),
+%   c'est-à-dire paralléliser au maximum calculs et communications
+%   afin de minimiser les durées d'inactivité (attentes)
+%   nécessaires aux synchronisations entre calculs et communications,
+% \item d'autre part minimiser les ajouts d'instructions qui prennent
+%   les décisions d'allocation de ressources (mémoire, séquenceurs
+%   d'instructions et séquenceurs de communications) afin
+%   d'équilibrer leur charge.
+% \end{itemize}
+
+% Pour que le gain apporté par l'optimisation de l'allocation des
+% ressources (distribution et ordonnancement des calculs et des
+% communications, dont découle la distribution des données dans les
+% mémoires) ne soit pas pénalisé par le coût de l'optimisation
+% elle-même, il faut que celle-ci soit faite avant l'exécution.  Comme
+% on dispose alors d'énormément plus de temps que pendant
+% l'exécution, on peut faire des optimisations plus complexes, plus
+% globales et donc probablement plus efficaces.  Aux méthodes dites
+% ``dynamiques'' d'allocation de ressources, qui nécessitent un
+% exécutif représentant un volume de code et un temps d'exécution
+% non négligeables pour prendre à l'exécution des décisions
+% d'allocation, on préférera donc des méthodes plus ``statiques''
+% qui consistent à \emph{synthétiser} un exécutif sur mesure, d'un
+% surcoût bien moindre, à partir des décisions de distribution et
+% d'ordonnancement prises avant l'exécution par l'heuristique
+% d'optimisation.
+
+% %--------------------------------------------------
+% \subsection{Choix de la granularité}
+% Ensuite, comme ce problème d'optimisation d'allocation de ressources
+% a un espace des solutions à explorer variant exponentiellement avec
+% le nombre de processeurs et d'instructions de l'algorithme, il faut en
+% réduire la taille afin que la durée d'exécution de l'heuristique
+% d'optimisation reste acceptable.
+
+% Aussi, comme atomes ou ``grains'' indivisibles de distribution et
+% d'ordonnancement, plutôt que de considérer des instructions
+% individuelles, on considérera des agrégats d'instructions
+% préordonnancées (correspondant par exemple à des séquences
+% d'instructions issues de la compilation séparée de sous-programmes
+% FORTRAN ou de fonctions C) qu'on appellera par la suite
+% indifféremment soit \emph{macro-instructions}, soit plus
+% généralement \emph{opérations}, et des agrégats de cellules
+% mémoire contiguës (correspondant par exemple à des tableaux ou à
+% des structures C) qu'on appellera par la suite soit \emph{macro-registres}
+% soit plus généralement \emph{dépendances (de données)}.
+
+\section{Synchronisation dans les architectures}
+% Tout modèle étant entâché d'erreurs dues aux nécessaires
+% approximations simplificatrices, les dates de début et de fin
+% d'exécution des opérations et des communications, calculées par
+% le modèle de prédiction de performances lors de l'optimisation à
+% partir des durées d'exécution, peuvent être suffisament
+% différentes lors de l'exécution pour que leur ordre relatif (entre
+% séquences parallèles) change.  Pour garantir à l'exécution
+% l'ordre relatif entre communications et opérations qui partagent les
+% tampons mémoire des données communiquées, on ne peut donc se
+% contenter des prédictions de dates d'exécution faites pendant
+% l'optimisation, il faut imposer cet ordre relatif par des
+% synchronisations explicites dans l'exécutif.  En bref, la
+% distribution et l'ordonnancement des opérations et des
+% communications sont optimisés avant l'exécution, en fonction des
+% durées d'exécution données, mais ils sont imposés à
+% l'exécution indépendament des durées effectives d'exécution.
+
+La synchronisation n'est pas simple entre opérateurs
+(séquenceurs d'instructions et/ou de communications) car chacun
+peut séquencer ses opérations indépendamment des autres, sauf
+dans les deux cas suivants ~:
+\begin{enumerate}
+\item Lorsque deux opérateurs requièrent simultanément, pour
+  leur micro-opération en cours, un accès à une même ressource
+  (partagée), comme par exemple un bus mémoire, les deux accès
+  doivent être séquentialisés, donc l'un des deux opérateurs
+  doit, avant de commencer son accès, attendre que l'autre
+  opérateur ait terminé le sien, ce qui rallonge d'autant la
+  durée d'exécution de la micro-opération mise en attente~;
+%  ces interférences entre micro-opérations, et donc entre
+%  macro-opérations, dues aux arbitrages d'accès aux ressources
+%  partagées entre opérateurs, doivent être prises en compte dans
+%  le modèle prédictif de performances.
+\item Lorsqu'une macro-opération consomme en donnée le résultat
+  produit par une autre macro-opération exé\-cu\-tée par un
+  autre opérateur, il faut que ce dernier termine l'exé\-cu\-tion
+  de la macro-opération productrice avant que l'autre opérateur ne
+  commence l'exécution de la macro-opération consommatrice, et
+  de plus, comme les algorithmes réactifs sont par nature
+  répétitifs, il faut que la macro-opération consommatrice soit
+  terminée avant que la macro-opération productrice soit à nouveau
+  exécutée lors de l'itération suivante de la séquence
+  répétitive, tout ceci afin que les données ne soient pas
+  modifiées pendant leur utilisation.
+\end{enumerate}
+Dans les deux cas, des opérations qui auraient pu être exécutées
+concurremment doivent être exécutées séqueniellement,
+mais leur ordre d'exécution est sans influence sur le résultat
+fonctionnel des opérations dans le premier cas, alors qu'il doit
+être imposé dans le second cas.
+
+C'est la raison pour laquelle dans le premier cas il n'est pas
+nécessaire de spécifier les synchronisations, d'autant plus
+qu'elles doivent être faites au niveau de la micro-opération,
+``invisible'' au niveau macroscopique (et même au niveau de
+l'instruction), et que leurs dates d'occurrence dépendent des
+durées relatives d'exécution des micro-opérations exécutées
+concurremment.
+
+Par contre dans le second cas, les synchronisations doivent être
+spécifiées au niveau macroscopique, insérées entre les
+macro-opérations.
+
+Ce niveau ``opérateur'' de décomposition de l'architecture
+correspond à un grain adéquat pour le problème d'optimisation
+d'allocation de ressources~: chaque opérateur séquence des
+macro-opérations de calcul et/ou de communication, et de
+synchronisation.
+
+
+
+
+

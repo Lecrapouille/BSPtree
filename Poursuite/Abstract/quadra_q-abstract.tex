@@ -1,0 +1,241 @@
+\documentclass[a4paper, 10pt]{article}%{report}
+%\usepackage[french]{babel}
+\usepackage{amstext}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{amssymb}
+\usepackage{picins}
+
+\newcommand{\dessin}[4]{
+\begin{figure}[htb]
+\centering
+\includegraphics[scale= #2]{#1}
+\caption{#3}
+\label{#4}
+\end{figure}}
+
+\newcommand{\dessinsscaption}[2]{
+\begin{figure}[htb]
+\centering
+\includegraphics[scale= #2]{#1}
+\end{figure}}
+
+\newcommand{\yinifnt}{\fontencoding{OT1}\fontfamily{yinit}\fontsize{40}{60}\selectfont}
+\newtheorem{remarque}{Remarque} \newcommand{\AAA}{{\mathcal A}}
+\newcommand{\BB}{{\mathcal B}} \newcommand{\CC}{{\mathcal C}}
+\newcommand{\DD}{{\mathcal D}} \newcommand{\EE}{{\mathcal E}}
+\newcommand{\FF}{{\mathcal F}} \newcommand{\GG}{{\mathcal G}}
+\newcommand{\HH}{{\mathcal H}} \newcommand{\II}{{\mathcal I}}
+\newcommand{\JJ}{{\mathcal J}} \newcommand{\KK}{{\mathcal K}}
+\newcommand{\LL}{{\mathcal L}} \newcommand{\MM}{{\mathcal M}}
+\newcommand{\NN}{{\mathcal N}} \newcommand{\OO}{{\mathcal O}}
+\newcommand{\PP}{{\mathcal P}} \newcommand{\QQ}{{\mathcal Q}}
+\newcommand{\RR}{{\mathcal R}} \newcommand{\SSS}{{\mathcal S}}
+\newcommand{\TT}{{\mathcal T}} \newcommand{\UU}{{\mathcal U}}
+\newcommand{\VV}{{\mathcal V}} \newcommand{\WW}{{\mathcal W}}
+\newcommand{\XX}{{\mathcal X}} \newcommand{\ZZ}{{\mathcal Z}}
+\newcommand{\bbR}{{\mathbb R}} \newcommand{\bbD}{{\mathbb D}}
+\newcommand{\bbO}{{\mathbb O}} \newcommand{\bbS}{{\mathbb S}}
+\newcommand{\bbE}{{\mathbb E}} \newcommand{\bbN}{{\mathbb N}}
+\newcommand{\bbM}{{\mathbb M}} \newcommand{\bbV}{{\mathbb V}}
+\newcommand{\bbC}{{\mathbb K}} \newcommand{\bbF}{{\mathbb F}}
+\newcommand{\bbP}{{\mathbb P}}
+\newcommand{\www}{{\mathfrak w \;}} \newcommand{\fff}{{\mathfrak f \;}}
+\newcommand{\nnn}{{\mathfrak n \;}} \newcommand{\aaa}{{\mathfrak a \;}}
+\newcommand{\hhh}{{\mathfrak h \;}}
+
+\begin{document}
+
+\title{\vskip -4cm
+  \Large \sl \bf  Quentin QUADRAT\\
+    quadra\_q, UID 17115, GISTR promo 2007 \\
+    \vspace{0.5cm}\hrule\vspace{0.5cm}
+      \dessinsscaption{epita}{0.2}
+      \large EPITA \\
+  \large \textbf{\'Ecole Pour l'Informatique et les Techniques
+  Avanc\'ees} \\
+  \vskip 2.5cm
+  {\Large Internship Report}\\
+  \vskip 1cm
+  {\LARGE {\textsc{Visual control of autonomous vehicles for platooning applications}}}\\
+    \vskip 2cm
+    January -- July 2007\\
+  \vskip 3.5cm
+}
+
+\date
+{\vskip -3cm
+  \vspace{15mm}
+  Supervised by\\
+  \vskip 0.25cm
+  {\Large \sl \bf Yves SOREL } \\
+  INRIA - Domaine de Voluceau - Rocquencourt B.P.105\\
+  78153 Le Chesnay Cedex - France\\
+  T\'el: (1) 39 63 52 60 - email: Yves.Sorel@inria.fr\\
+  \vspace{0.5cm}\dessinsscaption{inria}{0.2}
+  \large INRIA \\
+  \large \textbf{Institut National de Recherche en Informatique et en Automatique} \\
+  \vspace{0.5cm}\hrule
+}
+
+\maketitle
+
+\strut\thispagestyle{empty}
+\setcounter{page}{0}
+
+%%% Definition entÍte et pied de page
+
+\pagestyle{fancy}
+
+%\lhead[\textbf{Etude pour....}]
+  %    {}
+%\rhead[]
+  %    {\leftmark}
+%\chead{}
+%\lfoot[\thepage]
+  %    {EPITA}
+%\rfoot[EPITA]
+  %    {\thepage}
+%\cfoot{Quentin Quadrat}
+
+
+%\tableofcontents 
+%\newpage
+
+
+%% # Aide à l'écriture de noyaux d'exécutif
+%% Afin d'aider l'utilisateur à écrire les noyaux d'exécutifs,
+%% ce qui correspond à une tâche répétitive et fastidieuse,
+%% il s'agit d'étudier et de développer un éditeur de noyaux
+%% d'exécutif proposant des formulaires issus de l'analyse de
+%% la spécification de l'algorithme.
+
+%\newpage
+
+\section{Introduction}
+My internship lasted six months (from January to July 2007) at the National Institute for Research in Computer Science and Automatic Control (INRIA), in the AOSTE project. The purpose was to develop the control of an autonomous vehicle for a platooning application.
+%an autonomous driving algorithm for a platoon of electric cars called CyCab.
+We define a platoon as several vehicles queued in a  file of cars called CyCab. The first CyCab, called \emph{Leader}, generally driven by a human, is followed by an autonomous CyCabs, called \emph{Followers}. Each follower tries to maintain a predefined distance with the previous follower. .
+
+\dessin{cycab}{0.4}{A Cyber Cabi.}{cy}
+
+\section{INRIA Rocquencourt}
+The French Research Institute for Computer Science and Automatic Control, also
+called IRIA, was established in 1967. IRIA was a scientific and technological
+public center under the dual authority of the Ministry of Research and the
+Ministry of Industry. IRIA became INRIA in 1979.
+
+Within its six research units in Rocquencourt, Rennes, Sophia Antipolis,
+Grenoble, Nancy and Bordeaux-Lille-Saclay, INRIA has a workforce of 3,500,
+2,700 of whom are scientists from INRIA's partner organizations such as CNRS
+(the French National Center for Scientific Research), universities and leading
+engineering schools. They work in 120 joint research projects. Many INRIA
+researchers are also professors whose doctorat students, approximately 950, work on
+theses as part of INRIA research projects.
+
+INRIA's main aims are: 
+\begin{itemize}
+\item to undertake basic and applied research, 
+\item to create experimental systems, 
+\item to organize international scientific exchange, 
+\item to ensure the transfer and dissemination of knowledge and expertise, 
+\item to contribute to the effective implementation of research findings, 
+\item to contribute to cooperative development programmes especially through
+  training, 
+\item to carry out scientific evaluations.
+\end{itemize}
+
+Mathematics, automatic and computer science researchers all collaborate on the
+five following fields: -- communicating systems,  -- cognitive systems,
+-- symbolic systems,  -- numeric systems, -- biological system. 
+
+An INRIA's research project is a limited size team with scientific goals and relative focused thematic. The supervisor is wholly responsible for carrying through the project and the work of the team. All teams are frequently in relation with industrial partnerships.
+
+\section{AOSTE Rocquencourt project}
+The acronym AOSTE means Models and Methods for the Analysis and Optimization of Systems with Real-time and Embedded Constraints.
+
+The subject of this internship lies within the AOSTE project activities:
+models and methods for analyzing and optimizing of real-time embedded
+applications. This project has a dual localization: Rocquencourt and Sophia
+Antipolis. Rocquencourt is interesting in optimization. Yves Sorel, INRIA's director of research, is the supervisor of the AOSTE Rocquencourt project.
+
+The work of the team is focused on four research axes: -- modelling such
+systems thanks to the graph theory, -- developing automated processor code
+generation techniques (to make material--software dual development), --
+studying fault tolerance, -- optimizing implementations. Real-time production
+control algorithms are implemented in the case of mono-processors. In the case
+of several components (network of processors and integrated circuits), the distribution heuristics are studied.
+The simulation/specification phase and the real-time implementation are integrated in order to reduce the development time of distributed real-time applications.
+
+A methodology called AAA (for Algorithm--Architecture adequation) has been
+introduced in these works. At the same time, a computer aided design (CAD) software, called
+\textbf{SynDEx}, has been implemented, for rapid prototyping and optimizing the implementation of distributed real-time embedded applications into multicomponent architectures.
+
+\section{What is SynDEx}
+SynDEx is a software that takes in input two graphs : -- one graph determining a processor architecture with  their  communication media, -- another graph specifying  an algorithm by defining the different tasks to be executed, the data exchanges and  the partial  task execution order. SynDEx finds the tasks that can be executed in parallel and places them into the different processors (that we call scheduling).
+
+Let us show an example, and suppose that the architecture consists in two computers linked  by a communication protocol. Let us suppose  that we have to execute the following algorithm :
+\begin{enumerate}
+\item Generate a random number $n$.
+\item Get the number $n$ and a apply it to a function (task) called \emph{foo} that produces the number $n_1$.
+\item Get the same number $n$ and a apply it to a function called \emph{bar} that produces the number $n_2$.
+\item Sum $n_1$ and $n_2$. 
+\end{enumerate}
+
+The following figure, shows the algorithm and architecture graphs and the result obtained by SynDEx i.e. the scheduling.
+\dessin{../figures/comm}{0.6}{AAA methodology.}{comm}
+
+In the chart of the \emph{AAA result}, we see vertically the architecture, i.e. the two PCs and their  communication medium. Horizontally, we see the schedule generated by SynDEx with the colorful task execution times and the communication times shown in black.
+Spaces between two tasks show the idle times of the PCs. Indeed it has to wait for the data before executing a task. As soon as the schedule has been determined by SynDEx  it can be uploaded into the two PCs.
+
+\section{Description of the work}
+
+The research searches on autonomous vehicles started 15 years ago. The first INRIA's project tried to achieve a platoon of autonomous vehicles for the PRAXITELE project (self service set of cars) to improve the availability of cars in the parking. But the costs was too high and the project had to be given up.  After this project, several prototypes of CyCab have been specified at INRIA and built by the Robosoft company. Now it is possible to achieve the initial PRAXITELE dream of autonomous platoon of CyCabs.
+
+A CyCab is a a two-seat car. It contains four electrical motors powered by an embedded PC with a real time operating system, called RTAI, and two electronic cards which control both the driving and the steering of the vehicle. The default software allows a CyCab to be manually  driven by a human thanks a joystick.
+
+My job consisted to replace the joystick by an automatic controller
+based on a video camera.  To determine the distance between two cars
+we observe on the image the distance between two significant
+horizontal stripes thanks to the different colorful parts of the
+CyCab. The initial distance of the two stripes seen in the first
+image, give us the reference distance to be maintained by the Follower
+while the Leader can arbitrarily change its velocity. When the Leader
+accelerates, the two stripes on the image becomes closer.  Then the
+Follower must accelerates to keep the new observed positions of the
+stripes to the reference position. To avoid mathematical discussion
+the controller is not detailed here. A similar algorithm can be used
+for the Follower's steering but based this time on maintaining in the
+center of the Follower image the Leader CyCab.
+
+\section{Results}
+
+Currently, the algorithm has only been tested in simulation due to electrical failing of an electronic card. While, I was waiting the Robosoft repair, I made a Scicos simulator to test the visual tracking and to model the CyCab's dynamics. The simulator has been made thanks to a spy softwares on the CyCab, using the numerical  software Scilab-Scicos. An user interface to see, in real time, the result of the image processing has been designed. Finally, the controller and the image processing has been distributed into the CyCab's architecture (i.e. the embedded PC and electrical cards) thanks to the SynDEx software.
+
+Moreover it appears that the embedded PC was not enough powerful and a new one had to be
+specified and bought after speed evaluation of embedded software.
+
+\section{Skills acquired}
+This internship allowed me:
+-- to discover the realtime problematic (time constraints, data value precision, specification of embedded equipments),
+-- to progress in automatic control theory,
+-- to be introduced to image processing,
+-- to improve the mastering  of SynDEx, Scilab and Scicos sofwares
+-- to manipulate embedded electric cards, 
+-- to learn MPC assembly language,
+-- to discover the real time operating systems RTAI. 
+
+\section{Conclusion and thanks}
+I have enjoyed the work I have done. This internship was very useful to apply and improve my knowledge the real time tools that I have learned during may specialization at EPITA.
+
+I would like to deeply thank Yves Sorel, INRIA director of research, who
+accept me in his team and  to give me the opportunity  to discover real time problematic. I have also really appreciated his friendship.
+
+I would like also thank Patrice Bodu for his precious help to debug and understand the CyCab. I also thank all the team mates: Christophe Gensoul, Patrick Meumeu, Daniel de Roglaudre and Jacky for their friendship and the good time I spent with us. Thank also to Nelly Malloisel, the project assistant, for her kindness.
+\end{document}
+
+
+
+
+
+

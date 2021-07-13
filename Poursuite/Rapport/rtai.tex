@@ -1,0 +1,184 @@
+%\chapter{Linux, RTAI et LXRT}\label{chaprtai}
+\chapter{Système d'exploitation Linux}\label{chaprtai}
+
+\section{Travail effectué}
+
+J'ai profité de la mise à jour des cartes électroniques du PC embarqué pour installer un système d'exploitation Linux plus récent. Je lui ai appliqué un patch pour le faire fonctionner avec le temps réel. 
+
+J'explique ici quelques notions de Linux comme le but du noyau, les modules, la différence entre espace noyau et utilisateur, la différence entre LXRT et RTAI. Dans les annexes \ref{annexes}, j'explique comment installer RTAI et surtout comment configurer et compiler le noyau Linux. Dans le chapitre \ref{qq}, j'explique le travail que j'ai effectué, à savoir~: corriger un problème dans la communication entre LXRT et RTAI.
+
+\section{Rappels}
+On définit un programme comme étant une séquence d'instructions qui doit être exécutée dans un certain ordre. Un logiciel ou application est un ensemble de programmes, qui permet à un ordinateur ou à un système informatique d'assurer une tâche ou une fonction en particulier. Un processus est un programme en train de s'exécuter. En informatique, on ajoute certaines propriétés à la définition précédente. En l'occurrence, un processus se compose d'un texte de programme (du code machine) et d'un état du programme (point de contrôle courant, valeur des variables, pile des retours de fonctions en attente, descripteurs de fichiers ouverts, etc.).
+Une tâche est un concept abstrait que l'on rapproche d'un processus dans le sens d'un travail ou d'une responsabilité qui est alloués et qui doit être exécutée.
+
+Le noyau est le composent central de la plupart des systèmes d'exploitation. Il est responsable de la gestion des ressources du système et de la communication entre le matériel et les logiciels utilisateurs (confère figure (\ref{kernel})).
+ Il fournit la couche d'abstraction la plus basse (confère figure~(\ref{layers})) des ressources (comme la mémoire, le processeur et les dispositifs d'entrée-sortie).  Cela permet d'avoir accès aux ressources physiques  par des mécanismes de communication inter processus et par des appels systèmes. Cette encapsulation du matériel libère les développeurs de logiciels de la gestion complexe des périphériques et d'écrire des applications génériques.\\[0.2cm]
+\begin{minipage}[b]{.17\linewidth}
+\centering\epsfig{figure=figures/rtai/layers, width=\linewidth}
+\caption{Abstractions \cite{wiki}.}\label{layers}
+\end{minipage}\hspace{1.7cm}
+\begin{minipage}[b]{.3\linewidth}
+\centering\epsfig{figure=figures/rtai/kernel, width=\linewidth}
+\caption{Connexions du noyau \cite{wiki}.}\label{kernel}
+\end{minipage} \hspace{1.7cm}
+\begin{minipage}[b]{.3\linewidth}
+\centering\epsfig{figure=figures/rtai/mono, width=\linewidth}
+\caption{Noyau monolithique \cite{wiki}.}\label{mono}
+\end{minipage}
+
+Il existe différents types de noyau, comme  par exemple les noyaux monolithiques,  les micro-noyaux, etc. Celui qui nous intéresse ici est le noyau de Linux qui est un noyau monolithique (confère figure (\ref{mono})). Sa mémoire est divisée entre l'espace utilisateur et l'espace noyau.  L'espace utilisateur désigne la région mémoire dédiée aux applications, à l'exclusion du noyau lui-même, qui fonctionne dans son propre espace mémoire. L'espace noyau est l'endroit où le code réel du noyau réside après son chargement, et où la mémoire est allouée pour les opérations qui prennent place à son niveau. Ces opérations incluent l'ordonnancement, la gestion des processus et des signaux, des entrées/sorties assurées par les périphériques, de la mémoire et de la pagination. 
+
+Cette partition entre espace utilisateur et espace noyau permet d'obtenir une certaine forme de sécurité : les applications de l'espace utilisateur ne peuvent, par accident ou intentionnellement, accéder à une zone mémoire ne leur appartenant pas : une telle action déclenche immédiatement une trappe du noyau, qui doit envoyer un signal particulier au programme et, généralement, le terminer. Pour que ce mécanisme fonctionne, il faut que les processeurs disposent d'une unité de gestion mémoire (MMU) exploitable par le noyau.
+
+Un module est une partie du noyau qui peut être intégrée pendant le fonctionnement du système d'exploitation. C'est une alternative aux fonctionnalités compilées dans le noyau qui ne peuvent être modifiées qu'en relançant le système.
+
+\section{Différences entre modules du noyau Linux et applications Linux}
+Il existe des différences entre un module du noyau et une application (outre le fait de leur séparation de leur espace mémoire \cite{ldd}). Une application (espace utilisateur) accomplit généralement une tâche unique du début jusqu'à la fin de sa vie. Un module (espace noyau) s'enregistre auprès du noyau pour servir les futures requêtes mais sa fonction d'initialisation se termine immédiatement. En d'autres termes, le but de la fonction d'initialisation \emph{module\_init} est de s'enregistrer au près du noyau afin de préparer la future invocation de la fonction du module, puis s'endort. La fonction d'arrêt du module \emph{module\_exit} est invoquée juste avant que le module soit déchargé du noyau. Elle indique au noyau que le service qu'elle fournit ne sera plus actif.
+
+Une autre différence entre module du noyau et une application est que l'arrêt de l'application peut se faire de manière \emph{fainéante} en libérant pas ses ressources (mémoire, descripteur de fichier,~...).
+L'arrêt d'un module devra se faire correctement sinon les ressources resteront présentes jusqu'au redémarrage du système.
+
+Les développeurs savent que quand ils développent une application, ils peuvent appeler des fonctions non connues mais qui le seront au moment de \emph{link} la résolution des références externes vers  les bibliothèques appropriées. Par exemple la fonction \emph{printf} est une des fonctions définie dans la bibliothèques \emph{libc}. Un module, quand à lui, est lié seulement avec le noyau, et les seules fonctions qu'il peut appeler sont celles qui sont exportées par le noyau. Il n'y a pas de bibliothèques avec qui on peut se lier. La fonction \emph{printk}  est une version de la fonction \emph{printf} définie dans le noyau et exportable dans un module. Remarquons que \emph{printk} ne supporte pas l'affichage des nombres en virgule flottante.
+
+Les modules du noyau Linux sont généralement placés dans /lib/modules. Ils utilisent l'extension .ko depuis la version 2.6.
+Voici un exemple de création d'un module, tiré de \cite{ldd}~:
+\begin{verbatim}
+#include <linux/init.h> 
+#include <linux/module.h> 
+MODULE_LICENSE("Dual BSD/GPL"); 
+static int hello_init(void) 
+{ 
+    printk(KERN_ALERT "Hello, world\n"); 
+    return 0; 
+} 
+static void hello_exit(void) 
+{ 
+    printk(KERN_ALERT "Goodbye, cruel world\n"); 
+} 
+module_init(hello_init); 
+module_exit(hello_exit); 
+\end{verbatim}
+
+Après compilation, on obtient un fichier {hello.ko} que l'on charge dans le noyau avec la commande {\tt insmod ./hello.ko}. On retire le module avec la commande {\tt rmmod hello}.
+
+%\section{Patch du noyau Linux pour le temps réel}
+\section{Linux temps réel}
+\subsection{RTAI}
+Le projet RTAI, pour Real Time Application Interface, a pour origine
+le département d'ingénierie aérospatiale DIAPM de l'école
+polytechnique de Milan. Pour des besoins internes, Paolo Montegazza du
+DIAPM entreprit de développer un produit inspiré de RTLinux dont la
+stratégie est de faire cohabiter le noyau Linux avec un noyau
+auxiliaire basé sur un vrai ordonnanceur temps réel à priorités fixes. Les tâches temps réel sont
+gérées par ce noyau RTAI et le traitement d'autres tâches est délégué au
+noyau Linux, lui-même considéré par le noyau temps réel comme étant
+une tâche de plus faible priorité (\emph{idle task}. La figure (\ref{diagrtai})
+montre cette architecture.
+
+\dessin{figures/rtai/rtai}{0.5}{Architecture d'un Linux temps réel.}{diagrtai}
+
+En effet, le code de masquage des interruptions a été réécrit
+toutes les interruptions hard sont initialement traitées par le noyau temps réel
+et transmises au noyau Linux seulement si l'interruption ne correspond
+pas à une tache temps réel. En bref, les générations d'interruptions softs
+sont laissées à Linux. L'ensemble des services tel que~: les ordonnanceurs, les FIFO ou
+encore les allocations dynamiques de mémoire est fourni par des
+modules du noyau, que l'on charge dynamiquement en utilisant simplement les
+commandes standard de Linux~: \emph{insmod} ou \emph{modprobe}.
+
+%Les services de bases sont fournis par plusieurs modules qui
+%permettent de faire du temps réel dur, un ordonnancement totalement
+%préemptif basé sur un modèle de priorité fixe. Que nous verrons dans
+%la section suivante.
+
+%dessin
+
+\subsection{LXRT}
+Les développeurs de RTAI ont récemment fait un effort particulier sur une extension appelée LXRT (LinuX Real Time) permettant de développer des tâches temps réel dans l'espace utilisateur et non plus dans l'espace noyau. Ce dernier point est extrêmement intéressant au niveau de  la facilité de développement car nous savons que développer dans l'espace noyau est relativement plus complexe (la mémoire de l'espace noyau ne possède pas de
+mécanismes de protection contre les accès invalides ou encore de
+programmes pouvant amenés à un panne du système. La modification d'une
+zone mémoire non désirée cause la corruption générale du système).
+
+Au niveau des performances,  les résultats par rapport au même programme développé dans l'espace noyau sont très honorables et ce bien que LXRT soit encore en cours d'évolution.
+
+\subsection{Ordonnanceurs}
+L'ordonnanceur se trouve être le coeur de RTAI.  Il fournit à travers
+une série de mécanismes les capacités temps réel. En utilisant
+l'ordonnanceur RTAI, le processus peut satisfaire des contraintes
+temps réel dures en exécutant les tâches de façon déterministe .
+
+RTAI fournit des services inter et intra espace utilisateur et noyau
+temps réel durs symétriques. Un tel support passe à travers deux
+ordonnanceurs, qui à l'heure actuelle sont nommées \emph{rtai\_lxrt} pour LXRT
+et \emph{rtai\_sched} pour RTAI. Ils peuvent fonctionner aussi bien dans
+l'espace utilisateur que dans celui du noyau et ils se distinguent
+seulement par les objets qu'ils peuvent ordonnancer. Cela signifie que~:
+-- \emph{rtai\_lxrt} est un co-ordonnanceur GNU/Linux, -- \emph{rtai\_sched}
+supporte non seulement le temps réel dur (pour
+l'ensemble des objets Linux ordonnançable, comme les
+processes/threads/kthreads) mais aussi  les propres tâches noyau
+RTAI.
+
+\subsection{Comparaison de Linux et RTAI/LXRT}
+Finalement on distinguera 4 types de tâches selon leurs contraintes temporelles et
+l'espace mémoire dans lequel elles vivent~:
+\begin{itemize}
+\item  les \emph{processus} qui s'exécutent dans l'espace utilisateur sans contrainte temporelle dure,
+\item  les \emph{modules} qui s'exécutent dans l'espace noyau sans 
+contrainte temporelle dure,
+\item  les  \emph{tâches RTAI} qui s'exécutent dans l'espace noyau
+avec contraintes temporelles dures,
+\item  les \emph{tâches LXRT} qui s'exécutent dans l'espace utilisateur 
+avec contraintes temporelles dures.
+\end{itemize}
+\begin{center}
+\begin{tabular}{|c|p{6cm}|p{6cm}|} \hline
+Type de tâche& Avantages & inconvénients \\ \hline
+Processus & $\bullet$ Elle laisse plus de ressources temporelles aux autres tâches. Car considéré par le noyau temps réel comme étant
+une tâche de plus faible priorité & $\bullet$ Très souvent préemptée. \\
+& $\bullet$ On a accès aux fonctions Linux standards comme les
+  fonctions (\emph{open}, \emph{write}). & \\
+& $\bullet$ Protection contre les violations aux accès mémoire (on a un
+  segmentation fault plutôt qu'un kernel panic de l'OS) et outil de
+  débugage.& \\ \hline
+%%
+Tâche LXRT & $\bullet$  Protection contre les violations aux accès mémoire (on a un
+  segmentation fault plutôt qu'un kernel panic de l'OS) et outil de
+  débugage. & $\bullet$   Moins réactive que RTAI car un appel système doit
+  traverser la couche utilisateur. \\
+& $\bullet$ On a accès aux fonctions Linux standards comme les
+  fonctions (\emph{open}, \emph{write}). & \\ \hline
+%%
+ Module & $\bullet$  Souplesse dans le développement de driver, car peut être chargé/déchargé dynamiquement, ce qui évite de redémarrer à chaque fois le système d'exploitation. & $\bullet$ Il faut charger/décharger des modules avant et
+  après exécution du programme. \\ \hline
+  %%
+Tâche RTAI & $\bullet$ Souplesse dans le développement de driver, car peut être chargé/déchargé dynamiquement, ce qui évite de redémarrer à chaque fois le système d'exploitation. & $\bullet$ La programmation doit être soigneuse,
+  car étant dans l'espace noyau, la mémoire n'est plus protégée~:
+  l'accès en écriture peut se faire partout et donc tuer l'OS entier. \\
+  & Plus réactive que LXRT. & $\bullet$ On n'a pas accès aux fonctions Linux standards comme
+  les fonctions (\emph{open}, \emph{write}, ... ). \\  \hline
+\end{tabular}
+\end{center}
+
+
+
+
+\section{Noyau d'exécutif SynDEx pour RTAI}
+
+Le logiciel SynDEx possède un noyau d'exécutif pour RTAI. Comme on l'a expliqué précédem\-ment ces exécutifs générés sont des modules, que l'on charge dans le noyau avec la commande {\tt insmod}.
+Dans le cas de la génération de l'exécutif pour la conduite manuelle, on obtient un module appelé {\tt root.ko} que l'on lance avec la commande {\tt insmod}. L'arrêt de l'application, se fait, d'abord en appuyant sur le bouton rouge d'arrêt d'urgence du CyCab, puis en laçant la commande {\tt make stop}.
+
+Dans le cas de la génération de l'exécutif pour la conduite automatique, c'est plus compliqué car SynDEx ne possède pas de noyau exécutif pour LXRT. Il faut compiler et exécuter un programme LXRT qui communiquera avec le module {\tt root}. La synchronisation de la communication n'est donc pas générée automatiquement.
+
+
+
+
+
+
+
+
+
+
+
+
+

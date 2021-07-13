@@ -1,0 +1,367 @@
+%%====================================================================
+%%====================================================================
+\chapter{Notions de traitement d'image}\label{chaptrtimage}
+%%====================================================================
+%%====================================================================
+
+%On désigne par \emph{technique de traitement d'images} toutes les
+%techniques ayant pour but la modification des caractéristiques
+%chromatiques des pixels des images bitmap. Traitement d'images est
+%souvent synonyme d'amélioration des images avec pour but l'obtention
+%d'une plus grande lisibilité. Il n'y a pas création d'informations,
+%mais mise en évidence de l'information pertinente déjà
+%présente \cite{opgl}.
+
+{\bf Avertissement}~: afin de réduire le poids de ce document PDF, les images présentes ont du être comprimées.
+
+%%====================================================================
+\section{Formats de couleurs utilisés}
+%%====================================================================
+Nous allons présenter trois formats de couleur qui sont utilisés pour
+le traitement de l'image concernant la détection de CyCab~: --
+l'image, donnée par la caméra, au format YUV422 qui est une
+compression du format YUV, -- le format YUV et enfin, -- le format
+RGB. Nous allons décrire ces trois formats.
+%%====================================================================
+\subsection{Codage RGB}
+Le format RGB (RVB en français) attribue un octet par composante de
+couleur rouge, verte ou bleue par pixel. Ces trois composantes
+primaires additives servent dans les écrans d'ordinateur et de
+télévision pour reconstituer toutes les couleurs sur l'image
+visualisée. Par exemple, dans un ordinateur la valeur d'une composante
+est un entier compris entre 0 et 255 inclus. L'absence de couleur
+correspond au noir (valeur 0) alors que le blanc correspond à la
+fusion des 3 couleurs (valeur 255). Comme on représente une couleur
+sur les trois composantes, on obtient plus de 16 millions de
+possibilités théoriques de couleurs différentes, l'{\oe}il humain n'en
+voyant que 2 millions.
+%%====================================================================
+\subsection{Codage YUV}\label{yuv}
+D'après l'article \cite{LM69} on sait que l'oeil humain est plus
+sensible au signal de luminance qu'aux signaux de couleurs. Comme le
+format RGB n'en tire pas partie, on utilisera alors le format YUV qui
+a l'avantage de séparer une composante moyenne des signaux RGB,
+appelée luminance (Y à savoir le noir et blanc), des deux signaux de
+couleur (U et V qui correspondent au rouge et bleu) appelés
+chromances. La couleur verte se retrouve alors par combinaison entre
+Y, U et V. Figure (\ref{yuv}) montre une photo et la décomposition de ses
+composantes Y, U, V. Les images proviennent de  \cite{wiki}.
+ 
+\dessin{figures/filtre/yuv}{0.5}{Une image et ses composantes Y (haut, droit),  U (bas gauche) et V (bas droit).}{yuv}
+
+Du point de vu historique, le codage YUV provient de la transmission
+de la vidéo analogique pour la télévision. Le Conseil Supérieur de
+l'Audiovisuel n'ayant accordé à la télévision couleur qu'une bande
+passante de 8 MHz (au lieu de 32 MHz provenant des trois bandes de
+couleurs et de la bande de la luminescence), des ingénieurs ont dû
+trouver une méthode pour comprimer les données des images RGB pour la
+télévision hertzienne. Le système est donc compatible avec les
+téléviseurs noir et blanc.
+
+De nombreuses équations, très proches les unes des autres, permettent
+de passer du codage YUV au codage RGB.
+
+$$ R = Y - 0.0009267 (U-128) + 1.4016868 (V-128)$$
+$$ G = Y - 0.3436954 (U-128) - 0.7141690 (V-128)$$
+$$ B = Y + 1.7721604 (U-128) + 0.0009902 (V-128)$$
+%%====================================================================
+\subsection{Codage YUV422}
+
+Ce format est celui fournie par notre camera FireWire, il permet de
+compresser le débit vidéo tout en ne détérioraient pas trop
+l'information contenue. Les chiffres 4, 2 et 2 indiquent le nombre
+d'échantillons de luminance Y et de chrominance U et V pour coder
+l'information d'une image YUV de taille $4 \times 4$. Cela permet
+d'avoir 2 octets par pixel au lieu de 3.
+
+Par exemple, si on reçoit le flux d'entrée YUV422~:
+$$Y_1\; Y_2 \; ... \; Y_{16} \; U_1 \; U_2 \; ... \; U_4 \; V_1 \; V_2 \; ... \; V_4$$
+
+On en déduit l'image $4 \times 4$ YUV décompressée~:
+$$Y_1 U_1 V_1 \; \; Y_2 U_1 V_1 \; \; Y_3 U_2 V_2  \; \;Y_4 U_2 V_2$$
+$$Y_5 U_1 V_1 \; \; Y_6 U_1 V_1 \; \; Y_7 U_2 V_2  \; \;Y_8 U_2 V_2$$
+$$Y_9 U_3 V_3 \; \; Y_{10} U_3 V_3 \; \; Y_{11} U_4 V_4  \; \;Y_{12} U_4 V_4$$
+$$Y_{13} U_3 V_3 \; \; Y_{14} U_3 V_3 \; \; Y_{15} U_4 V_4  \; \;Y_{16} U_4 V_4$$
+
+%$$\left[
+%\begin{array}{cc}
+%Y_1 & Y_2 \\
+%Y_5 & Y_6 \\
+%\end{array}
+%\right]_{U_1 V_1}\left[
+%\begin{array}{cc}
+%Y_3 \; & Y_4 \\
+%Y_7 \; & Y_8 \\
+%\end{array}
+%\right]_{U_2 V_2}$$
+%$$\left[\begin{array}{cc}
+%Y_9 & Y_{10} \\
+%Y_{13} & Y_{14} \\
+%\end{array}
+%\right]_{U_3 Y_3}\left[
+%\begin{array}{cc}
+%Y_{11} & Y_{12} \\
+%Y_{15} & Y_{16} \\
+%\end{array}
+%\right]_{U_4 Y_4}$$
+
+D'autres formats YUV compressés comme les formats YUV420, YUV411 dont le débit total
+de ce dernier est de 1.5 celui de la luminance. Remarquons que le format YUV est
+aussi nommé YUV444.
+%%====================================================================
+\section{Opérations de base sur les pixels}
+Comme nous l'avons vu dans la section précédente, une image est un
+ensemble de composants chromatiques consécutifs (3 pour RGB et YUV; 1
+pour BW). En regroupant ces composants on forme des pixels qui sont
+ordonnancés par leur position $(x, y)$.
+
+%% Comme nous l'avons vu dans la section précédente, une image est un
+%% ensemble de pixel ordonnancés par leur position et où chaque pixel est
+%% constitué de plusieurs composants chromatiques consécutifs (3 pour RGB
+%% et YUV; 1 pour BW).
+
+On appelle taille d'une image le couple $(L, l)$, le nombre de pixel
+en longueur $L$ et en largeur $l$ qui la constituent. Une représentation
+mémoire d'une image est un vecteur de $3lL$ pixels pour des images YUV
+et RGB et un vecteur de $lL$ pixel pour les images blanches et noires.
+Chaque pixel est codé sur un octet.
+
+On liera les images d'abord de gauche à droite puis de haut en bas.
+On notera $p(x,y)$ un pixel de cordonnées $(x,y) \in (l,L)$.  Par
+exemple en format RGB, $p(x,y)$ retournera le triplet $(R(x,y),
+G(x,y), B(x,y))$ dont~:
+$$p(x,y)=
+\left[\begin{array}{cc} R(x,y) \\ G(x,y) \\ B(x,y) \end{array}\right]
+=
+\left[\begin{array}{cc} 3(yl + x)\\ 3(yl + x) + 1 \\ 3(yl + x) + 2 \end{array}\right]
+$$
+
+Il existe des opérations de base qui manipulent composante par
+composante les pixels d'une image. Ils ont la forme suivant ~:
+$$p(x,y) = p_1(x,y) \oplus p_2(x,y)$$
+$$p(x,y)=
+\left[\begin{array}{cc} R(x,y) \\ G(x,y) \\ B(x,y) \end{array}\right]
+=
+\left[\begin{array}{cc}
+\max(0, \min(255, R_1(x,y) \oplus R_2(x,y)) \\
+\max(0, \min(255, G_1(x,y) \oplus G_2(x,y)) \\
+\max(0, \min(255, B_1(x,y) \oplus B_2(x,y))
+\end{array}\right]$$
+
+où $p_1$ et $p_2$ sont des
+pixels de même coordonnées $x,y$ mais provenant de deux images. $p$
+est le pixel résultant de l'opération. La fonction $\oplus$
+peut-être~: -- une opération arithmétique de base comme, l'addition,
+la soustraction (on veillera à ce que la valeur de $p$ reste comprise
+entre 0 et 255 en saturant la valeur du résultat); -- des opérations
+booléenne comme l'opération \emph{non}, \emph{ou}, \emph{et}, \emph{ou
+  exclusif}.
+%%====================================================================
+\subsection{Masque}
+Dans notre cas, concernant le CyCab, seule l'opération \emph{et}
+binaire (opérateur \& en langage C) nous intéresse, car il va nous
+permettre de masquer certaines zone de l'image. Le site \cite{opgl}
+donne des exemples de ces opérations, dont voici un exemple avec le
+\emph{et}.\\[0.1cm]
+\begin{minipage}[b]{.3\linewidth}
+\centering\epsfig{figure=figures/filtre/p1, width=\linewidth}
+\caption{Image 1.}\label{p1}
+\end{minipage}\hspace{6mm}
+\begin{minipage}[b]{.3\linewidth}
+\centering\epsfig{figure=figures/filtre/p2, width=\linewidth}
+\caption{Image 2.}\label{p2}
+\end{minipage}
+\hspace{6mm}
+\begin{minipage}[b]{.3\linewidth}
+\centering\epsfig{figure=figures/filtre/et, width=\linewidth}
+\caption{Et binaire.}\label{et}
+\end{minipage}
+%%====================================================================
+\subsection{Transformation d'une image en niveaux de gris}
+La détection des contours se fait sur une image noir et blanc par un produit de 
+convolution. La première étape est alors de transformer l'image de type YUV ou 
+RGB en provenance de la caméra en une image en niveaux de gris.
+%%====================================================================
+\subsubsection*{Transformation d'une image RGB en une image en niveaux de gris}
+Cette transformation est un simple moyenne pondéré des trois
+composantes de couleurs. La formule générale est donc la suivante,
+pour un pixel $p(x,y)$~: $$p(x,y)=\frac{R(x,y)+G(x,y)+B(x,y)}{3}$$
+%%====================================================================
+\subsubsection*{Transformation d'une image YUV en une image en niveaux de gris}
+Comme précisé dans la section \ref{yuv}, la composante Y correspond au niveau de
+gris.  Voici cependant la formule qui permet d'obtenir la composante Y
+à partir des composantes RGB : $$Y = 0,299 R + 0,587 G + 0,114 B$$
+
+Les coefficients ne sont pas les mêmes (on s'attendait à avoir $0,333$). Cette 
+différence ne va pas nous gêner puisqu'elle correspond à une réalité physique
+(le vert est plus lumineux que le rouge qui est à son tour plus lumineux que le
+bleu) et puisque l'algorithme qui va être utilisé n'est pas sensible à ces 
+coefficients linéaires.
+
+On prendra alors dans notre programme la composante Y pour niveaux de gris, tout
+simplement.
+%%====================================================================
+\section{Filtrage matriciel}
+Cette technique consiste à appliquer une matrice $M$ de taille $I
+\times J$ (généralement de taille $3 \times 3$ à chaque pixel
+$p(x,y)$ de l'image à transformer de taille $m \times n$. Le calcul
+est le suivant~:
+
+\begin{equation}
+p(x,y) = \sum^{I}_{i=1}\sum^{J}_{j=1} M(i,j)\; p(y+i,x+j)\label{prodmat}
+\end{equation}
+avec~:
+$x \in [1 \; .. \; L-i-1]$ et $y \in [1 \; .. \; l-j-1]$.
+
+%%FAUX !!
+
+On veillera à ce que la valeur du pixel $p$ reste comprise entre 0 et
+255 en saturant la valeur. Nous allons voir dans les section futures
+qu'elles sont les formes que peut avoir $M$ et quels sont les
+résultats que l'on obtient.
+%%====================================================================
+\subsection{Filtres passe-bas}
+
+Nous ne nous attarderons pas sur les filtres passe-bas dont le but est
+de réduire les parasites (bruits de mesure). Ils agissent par moyenne
+sur un voisinage et suppriment donc les détails.
+%%====================================================================
+\subsection{Filtre passe-haut de Sobel}
+
+Les filtres passe-haut nous serons utiles pour le CyCab car ils ont
+pour but d'augmenter le contraste et de mettre en évidence les
+contours. Les contours sont une discontinuité locale de l'intensité
+lumineuse. Les techniques permettant de détecter un contour sont
+basées sur l'utilisation de gradients.
+
+La détection de contours du CyCab utilise principalement le filtre de
+Sobel dont la matrice est~:
+\[M_h=\left[
+\begin{array}{ccc}
+1 & 2 & 1 \\
+0 & 0 & 0 \\
+-1 & -2 & -1 \\
+\end{array}
+\right]\]
+
+Puisque ce filtre est basées sur l'utilisation de gradients, les
+coefficients 1, 2 et 1 ne sont que l'approximation de la dérivée.
+Ce filtre permet de déterminer les contours horizontaux. On obtient un
+filtre qui détermine les contours verticaux par rotation de $\pi/2$
+de la matrice $M_h$. On obtient alors~:
+\[M_v=\left[
+\begin{array}{ccc}
+1 & 0 & -1 \\
+2 & 0 & -2 \\
+1 & 0 & -1 \\
+\end{array}
+\right]\]
+
+Le résultat du produit matriciel (formule (\ref{prodmat})) de $M$ par
+le pixel $p(x,y)$ contiendra des valeurs négatives et positives ce qui
+correspondent aux signes du gradient. Comme nous travaillons sur des
+octets non signé, il faut recentrer la plage de valeur à 128. La
+visualisation graphique du résultat nous donne une image grisée (ce
+qui correspond à 128) avec des parties claires ou foncées.\\[0.5cm]
+\begin{minipage}[b]{.3\linewidth}
+\centering\epsfig{figure=figures/filtre/serie2/debut, width=\linewidth}
+\caption{Image RGB.}\label{bw1}
+\end{minipage}\hspace{6mm}
+\begin{minipage}[b]{.3\linewidth}
+\centering\epsfig{figure=figures/filtre/serie2/sobelHS, width=\linewidth}
+\caption{Sobel hor. signé.}\label{sobhs}
+\end{minipage}
+\hspace{6mm}
+\begin{minipage}[b]{.3\linewidth}
+\centering\epsfig{figure=figures/filtre/serie2/sobelVS, width=\linewidth}
+\caption{Sobel ver. signé.}\label{sobvs}
+\end{minipage}
+
+Par rapport à la formule \ref{prodmat}, on prendra la valeur absolue
+de la valeur du résultat du pixel $p(x,y)$, puis on divisera le
+résultat par un coefficient $k$. Cette division permet de supprimer le
+bruit (haute fréquence).
+
+Les images (\ref{bw2}), (\ref{sobh}) et (\ref{sobv}) donne un exemple
+de filtrage de Sobel sur les contours. Il est intéressant de noter que
+le logiciel libre \emph{The Gimp} contient une bibliothèque de
+détection de contours (Sobel (non) signé, Laplace, ...).\\[0.5cm]
+\begin{minipage}[b]{.3\linewidth}
+\centering\epsfig{figure=figures/filtre/serie2/debut, width=\linewidth}
+\caption{Image RGB.}\label{bw2}
+\end{minipage}\hspace{6mm}
+\begin{minipage}[b]{.3\linewidth}
+\centering\epsfig{figure=figures/filtre/serie2/sobelH, width=\linewidth}
+\caption{Sobel horizontal.}\label{sobh}
+\end{minipage}
+\hspace{6mm}
+\begin{minipage}[b]{.3\linewidth}
+\centering\epsfig{figure=figures/filtre/serie2/sobelV, width=\linewidth}
+\caption{Sobel vertical.}\label{sobv}
+\end{minipage}
+
+% Voici un effet sur le coef $k$~:\\[0.5cm]
+% \begin{minipage}[b]{.45\linewidth}
+% \centering\epsfig{figure=figures/filtre/serie2/sobelh, width=\linewidth}
+% \caption{$k=1$.}\label{sobl1}
+% \end{minipage}\hspace{6mm}
+% \begin{minipage}[b]{.45\linewidth}
+% \centering\epsfig{figure=figures/filtre/serie2/sobelh10, width=\linewidth}
+% \caption{$k=10$.}\label{sobh10}
+% \end{minipage}
+
+%%====================================================================
+\subsection{Histogrammes horizontal et vertical}
+
+L'histogramme est, dans notre cas, un vecteur $H$ de hauteur le nombre de lignes
+de l'image traitée. Chaque élément $(i)$ du vecteur correspond à la moyenne des
+pixels de la ligne $i$. Voici la formule générale pour une image~:
+
+$$h(y)=\frac{\sum_{x=1}^{L}p(x,y)}{L}$$
+$$v(x)=\frac{\sum_{y=1}^{l}p(x,y)}{l}$$
+
+Les lignes horizontales les plus grandes de l'histogramme horizontal
+correspondent le plus souvent aux contours du CyCab.\\[0.5cm]
+\begin{minipage}[b]{.45\linewidth}
+\centering\epsfig{figure=figures/filtre/serie2/sobelh, width=\linewidth}
+\caption{Sobel Horizontal.}\label{bw2}
+\end{minipage}\hspace{6mm}
+\begin{minipage}[b]{.45\linewidth}
+\centering\epsfig{figure=figures/filtre/serie2/histohbw, width=\linewidth}
+\caption{Histo horizontal.}\label{sobh}
+\end{minipage}
+
+Malheureusement ce n'est pas toujours le cas~: une haie d'arbres bien
+taillée ou la façade d'un bâtiment peuvent créer une ligne horizontale
+supplémentaire.\\[0.5cm]
+\begin{minipage}[b]{.45\linewidth}
+\centering\epsfig{figure=figures/filtre/fuckoff1, width=\linewidth}
+\caption{Haie coupée.}\label{fuck1}
+\end{minipage}\hspace{6mm}
+\begin{minipage}[b]{.45\linewidth}
+\centering\epsfig{figure=figures/filtre/fuckoff2, width=\linewidth}
+\caption{Pied du batiment.}\label{fuck2}
+\end{minipage}
+
+%%====================================================================
+% \section{Rapports invariants}
+
+%%====================================================================
+\section{Problématique sur le sélection des raies}
+
+Dans ce chapitre, nous avons vu quelques briques de bases
+concernant le traitement de l'image. Nous avons vu qu'un filtre de
+Sobel non signé suivit d'un histogramme horizontale nous permettait
+d'obtenir des lignes horizontales  (raies) du contours du CyCab.
+
+Lors de mes tests avec le traitement de l'image que j'ai hérité, j'ai
+remarqué trois choses~:
+\begin{itemize}
+\item[$\bullet$] L'environnement pouvait perturber la détection de CyCab, en créant des raies supplémentaires suffisamment grandes dans l'histogramme pour perturber l'estimation de la distance qui sépare les deux CyCab.
+\item[$\bullet$] L'algorithme de détection re-découvrait les positions des raies à chaque
+nouvelle image,  sans utiliser la détection du passé.
+\item[$\bullet$]  L'algorithme calcule la distance qui sépare les deux CyCab avec une méthode basée sur le calcul de rapport invariant avec les positions des raies. Si l'idée d'utiliser les rapports invariants est intéressant du point de vue théorique, il est difficile à mettre au point un programme, car il utilise un certain nombre de raies pouvant aller de 2 à 5.
+\end{itemize}
+
+Dans le prochain chapitre, nous décrirons une méthode améliorée de
+détection de CyCab.

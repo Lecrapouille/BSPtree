@@ -1,0 +1,303 @@
+%%
+%% quadrat_q-rapport.tex for AOSTE in /Users/crapouille
+%%
+%% Made by Quentin Quadrat
+%% Mail   <quentin.quadrat@free.fr>
+%%
+%% Started on  Thu May  3 21:26:44 2007 Quentin Quadrat
+%% Last update Sun Jun 10 00:14:13 2007 Quentin Quadrat
+%%
+
+\documentclass[a4paper, 11pt]{report}
+\usepackage{fullpage}
+\usepackage[latin1]{inputenc}
+\usepackage[french]{babel}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{picins}
+\usepackage{hyperref}
+%\usepackage{makeidx}
+%\usepackage{showlabels}
+\usepackage{epsfig}
+\hypersetup{
+backref=true,    %permet d'ajouter des liens dans...
+pagebackref=true,%...les bibliographies
+hyperindex=true, %ajoute des liens dans les index.
+colorlinks=true, %colorise les liens
+breaklinks=true, %permet le retour ? la ligne dans les liens trop longs
+urlcolor= blue,  %couleur des hyperliens
+linkcolor= blue, %couleur des liens internes
+bookmarks=true,  %crÈÈ des signets pour Acrobat
+bookmarksopen=true, %si les signets Acrobat sont crÈÈs, les afficher complËtement.
+pdftitle={Projet H4H}, %informations apparaissant dans
+pdfauthor={Quentin QUADRAT},     %dans les informations du document
+pdfsubject={Mac OS X}          %sous Acrobat.
+}
+
+\usepackage{boites}
+
+\makeatletter
+\newenvironment{moncadre}{%
+  \renewcommand*{\bkvz@right}{}%
+  \renewcommand*{\bkvz@top}{}%
+  \renewcommand*{\bkvz@bottom}{}%
+ \breakbox}{\endbreakbox}
+\makeatother 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\dessin}[4]{
+\begin{figure}[htb]
+\centering
+\includegraphics[scale= #2]{#1}
+\caption{#3}
+\label{#4}
+\end{figure}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\dessinsscaption}[2]{
+\begin{figure}[htb]
+\centering
+\includegraphics[scale= #2]{#1}
+\end{figure}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newtheorem{remarque}{Remarque} \newcommand{\AAA}{{\mathcal A}}
+\newcommand{\BB}{{\mathcal B}} \newcommand{\CC}{{\mathcal C}}
+\newcommand{\DD}{{\mathcal D}} \newcommand{\EE}{{\mathcal E}}
+\newcommand{\FF}{{\mathcal F}} \newcommand{\GG}{{\mathcal G}}
+\newcommand{\HH}{{\mathcal H}} \newcommand{\II}{{\mathcal I}}
+\newcommand{\JJ}{{\mathcal J}} \newcommand{\KK}{{\mathcal K}}
+\newcommand{\LL}{{\mathcal L}} \newcommand{\MM}{{\mathcal M}}
+\newcommand{\NN}{{\mathcal N}} \newcommand{\OO}{{\mathcal O}}
+\newcommand{\PP}{{\mathcal P}} \newcommand{\QQ}{{\mathcal Q}}
+\newcommand{\RR}{{\mathcal R}} \newcommand{\SSS}{{\mathcal S}}
+\newcommand{\TT}{{\mathcal T}} \newcommand{\UU}{{\mathcal U}}
+\newcommand{\VV}{{\mathcal V}} \newcommand{\WW}{{\mathcal W}}
+\newcommand{\XX}{{\mathcal X}} \newcommand{\ZZ}{{\mathcal Z}}
+\newcommand{\bbR}{{\mathbb R}} \newcommand{\bbD}{{\mathbb D}}
+\newcommand{\bbO}{{\mathbb O}} \newcommand{\bbS}{{\mathbb S}}
+\newcommand{\bbE}{{\mathbb E}} \newcommand{\bbN}{{\mathbb N}}
+\newcommand{\bbM}{{\mathbb M}} \newcommand{\bbV}{{\mathbb V}}
+\newcommand{\bbC}{{\mathbb K}} \newcommand{\bbF}{{\mathbb F}}
+\newcommand{\bbP}{{\mathbb P}}
+\newcommand{\www}{{\mathfrak w \;}} \newcommand{\fff}{{\mathfrak f \;}}
+\newcommand{\nnn}{{\mathfrak n \;}} \newcommand{\aaa}{{\mathfrak a \;}}
+\newcommand{\hhh}{{\mathfrak h \;}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+%\pagestyle{empty}
+\title{\vskip -3cm
+  \Large \sl \bf  Quentin QUADRAT\\
+    quadra\_q, UID 17115, promo 2007 \\
+    \vspace{0.5cm}\hrule\vspace{0.5cm}
+      \dessinsscaption{figures/epita}{0.2}
+      \large EPITA \\
+  \large \textbf{École Pour l'Informatique et les Techniques
+  Avancées} \\
+  \vskip 3.5cm
+  {\Large RAPPORT DE STAGE}\\
+  \vskip 1cm
+  {\LARGE {\textsc{Développement d'un train virtuel de CyCabs avec Scilab/Scicos/SynDEx}}}\\
+    \vskip 2cm
+    1er Janvier, 1er Juillet 2007\\
+  \vskip 3.5cm
+}
+
+\date
+{\vskip -3.5cm
+  \vspace{15mm}
+  Supervisé par\\
+  \vskip 0.25cm
+  {\Large \sl \bf Yves SOREL } \\
+  INRIA - Domaine de Voluceau - Rocquencourt B.P.105\\
+  78153 Le Chesnay Cedex - France\\
+  Tél: (1) 39 63 52 60 - email: Yves.Sorel@inria.fr\\
+  \vspace{0.5cm}\dessinsscaption{../figures/inria}{0.2}
+  \large INRIA \\
+  \large \textbf{Institut National de Recherche en Informatique et en Automatique} \\
+  \vspace{0.5cm}\hrule
+}
+
+\maketitle
+\strut\thispagestyle{empty}
+\setcounter{page}{0}
+
+\tableofcontents
+%%====================================================================
+%%====================================================================
+
+\input{introduction.tex}
+\part{Structure d'accueil et contexte}
+\input{acceuil.tex}
+\input{contexte.tex}
+\input{scicos.tex}
+\input{syndex.tex}
+
+\part{Architecture matérielle et OS}
+\input{architecture.tex}
+\input{rtai.tex}
+
+\part{Conduite manuelle du CyCab}
+\input{automatique.tex}
+\input{conduitemanuelle.tex}
+
+\part{Conduite automatique du CyCab}
+\input{traitementimages.tex}
+\input{conduiteautomatique.tex}
+
+
+\input{conclusion.tex}
+\input{annexes.tex}
+\input{bibliographie.tex}
+
+\end{document}
+
+%%====================================================================
+%%====================================================================
+
+
+
+
+\section{Revenir au vieux PC embarque}
+Presenter l'arborescence des sources:
+++ihm
+++robucars
+++robucos
+
+Algo general CyCab
+
+Demarer camera
+
+attendre quelle chauffe
+
+avec IHM virer le decors, selectionner les 2 lignes horizontale qui determinent le cycab
+
+lancer la comm avec RTAI
+
+mesurer hauteur cycab et en deduire une consigne de vitesse
+
+envoyer cons vit aux MPC
+
+observer vitesse cycab
+
+agrandir rectangle
+
+mesurer hauteur
+
+
+J'ai passe 4 mois de merde a piger les trucs suivants :
+++ 1 mois a comprendre : -- RTAI et LXRT (communication, car RTAI interdit utilisation fichier)
+-- appli Hello World sur MPC impossible (pas moyen de debug)
+-- appli robucar ibittable (assembleur) pas de simulation Scicos pour voir la plage des valeurs (connais pas les capteurs)
+-- code degueulasse des stagiaires (Sobel) et deadlock comm RTAI LXRT + mauvaise comprehension du contexte au depart (block Syndex 'Camera' ==> nom trompeur) + mauvaise documentation des stagiaires.
+
+++ 1 mois pour faire un premier regulateur simple (PID) tester dans le truc reel enviter de tout faire planter le cycab quand on ne connait pas les plages de valeur (pas de simulation Scicos) ==> casser la carte ==> ca ma refroidit ==> perte de confiance ==> perte de temps.
+
+++ 1 mois a faire de la retro ingenieurie -- comment lire les donnees venant de RTAI car ecriture fichier interdit (comprehension de l'archi du CyCab (capteurs et leur plage de valeur)) --> Scicos. Erreure grossiere de lecture des donnees (donnees manquantes 30ms) --> comprehension probleme de design (PC embarque == Timer de synchron des MPC) + lecture code assembleur + pas de doc + probleme arrondis (float vs int) dans scicos ==> derive
+
+++ 1 mois pour netoyer le code (IHM pou gagner en vitesse et moyen de debugage) ==> probleme de vitesse du processeur 233Mhz (1 detection / s) comment gagner un peu de vitesse.
+
+++ 1 mois pour l'arrondi ==> 5 mai : TOUJOURS RIEN FAIT
+
+demain je me fait la COMMANDE DE LA CERTE MERE + 2 lassots + film camera + vire conversion YUV2RGB
+samedi je finis ca + rapport + bug Scicos deceleration + COEF Cutis
+dimanche je regle histoire agrandissement rectangle SUR LE FILM
+
+1 semaine pour regler tous les details agrandissement rectangle et preparation test reels
+
+APRES A DIEU VA
+
+\section{CyCab}
+\subsection{caracteristiques} Copier Coller
+\subsection{Archi}
+2 noeuds MPC 555
+1 noeud gere 2 roues grace a 1 controleur moteur (Curtis MCP + donner la reference MPC)
+1 linux RTAI sur un processeur x86 a 233MHz
+1 joystick donnant la consigne de direction des 4 roues et de vitesse (analogique)
+1 decodeur quad pour la vitesse des roues
+1 moteur pour la direction des roues (alimente par un PWM)
+1 camera firewire (donner ref Libraw 1394)
+1 bus CAN
+1 ecran
+
+ un diag UML "system"
+
+Photo CyCab demonte, CyCab monte.
+
+Photo d'un noeud MPC (recuperer le PDF de Patrice avec les numeros)
+
+Diagramme de Lionel RTAI --mem partagee -- regul --  MPC
+
+Dire faire attention aux differentes alimentation (25V et 50V).
+
+Dire RTAI = Timer 10 ms.
+
+\subsection{Robucar.m4x}
+
+Retro-ingenieurie SynDex --> truc final --> Scicos --> simulation
+
+Afficher les hyper block SCICOS + simulation + Tableau couleur des plots + comment espionner CyCab (dmesg)
+
+Expliquer traduction ASM MPC --> block diag + probleme de precision floattant vs. entier
+
+Expliquer RTAI == timer 10 ms mais au demerrage a 3 ms.
+
+%%====================================================================
+%%====================================================================
+\section{Chaine de CyCab}
+\subsection{Principe general}
+Camera bas cout
+
+Expliquer le principe h/h' = L'/L = alpha (formule) avec h connu + exemple sur 2 photos : une
+petite et l'autre grande et afficher les coef.
+
+Expliquer le principe de ma regulation avec la simulation :
+
+%%====================================================================
+\subsection{Regulation de la distance entre les deux voitures}
+
+
+%%====================================================================
+\section{Camera : capteur de distance}
+\subsection{Libraw 1394}
+
+Recuperer le cours de Linux Mag et citer ref + ref site oueb libraw1394
+
+\subsection{Gestion camera : Linux TR embarque}
+
+Expliquer RTAI et LXRT
+
+\subsection{Traitement de l'image}
+
+Expliquer les couleurs RGB YUV
+
+Expliquer les filtres Laplace Sobel
+
+Detection de contours histo H --> distance
+
+\subsection{IHM pour le debug}
+
+\section{Annexes}
+
+Expliquer comment compiler/executer mon programme ./configure --camera profiler RTAI IHM xv geios
+
+Expliquer comment espionner Robucar.m4x et comment transformer les fichiers en fichier Scilab
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

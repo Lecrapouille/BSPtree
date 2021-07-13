@@ -1,0 +1,89 @@
+%%====================================================================
+%%====================================================================
+\chapter{Introduction}
+%\addcontentsline{toc}{part}{Introduction}
+%\markboth{\uppercase{Introduction}}{\uppercase{Introduction}}
+\section{Contexte et but du stage}
+Ce rapport présente le travail réalisé dans le cadre du stage de 6 mois de fin
+d'étude pour l'EPITA, intitulé ``Développement d'un train virtuel de CyCabs avec Scilab/Scicos/SynDEx'' et s'est déroulé à l'INRIA Rocquencourt sous la direction de Yves Sorel,
+responsable du projet AOSTE dont l'équipe travaille sur des modèles et
+des méthodes pour l'analyse et l'optimisation des systèmes temps réel
+embarqués. L'équipe AOSTE est en  relation avec l'équipe IMARA
+qui travaille sur des projets de route automatisée.
+
+L'équipe AOSTE développe le logiciel de CAO SynDEx qui met en oeuvre
+la méthodologie AAA pour le prototypage rapide et l'optimisation de la
+mise en oeuvre d'applications distribuées temps réel embarquées. A
+partir d'un algorithme et d'une architecture donnés sous forme de
+graphe, SynDEx génère une implémentation distribuée de l'algorithme en
+macro-code. La  validation de l'algorithme
+a été  faite avec les logiciels de modélisation/simulation Scilab/Scicos,
+développés par l'équipe SCILAB/METALAU.
+
+Le CyCab est un véhicule électrique commandé manuellement par un
+joystick. Il sert d'application directe au logiciel SynDEx. C'est
+ainsi qu'a été généré le code distribué sur les processeurs embarqués
+du CyCab pour la conduite manuelle. A présent, le but est d'effectuer
+un train de CyCabs liés électroniquement grâce à une caméra à bas-coût.
+
+Le but de mon stage a été de poursuivre le travail mené sur le suivi automatique
+de CyCabs. Il faut  implémenter un algorithme d'estimation de la distance
+entre deux véhicules basé sur de la détection de contours dans des images. 
+Il faut déterminer l'asservissement longitudinal du CyCab suiveur en
+simulation avec le logiciel Scilab. Il faut enfin enfin générer, grâce
+à la chaîne d'outils Scilab/Scicos/SynDEx le code temps réel,  avec ses
+communications et synchronisations distribuées sur chacun des processeurs embarqués. 
+
+Ce rapport se compose de huit parties. Dans la première partie, on
+présente l'architecture matérielle du CyCab (les deux noeuds à coeur
+MPC, le PC embarqué, reliés par un bus CAN). Dans la deuxième partie, on présente le
+système d'exploitation du PC
+embarqué basé  sur un Linux temps réel. Dans les parties trois et quatre, nous rappellerons les
+éléments d'automatique et de traitement d'images utilisés. Dans les parties
+cinq et six, nous présentons les logiciels de développement~:
+Scilab/Scicos et SynDEx. Enfin, dans les parties sept et huit nous
+parlons des logiciels générés par Syndex pour faire de la conduite manuelle puis automatique.\\[0.5cm]
+
+
+\section{Travail effectué}
+J'ai du exploré plusieurs domaines~:
+\begin{itemize}
+\item[$\bullet$] La rétro-ingénierie~:
+
+\begin{itemize}
+\item En espionnant les états du CyCab,
+\item En traduisant l'application de conduite manuelle SynDEx vers Scicos et où j'ai été confronté à des problèmes des erreurs entre les signaux observés et simulés dus à des problèmes d'arrondis.
+\item En traduisant des morceaux de code assembleur en langage Scilab/Scicos.
+\end{itemize}
+
+\item[$\bullet$] L'électronique~:
+\begin{itemize}
+\item En dichotomisant les noeuds MPC afin d'isoler le problème des pannes des cartes.
+\item En faisant  de la  maintenance électronique (pannes à détecter, fils à ressouder, etc. ) 
+\item En espionnant la circulation des données  temps réel sur un bus CAN,
+\item En  choisissant et remplaçant les cartes du PC embarqué.
+\end{itemize}
+
+\item[$\bullet$] Le traitement d'images~:
+\begin{itemize}
+\item En récupérant les images d'une caméra FireWire,
+\item En lisant des documents sur le traitement de l'image.
+\item En appliquant des filtres de traitement d'images simples comme Sobel, Laplace, ...
+\item En faisant une IHM pour visualiser/débuger le traitement de l'image servant à l'estimation de
+distance entre les véhicules.
+\end{itemize}
+
+\item[$\bullet$]L'automatique~:
+\begin{itemize}
+\item En déterminant le régulateur  de suivi de véhicules,
+\item En appliquant  le filtrage de Kalman  au suivi de contours.
+\end{itemize}
+
+\item[$\bullet$] La programmation~:
+\begin{itemize}
+\item En découvrant le  Linux temps réel RTAI  (installation, configuration et l'utilisation),
+\item En approfondissant ma connaissance du noyau et des modules Linux,
+\item En découvrant la bibliothèque Xlib.
+\item En apprenant à me servir des logiciels Scilab, Scicos et SynDEx.
+\end{itemize}
+\end{itemize}

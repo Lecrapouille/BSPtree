@@ -1,0 +1,519 @@
+%%====================================================================
+%%====================================================================
+%\chapter{Logiciel applicatif~: conduite manuelle du CyCab}\label{chaprobucar}
+\chapter{Modélisation de la conduite manuelle du CyCab}\label{chaprobucar}
+%%====================================================================
+%%====================================================================
+\section{Observation des états du CyCab}
+%%====================================================================
+\subsection{Travail effectué}
+%%====================================================================
+Il existe au moins deux applications SynDEx de conduite manuelle du CyCab~:
+l'application \emph{Manu}, et l'application
+\emph{Robucar}. \emph{Robucar} est l'application développée par la
+société Robosoft. Elle est utilisée par l'équipe IMARA comme base de
+développement. Elle est plus récente que l'application
+\emph{Manu}. \emph{Robucar} et \emph{Manu} sont des régulateurs,
+après leur téléchargement sur l'architecture du CyCab (à savoir deux
+noeuds MPC et le PC embarqué) il est possible de conduire le CyCab
+avec le joystick.
+
+%\section{L'application originelle SynDEx \emph{Robucar}}
+
+A mon arrivée, j'avais deux applications SynDEx~: \emph{Robucar} originelle
+et l'application \emph{Robucar} modifiée par Lionel Durand, le
+stagiaire précédent. Dans ce chapitre, on expliquera le contenu et le
+fonctionnement du \emph{Robucar} fait par Robosoft. La
+reprise du travail de Lionel sera expliquée dans la section \ref{lionelfuck}.
+Comme nous l'avons expliqué dans la section \ref{syndexsoft}, un algorithme
+sous SynDEx est un ensemble de blocs interconnectés, mais au premier abord l'application \emph{Robucar} n'est pas facile à
+comprendre~: -- les blocs appellent du code assembleur MPC555 (que ce
+soit pour les calculs sur la régulation, de communication ou de
+gestion des capteurs/actuateurs), -- enfin, on ne connaît pas les plages de
+valeur de ces signaux.
+
+Un des buts de mon stage était de remplacer certains blocs de régulation
+de la vitesse des roues qui sont en relation avec le joystick par des blocs régulant la vitesse mais à partir d'une
+caméra. Mais il est difficile de trouver les bons gains si on ne connaît
+pas le domaine des valeurs correspondant à ces blocs.
+J'ai donc du traduire l'application SynDEx \emph{Robucar} en une
+application Scicos, logiciel de modélisation et de simulation, et par la même occasion trouver un modèle physique du CyCab. Ceci a permis de simuler la régulation \emph{Robucar} en toute sécurité, pour moi et pour les stagiaires suivants.
+
+%%====================================================================
+\subsection{Observation des états}\label{spy}
+%%====================================================================
+Afin de savoir si la traduction de \emph{\emph{Robucar}} sous Scicos
+sera correcte, il est nécessaire de faire jouer la simulation avec des
+valeurs qui correspondent à la réalité. Avant de commencer le travail
+de traduction, j'ai du trouver un moyen d'espionner les données
+du CyCab.
+
+Le premier problème rencontré fut qu'une partie de l'algorithme,
+appelé \emph{root}, de l'application Robucar tourne sous RTAI. Passer
+par RTAI pour sauver des données dans des fichiers n'est pas ce qui y
+a de plus simple. Comme nous l'avons vu dans le chapitre \ref{chaprtai},
+fonctionner avec RTAI a un inconvénient majeur~: celui de ne pas
+pouvoir accéder aux fonctions Unix de gestion des fichiers (comme
+\emph{open}, \emph{write}, \emph{fprintf}, ... ).
+
+Une première solution consisterait à transformer le programme
+\emph{root} en une application LXRT car on pourrait accéder aux
+fonctions \emph{open}, \emph{write}, \emph{fprintf} interdites sous
+RTAI.
+
+Une deuxième solution consisterait à créer un programme tournant sous LXRT
+en parallèle avec RTAI et transmettre les données par mémoire partagée
+et protéger les accès concurrents par sémaphores nommées. Ceci est assez
+pénalisant, car assez lourd a mettre en place et est peu esthétique.
+
+Une troisième solution, la plus simple mais assez douteuse, consiste à
+espionner le fichier \emph{kernel.log} par un script shell. Dans
+l'application \emph{Robucar} sous SynDEx on ajoute des blocs appelant
+la fonction \emph{rt\_printk}, devant tous les blocs de type
+actuateurs et capteurs.
+
+Cette fonction du noyau qui permet d'écrire des chaînes de caractères
+de façon équivalente à \emph{printf} (sauf qu'elle ne permet pas
+l'affichage de flottants). Ces chaînes de caractères sont déroutées
+vers l'écran et/ou un fichier log nommé \emph{kernel.org}, selon
+configuration. Ce fichier peut-être intégralement lu grâce à la
+commande shell \emph{dmesg}. Le paramètre optionnel '-c' permet
+d'effacer ensuite le fichier \emph{kernel.log}. Il faut s'avoir que ce
+fichier log est un fichier cyclique qui peut contenir, dans notre cas,
+environ 400 lignes. Donc \emph{rt\_printk} écrit dans ce fichier à la
+position courante modulo 400.
+
+J'ai écrit un petit script shell qui recopie
+le contenu de ce fichier \emph{kernel.log} dans un fichier texte de
+taille infinie~:
+\begin{verbatim}
+#! /bin/bash
+while [ 1 ]
+do
+   dmesg -c >> CyCab.log
+done
+\end{verbatim}
+
+Comme RTAI peut tourner à 1 KHz et qu'il travaille peu, on peut
+supposer qu'il reste suffisamment de temps pour Linux d'exécuter ce
+script sans trop de problème avant que les 10 ms ne s'écoulent.
+
+En faisant attention au nombre d'appel à \emph{rt\_printk}, on ne perd
+pas de données par débordement des 400 lignes. Comme un fichier log
+récupère également des messages d'erreur du système, ils vont se
+mélanger aux données du CyCab (comme le démarrage, et arrêt du CyCab,
+...). on ajoute un identifiant pour pouvoir les reconnaître. On
+ajoutera le flag \emph{IN=} pour les données sortant des capteurs et
+le flag \emph{OUT=} pour les données entrant dans les actuateurs.
+
+Il ne reste plus qu'a lancer ce script, compiler et exécuter
+l'application \emph{Robucar}. On obtient le fichier CyCab.log
+
+%%====================================================================
+\subsection{Traitement des états}
+%%====================================================================
+J'ai écrit un petit script shell qui va filtrer le fichier
+\emph{CyCab.log}, supprimer les messages du noyau, garder les données
+des signaux et les séparer en 2 fichiers textes, lisibles par Scicos.
+Car par défaut, Scicos s'attend à lire des données au format
+$7(e10.3,1x)$.
+
+\begin{verbatim}
+    #! /bin/bash
+    function call_scilab
+    {
+        cat <<EOF > SCISCRIPT.txt
+    A=fscanfMat('/afs/inria.fr/rocq/home/aoste/qquadrat/DATA.txt');
+    A(:,$) = (A(:,$) - A(1,$)) / 1000;
+    write('$1', A, '(7(e10.3,1x))');
+    exit
+    EOF
+
+        scilab -nw -ns -nb -f SCISCRIPT.txt
+        echo "Creation du fichier $1 [OK]."
+        rm -fr SCISCRIPT.txt DATA.txt 2> /dev/null
+    }
+
+    if [ "$1" = "" ]
+    then
+        echo "Donner le nom du fichier log CyCab"
+        exit 1
+    fi
+
+    if [ "`which scilab 2> /dev/null`" = "" ]
+    then
+        echo "Il faut installer Scilab"
+        exit 1
+    fi
+
+    rm -fr IN.txt OUT.txt 2> /dev/null
+
+    cat $1 | sed -e '/^IN=/!d;s/[ \t][ \t]*/ /g' | cut -d" " -f2,4,6,8,10,12 > DATA.txt
+    call_scilab IN.txt
+
+    cat $1 | sed -e '/^OUT=/!d;s/[ \t][ \t]*/ /g' | cut -d" " -f2,4,6,8,10 > DATA.txt
+    call_scilab OUT.txt
+\end{verbatim}
+
+La première partie consiste à séparer les signaux des capteurs des
+actuateurs dans 2 fichiers grâce aux commande \emph{sed} et
+\emph{cut}. Puis on transforme le format des signaux en signaux
+compréhensibles par Scicos grâce à un script Scilab.
+
+\dessin{figures/retro/readfrominputfile}{0.4}{Le bloc \emph{Read
+  from input file}.}{read}
+
+La lecture des signaux sous Scicos se fait grâce à un bloc \emph{Read
+  from input file} comme sur la figure (\ref{read}). On branchera la sortie de l'horloge (en rouge) sur
+l'entrée de l'horloge pour le mettre en échantillonneur bloqueur.
+Ceci permet aux signaux de ne pas se désynchroniser au cas où des
+données viendraient à manquer (pas lues par l'espion). Dans la figure (\ref{read}),
+on voit une configuration possible de ce bloc~:
+\begin{itemize}
+\item[$\bullet$] on indique le numéro de la colonne où est stocké le temps.
+\item[$\bullet$] on indique les numéros des colonnes où sont stockées
+  les données. Ici les colonnes $1\; 2\; 3\; 4\; 5$.
+\end{itemize}
+
+Il faut faire attention, car c'est bien les numéros des colonnes qu'il faut indiquer et non pas la taille du
+bus de données, comme on peut le retrouver dans les autres configurations des blocs Scicos.
+%%====================================================================
+\section{Notions d'assembleur MPC555}
+%%====================================================================
+La traduction de l'application Robucar SynDEx en un application Scicos, n'est pas la partie la plus compliquée car le code assembleur est assez simple à comprendre, nous expliquerons les instructions les plus importantes.
+
+La partie où j'ai eu le plus de problème fut de comprendre pourquoi les signaux obtenus avec la simulation de Scicos ne correspondait pas aux signaux réels. Il faut rappeler que les MPC555 travaillent sur des entiers 32 bit alors que Scicos travaille avec des nombres à virgule flottantes et que des problèmes de dérive sont apparus, dus aux problèmes d'arrondis des signaux simulés. Après l'ajout à certains endroits des blocs qui gèrent les arrondis (à savoir les blocs \emph{quantization}) à permis de simuler le travail sur des entiers, car on ne peut indiquer a scicos de travailler sur des entiers.
+
+L'application Robucar est constitué de blocs appelant des morceaux de code assembleur ressemblant à~:
+\begin{verbatim}
+(1)    B(lwz r30,$1);
+(2)    cmpwi r30,1;
+(3)    bge 0f;
+(4)    mulli r30,r30,-1;
+(5)    0: B(stw r30,$2)
+\end{verbatim}
+
+Ce code mélange assembleur 555 et macro code M4. Dans le chapitre (\ref{syndex}) nous avons expliqué à quoi servait le langage M4. Nous allons expliqué les instructions 555.
+
+La première ligne {\tt B(lwz r30,\$1)} est une macro M4 qui affecte au registre $r_{30}$ la valeur contenue dans la variable M4 {\tt \$1}.
+
+Les lignes {\tt (2)} et {\tt (3)} testent si le registre $r_{30}$ est plus petit que $1$. Si c'est le cas, on saute à la ligne {\tt (5)}, sinon on passe à la ligne {\tt (4)}. L'instruction {\tt cmpwi} compare le contenu d'un registre avec un mot (word ou {\tt w}) entier ({\tt i}). L'instruction {\tt bge 0f} signifie~: \emph{Branch into label {\tt 0f} if $r_{30}$ is Greater or Equal to 1}. La ligne {\tt (4)} multiple le contenu du registre $r_{30}$ par $-1$ et affecte le résultat dans le registre $r_{30}$. Enfin, la ligne {\tt (5)} permet de sauver le registre $r_{30}$ dans la variable M4 de {\tt \$2}, elle joue le rôle de {\tt return} en langage C.
+%%====================================================================
+\section{Modélisation en Scicos de la conduite manuelle}
+%%====================================================================
+La figure \ref{robucosmain}) montre le résultat de la traduction de l'application \emph{\emph{Robucar}}
+en une application Scicos. 
+
+\dessin{figures/retro/Robucos_main}{0.4}{L'application \emph{Robucar} sous Scicos.}{robucosmain}
+
+Dans la figure (\ref{robucosmain}), on peut voir deux superblocs : -- à droite~: le régulateur
+\emph{Robucar} SynDEx traduit en formalisme Scicos (couleur bleue) et
+-- à gauche~: un superbloc \emph{Capteurs \& Actuateurs \& Plot}
+permettant de lire les signaux espionnés des capteurs et des
+actuateurs du CyCab, puis de visualiser les signaux obtenus par
+simulation sous la forme d'un graphique (couleur grise) et voir s'ils
+correspondent à ceux espionnés.
+
+Nous verrons dans la section (\ref{phys}) que le superbloc \emph{Capteurs
+  \& Actuateurs \& Plot} peut être remplacé par une fonction de
+transfert simulant le fonctionnement des capteurs et actuateurs.
+Rappelons (confère section (\ref{sss})) qu'il existe un traducteur automatique de bloc Scicos vers des blocs SynDEx et qu'il suffit, dans l'IHM de Scicos de sélectionner le super bloc \emph{Régulateur Robucar} pour obtenir une application SynDEx.
+
+%%====================================================================
+\subsection{Superbloc \emph{Capteurs, actuateurs, plots}}
+%%====================================================================
+\dessin{figures/retro/Robucos_plot}{0.6}{Le superbloc gérant l'affichage et la lecture des signaux.}{robucosplot}
+
+Le contenu du superbloc de gauche (\emph{Capteurs \& Actuateurs \&
+Plot}) est représenté figure (\ref{robucosplot}). Dans la section \ref{spy}, nous
+avons vu comment obtenir un fichier
+ascii contenant la valeur des signaux (ainsi que le temps) observés
+lors d'un test réel de déplacement sur un CyCab. Nous allons exploiter
+ces données grâce aux deux blocs \emph{Capteurs} et \emph{Actuateurs}
+qui sont du type \emph{Read from input file} (figure (\ref{read})).
+
+Les signaux observés sortant des capteurs sont respectivement :
+\begin{enumerate}
+\item La conversion analogique du joystick pour la direction des roues,
+\item La valeur de l'encodeur absolue pour la direction des roues arrières,
+\item La conversion analogique du joystick pour la vitesse des roues,
+\item La valeur moyenne des quatre décodeurs en quadrature indiquant
+  la vitesse moyenne des roues,
+\item La valeur de l'encodeur absolue pour la direction des roues avants,
+\item Le temps (sortie horloge).
+\end{enumerate}
+
+Les signaux observés entrant dans les actuateurs sont respectivement :
+\begin{enumerate}
+\item La consigne de direction des roues avants,
+\item La consigne de direction des roues arrières,
+\item La tension de consignes pour la vitesse des roues avants,
+\item La tension de consignes pour la vitesse des roues arrières,
+\item Le temps (sortie horloge).
+\end{enumerate}
+
+Tous ces signaux observés sont multiplexés avec les signaux obtenus
+par simulation puis sont dessinés sous de formes de graphiques (bloc
+\emph{MScope} pour Multi Scopes). Un exemple de graphique obtenu est
+figure \ref{plot}. En noir les signaux espionnés et en rouge et bleu,
+les signaux obtenus par simulation.
+
+\dessin{figures/retro/Robucos_sim}{0.6}{Signaux simulés et réels.}{plot}
+%%====================================================================
+\subsection{Coeur du régulateur de conduite manuelle}
+%%====================================================================
+La figure (\ref{robucossuper}) montre le superbloc \emph{Régulateur Robucar}
+SynDEx traduit en formalisme Scicos (superbloc droit de la figure
+(\ref{robucosmain})).
+
+\dessin{figures/retro/Robucos_super}{0.6}{\emph{Robucar} main}{robucossuper}
+
+On voit en entrée les signaux des 5 capteurs précédemment cités dans
+la figure (\ref{plot}). On voit également 5 superblocs colorés en 3
+couleurs différentes (vert, jaune et marron). En effet certains blocs
+accomplissent presque le même travail, d'où leur regroupement par
+couleur~:
+\begin{itemize}
+\item En vert : des filtres sur les signaux analogiques du joystick,
+\item En jaune : la régulation sur la vitesse des 4 roues,
+\item En rouge : la régulation sur la direction des 4 roues.
+\end{itemize}
+
+Nous allons détailler chacun de ces superblocs.
+%%====================================================================
+\subsection{Superbloc \emph{Adoucissement Joystick motricité}}
+%%====================================================================
+La figure (\ref{robucosjoyavt}) est le contenu du superbloc
+\emph{Adoucissement Joystick Avant/Arrière} montre le filtre sur le
+signal du joystick pour la vitesse des roues (motricité).
+
+\dessin{figures/retro/Robucos_joy_avt}{0.6}{Filtrage du joystick gérant la motricité.}{robucosjoyavt}
+
+La plage de valeur du signal du joystick est comprise entre +115 et
++775. On commence par recentrer ce signal en 0 en lui soustrayant
+445. C'est le rôle des blocs verts à gauche de l'image.
+
+Ensuite, on filtre le bruit du signal grâce aux blocs roses :
+\begin{itemize}
+\item[$\bullet$] d'abord par une moyenne pondérée des 32 dernières
+  valeurs grâce à la fonction dynamique $y=f(u,y)$, où $u$ est
+  l'entrée, $y$ la sortie et $f$ la fonction qui calcule
+  $\frac{u+31y}{32}$.
+\item[$\bullet$] Ensuite, avec le bloc \emph{Zone Morte}, si le signal
+  est compris entre les valeurs -30 et +30, il est réduit à 0; sinon
+  tronqué d'une valeur 30. Les extremums du signal sont donc
+  -300 et +300.
+\end{itemize}
+
+Le signal est multiplié par une constante 3.111 (bloc bleu) qui n'est
+d'autre qu'une conversion d'une vitesse en une autre vitesse. La
+documentation du CyCab nous dit que la vitesse maximum d'un moteur est
+de 7330 mm/s, que le diamètre d'une roue est de 400 mm, que le
+réducteur moteur a un ratio de 8 et que la révolution d'une roue fait
+2000 impulsions après décodage en quadrature et que la période de
+lecture est 10 ms. Donc la constante est~:
+
+$$\frac{7330 \times 8 \times 2000 \times 0.01 }{400 \pi \times 300} =
+3.11$$
+
+Le deuxième bloc bleu \emph{Réducteur} divise uniquement le signal
+négatif par 4. Je ne suis pas sure mais c'est à cause d'un autre
+réducteur moteur pour la marche arrière.
+
+Ensuite, vient le bloc vert \emph{Accélération progressive} il
+protège le moteur des changements de vitesse trop grands, ce qui
+empêche l'apparition de pics de courant importants dans les moteurs,
+risquant d'endommager l'électronique ou les moteurs. %(en effet le
+%moteur se comporte comme une bobine Ldi/dt).
+
+La fonction $f(u_1)$ est de la forme $f(u_1) = (u_1 + 30)^2 / 933$ et
+est bornée par deux fonctions~:
+\begin{itemize}
+\item[$\bullet$] $u_2 - 7 < f(u1) < u_2 + 1.5$ quand $u1 >= 0$.
+\item[$\bullet$] $u_2 + 7 > f(u1) > u_2 - 1.5$ quand $u1 < 0$.
+\end{itemize}
+
+% La sortie de ce super
+% bloc nous un signal consigne de vitesse pour le bloc jaune.
+%%====================================================================
+\subsection{Superbloc \emph{Régulation de la vitesse des roues.}}
+%%====================================================================
+La figure (\ref{robucosroues}) montre le contenu du bloc jaune
+\emph{Régulation Vitesse 4 Roues} de la figure (\ref{robucossuper}).
+
+\dessin{figures/retro/Robucos_roues}{0.6}{Régulation de la vitesse des roues.}{robucosroues}
+
+Il permet la régulation de la vitesse des quatre roues en fonctionnant
+de l'observation de la vitesse réelle des roues et de la consigne de
+vitesse qui est la sortie du superbloc de la figure
+(\ref{robucosjoyavt}).
+
+Les blocs en jaunes montrent l'erreur (entre la consigne de vitesse
+fournie par le joystick et l'observation de la vitesse réelle des
+roues) entre dans un régulateur \emph{Proprotionel--Intégral} puis est
+saturée dans la plage de valeur $[-400; +400]$. Les blocs en bleu font
+que le signal s'additionne ou se soustrait avec la constante 2560.
+
+Comme nous l'avons vu dans la section \ref{curtis}, ce signal
+correspond à une tension a fournir au Curtis. 400 correspond à 0.4V et 2560
+correspondant à 2.5V, la valeur neutre où les roues ne tournent
+pas. Comme les quatre roues doivent tourner toutes dans le même sens, et
+que les moteurs à gauche du CyCab sont inversés par rapport à ceux
+du côté droit, on doit changer le signe (valeur $< 2560$).
+
+%%====================================================================
+\subsection{Filtrer le signal du joystick de direction}
+%%====================================================================
+La figure \ref{robucosjoydir} montre le deuxième bloc vert filtrant
+le signal du jystick.
+
+\dessin{figures/retro/Robucos_joy_dir}{0.6}{Filtrage du joystick gérant la direction.}{robucosjoydir}
+
+Ce signal indique une consigne de direction pour les roues. Son
+fonctionnement est identique au superbloc \ref{robucosjoyavt}~: même
+filtre pondéré, même élimination du bruit par troncature. La
+différence vient du bloc vert \emph{Décélération Progressive} qui
+permet de contrôler la direction des roues en fonction de leur vitesse
+(pour éviter de tourner trop brusquement à grande vitesse).
+
+La fonction est de la forme $4(1+\frac{400}{40+u_1})$ et comme pour le
+bloc \emph{Accélération Progressive}, on empêche le signal de sortir
+entre deux bandes qui sont des fonctions dynamiques.
+%%====================================================================
+\subsection{Superbloc \emph{Adoucissement Joystick de direction}}
+%%====================================================================
+Enfin, les deux derniers blocs en rouge sur la figure
+\ref{robucossuper} permettent de réguler la direction des roues. L'un
+des deux est montré figure (\ref{robucosdir}).
+
+\dessin{figures/retro/Robucos_dir}{0.6}{Régulation de la direction des roues arrières.}{robucosdir}
+
+Les blocs bleus permettent de calculer l'erreur entre la consigne de
+direction des roues et de leur observation. On applique un régulateur
+proportionnel intégral à l'erreur et on sature la valeur entre -900 et
++900. Enfin on envoie au vérin le sens et une tension permettant de
+faire tourner les roues.
+%%====================================================================
+\section{Note importante sur l'application de conduite manuelle}
+%%====================================================================
+Il faut savoir que l'application \emph{Robucar} pour fonctionner
+correctement en situation réelle, doit avoir au moins un bloc tournant
+sur RTAI. En effet, RTAI sert de timer de période 10 ms. Il permet de
+ralentir les deux noeuds du CyCab pour la régulation. Supprimer cet
+unique bloc aura pour conséquence une mauvaise régulation.
+
+Une autre remarque importante, est que l'on constate qu'au démarage de la régulation,
+RTAI tourne à 3 ms au lieu de 10 ms puis revient à 10 ms. Je ne sais pas d'où vient ce
+phénomène.
+
+%%====================================================================
+%%====================================================================
+\chapter{Modélisation du process CyCab}\label{phys}
+%%====================================================================
+%%====================================================================
+\section{Principe des moindres carrés}
+Maintenant que nous avons traduit le régulateur du CyCab  de SynDEx en
+Scicos, il est nécessaire  de se donner un modèle
+du CyCab pour pouvoir tester le régulateur. Dans notre cas, on aimerait connaître, la fonction
+de transfert qui nous donne la vitesse des roues en fonction des sorties du régulateur (entrées du Curtis) c.a.d.  la fonction
+de transfert Curtis -- Quadrature Encoder.  Grâce aux
+données espionnées lors d'un test sur le CyCab, on ajuste dans un premier 
+un système lineaire  temps discret MIMO
+d'ordre un par la méthode des moindres carrés.
+%un systèmepeut avoir une
+%bonne approximation polynomiale de son modèle physique en utilisant le
+%principe des moindres carrés dont la formule générale
+%est~: $$\min_{p_0, p_1, ..., p_n} \sum^n_{i=0}(y_i-p(x_i))^2$$
+
+%Une forme d'approximation polynomiale simple est de tracer une droite
+%qui approxime un nuage de point. Dans notre cas, on veut traiter le
+%cas général~: ne pas se restreindre à une droite mais à un polynôme
+%d'ordre donné qui est la meilleure appriximation du nuage de point.
+%Le nuage de point est nos données observées.
+
+On suppose donc que le modèle du CyCab est le système,
+$x_{n+1}=a x_n + b u_n$  et $y_n=x_n$ où les entrées sorties $y_n$ et $u_n$ sont
+connus et les paramètres $a$ et $b$ à ajuster de façon à minimiser l'erreur
+entre le modèle et les données observées.  
+Soit~:
+$$\min_{a, b}\; \LL(a,b) = \min_{a, b} \sum_{n=0}^N (x_{n+1} - a x_n - b u_n)^2$$
+Donc on résout le système~:
+$\frac{\delta L}{\delta a} = 0$
+et
+$\frac{\delta L}{\delta b} = 0$
+et on trouve~:
+$$\frac{\delta L}{\delta a} = -\sum x_nx_{n+1} + b\sum u_nx_n + a\sum x^2_n = 0$$
+$$\frac{\delta L}{\delta b} = -\sum u_nx_{n+1} + a\sum u_nx_n + b\sum u^2_n = 0$$
+Soit sous forme matricielle~:
+$$\left[\begin{array}{c} a \\ b\end{array}\right]=
+\left[
+\begin{array}{cc}
+\sum x^2_n & \sum u_nx_n \\
+\sum u_nx_n & \sum u^2_n \\
+\end{array}
+\right]^{-1}
+\left[\begin{array}{c} \sum x_nx_{n+1} \\ \sum u_nx_{n+1}\end{array}\right]
+$$
+
+\section{Programme Scilab}
+Il ne reste plus qu'à écrire un petit script Scilab pour obtenir le
+modèle de notre CyCab.
+\begin{verbatim}
+function [W]=Modelise(file_IN, col_in, file_OUT, col_out)
+  M   = fscanfMat(file_IN);
+  u   = M(:, col_in);
+
+  M   = fscanfMat(file_OUT);
+  x   = M(:, col_out);
+
+  N   = min(size(u, 1), size(x, 1));
+  i   = [1:1:N-1];
+
+  a11 = sum(x(i)^2);
+  a12 = sum(u(i) .* x(i));
+  a21 = a12;
+  a22 = sum(u(i)^2);
+  A   = [a11, a12; a21, a22];
+
+  b11 = sum(x(i) .* x(i + 1));
+  b21 = sum(u(i) .* x(i + 1));
+  B   = [b11; b21];
+
+  W   = A \ B;
+endfunction
+
+//Modele vitesse roues droites
+Roue_droite = Modelise("IN.txt", 4, "OUT.txt", 3)
+
+//Modele vitesse roues gauches
+Roue_gauche = Modelise("IN.txt", 4, "OUT.txt", 4)
+\end{verbatim}
+Une version alternative d'écriture de la fonction {\tt Modelise} plus
+courte est possible. Elle utilise le produit scalaire~:
+\begin{verbatim}
+function [W]=Modelise(x, u)
+  xx  = x(1:$-1)
+  uu  = u(1:$-1)
+  A   = [uu * uu', xx * uu'; xx * uu', uu * uu'];
+  B   = [[x,0] * [0,x]'; [0,u] * [x,0]'];
+  W   = A \ B;
+endfunction
+\end{verbatim}
+
+%Comme, seule la régulation des roues nous intéresse, nous allons le caractériser le polynomes de la transformation du signal Curtis--Encodeur.
+%$$\begin{cases}
+%a= \;,\\
+%b=\;.
+%\end{cases}$$
+
+\section{Résultat}
+
+Nous en déduisons la fonction de transfert $F(z)=b/(1/z-a)$ Curtis--Encodeur. 
+Nous pouvons, ensuite, modifier notre application en remplaçant le bloc {\tt Capteurs \& Actutateurs \& Plot} de la figure (\ref{robucosmain}) par le bloc qui représente la fonction de transfert $F(z)$ comme le montre la figure (\ref{ft}).
+
+\dessin{figures/retro/ft}{0.2}{\emph{Robucar} main avec la fonction de transfert Curtis-décodeur.}{ft}
+
+
+
+
+

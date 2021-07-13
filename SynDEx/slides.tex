@@ -1,0 +1,300 @@
+\documentclass[a4paper,11pt]{amsart}
+\def\choix{1}
+\usepackage[latin1]{inputenc}
+\usepackage[pdftex]{graphicx}
+\usepackage{picins}
+\usepackage{epsfig}
+\newcommand{\difference}[2]{\ifcase\choix#1\or#2\fi}
+\difference{\renewcommand{\slide}{}\renewcommand{\endslide}{}}{}
+\usepackage{multicol}
+%% IMPORTANT
+\usepackage[screen,sectionbreak,gray,panelright,paneltoc]{pdfscreen}
+\input{preambule3}
+%% IMPORTANT
+\newcommand{\dessin}[4]{
+\begin{figure}[htb]
+\begin{center}
+\includegraphics[scale=#2]{#1}
+\caption{#3}
+\label{#4}
+\end{center}
+\end{figure}}
+
+\newcommand{\dessinsscaption}[2]{
+\begin{figure}[htb]
+\centering
+\includegraphics[scale= #2]{#1}
+\end{figure}}
+%
+\pagestyle{empty}
+\begin{document}
+%======================================================================
+
+\title{Aide a la conception de noyau applicatif pour le logiciel SynDEx}
+\author{Quentin Quadrat}
+
+
+\maketitle
+\begin{center} 
+Stage de fin de tronc commun\\1er Septembre au 31 Décembre 2005\\ --- \\Supervisé par Yves Sorel, Directeur de Recherche à l'INRIA\\[30mm]
+\end{center}
+
+\begin{minipage}[b]{.3\linewidth}
+\centering\epsfig{figure= inria, width=\linewidth}
+\end{minipage}\hfill
+\begin{minipage}[b]{.2\linewidth}
+\centering\epsfig{figure=epita, width=\linewidth}
+\end{minipage}
+
+\vfill
+%\tableofcontents
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Sommaire}
+\begin{itemize}
+\item Structure d'accueil : INRIA, le projet AOSTE.
+\item Problématiques des systèmes temps réel embarqués.
+\item Méthodologie Adéquation Algorithme Architecture.
+\item Les exécutifs et les noyaux d'exécutifs.
+\item Le logiciel SynDEx.
+\item Présentation du travail : l'\'Editeur de Code, création d'une application Automatique.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\section{INRIA}
+%\begin{itemize}
+%\item \textbf{I}nstitut \textbf{N}ational de \textbf{R}echerche en \textbf{I}nformatique et en %\textbf{A}utomatique créé en 1967 il est placé sous la double tutelle du ministre chargé de la
+%Recherche et de l'Industrie.
+%\item L'INRIA accueille dans ses 6 unités de recherche : Rocquencourt, Sophia Antipolis, Grenoble ...
+%\item Budget total: 135 M Euros HT (janvier 2005),
+%\item 2 700 scientifiques, dont 950 doctorants et 500 contractuels (post doctorants et ingénieurs),
+%\item 120 logiciels distribués en accès libre ou commercialisés,
+%\item 124 projets de recherche.
+%\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{INRIA, AOSTE}
+\subsection{INRIA}
+\begin{itemize}
+\item \textbf{I}nstitut \textbf{N}ational de \textbf{R}echerche en \textbf{I}nformatique et en \textbf{A}utomatique (créé en 1967)
+\item Il est placé sous la double tutelle du ministre chargé de la
+Recherche et de l'Industrie.
+\end{itemize}
+
+\subsection{Le projet AOSTE}
+\begin{itemize}
+\item \textbf{A}nalysis \textbf{O}ptimisation of \textbf{S}ystems
+with real-\textbf{T}ime and \textbf{E}mbedded constraints,
+\item Méthodologie AAA (Adéquation Algorithme Architecture),
+\item  \emph{SynDEx} : logiciel de CAO pour l'aide à l'implantation de systèmes distribués
+temps réel embarqués.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Probl. STR}
+Le temps est la problématique des systèmes temps réel embarqués :
+
+\begin{itemize}
+\item Une opération doit pouvoir s'exécuter dans un temps prévu à l'avance.
+\item Réagir trop tard peut conduire à des conséquences catastrophiques
+pour le système lui-même ou son environnement.
+%Une analyse mathématique
+%permet de déterminer les bornes minimal et maximal sur la durée des calculs.
+\item Il faut donc recourir à des calculateurs à architecture parallèle ou à des circuits intégrés spécialisés pour augmenter la puissance de calcul.
+\end{itemize}
+
+DONC, Il faut pouvoir affecter les tâches sur les différents processeurs et assurer la synchronisation de leur exécution.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Méthodo. AAA}
+{\large
+\begin{center}
+\begin{tabular}{ccc}
+& {\sc Adéquation}\\
+{\sc Algorithme} & $\longleftrightarrow$ & {\sc Architecture}\\
+$\downarrow$ & & $\downarrow$\\
+parallélisme & & parallélisme\\
+potentiel & $\stackrel{reduction}{\longrightarrow}$ & disponible\\
+$\downarrow$ & & $\downarrow$\\
+graphe & & graphe\\
+logiciel & $\stackrel{transformation}{\longrightarrow}$ & matériel\\
+& $\Downarrow$\\
+& {\sc exécutif}
+\end{tabular}
+\end{center}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{itemize}
+\item Algorithme : graphe d'ordonnancement  des tâches.
+\item Architecture : graphe des ressources et des moyens de communication.
+\item Exécutifs : affectation temporelle des tâches aux ressources.
+\item Adéquation : générer l'exécutif.
+\end{itemize}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{SynDEx}
+%Logiciel de Conception Assisté par Ordinateur (CAO) :
+\begin{itemize}
+\item Met en oeuvre la méthodologie AAA.
+\item Entrée : graphe algorithme et graphe architecture.
+\item Sortie : les exécutifs distribués temps réel, sans inter\-blocage et statiques écrits en macro-code m4.
+\item Visualise la prédiction des performances temps réel pour le
+  dimensionnement de l'architecture.
+\item Utilise des heuristiques pour la distribution et l'ordon\-nancement de l'algorithme
+  d'application sur l'architecture.
+\item Des noyaux
+  d'exécutifs génériques sont fournis pour~: SHARC, i80C196, TMS320C40, i80386, MC68332 et
+  stations de travail Unix ou Linux.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Graphe algorithme}
+\begin{itemize}
+\item Un graphe hiérarchique définit l'algorithme.
+\item Les noeuds sont les tâches (opérations) à réaliser et les arcs définissent les relations de précédence.
+\end{itemize}
+\begin{minipage}[b]{.45\linewidth}
+\centering\epsfig{figure=../qqrapport/tuto8_img/syndex_algomain, width=\linewidth}
+\end{minipage}\hspace{6mm}
+\begin{minipage}[b]{.45\linewidth}
+\centering\epsfig{figure=../qqrapport/tuto8_img/syndex_control1, width=\linewidth}
+\end{minipage}
+
+\section{Graphe architecture}
+\begin{itemize}
+\item Un graphe non hiérarchique définit l'architecture.
+\item Les noeuds sont les ressources (soit des opérateurs soit des médias de communication).
+\item Les arcs les communications entre les ressources.
+\end{itemize}
+\dessinsscaption{../qqrapport/tuto8_img/archi}{0.45}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Diagramme temporel}
+La synchronisation des exécutions des tâches
+peut être visualisée sous forme d'un diagramme temporel :
+\dessinsscaption{../qqrapport/tuto8_img/schedule}{0.4}
+\begin{itemize}
+\item Colonnes : ressources disponibles.
+\item Contenu des colonnes : agenda des tâches à exécuter. 
+\item Epaisseur des opérations : durée des opérations.
+%\item Abscisses : ressources disponibles.
+%\item Ordonnées : agenda des tâches à exécuter. 
+%\item Epaisseur des opérations : durée.
+\end{itemize}
+
+\section{Exécutif}
+\dessinsscaption{executifs}{0.35}
+Les opérations et les synchronisations sont spécifées en macro-code m4.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Noyau d'exécutif}
+Noyau d'exécutif : ensemble de définitions des différentes macros utilisées par les exécutifs, dans un langage haut niveau (C, ...) ou assembleur.
+\dessinsscaption{../qqrapport/figures/arbo}{0.35}\\[2mm]
+Travail du stage a concerné la génération de noyau applicatif.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Génération de l'exécutable}
+\hspace{15mm}
+\begin{center}
+Macro-processeur M4\;\;\;: Exécutifs $\times$ Noyaux d'exécutifs $\rightarrow$ Codes sources (C)\\[4mm]
+Compilateur (GCC)\;\;: Codes sources (C) $\rightarrow$ Exécutables
+\end{center}
+
+
+% \section{Avant le stage}
+% Un utilisateur devait générer manuellement le noyau applicatif~:
+% \begin{itemize}
+% \item spécifier le code applicatif en terme de macros instruction m4.
+%\item 
+%\item Ecrire dans un fichier, tous les codes source associés aux opérations d'une application SynDEx écrit soit en assembleur soit en langage haut niveau.
+%\item Chaque code source doit être entouré de macros m4.
+%\item Transformer les noms des ports d'une opération par un argument m4.
+%\item Ces macros m4 généreront le code final lorsqu'elles sont macro-expansées.
+%\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Premier travail}
+Développer un éditeur de noyau applicatif \emph{\'Editeur de Code} dans l'IHM de SynDEx.
+\dessinsscaption{../qqrapport/figures/codeeditor}{0.4}
+\newpage
+
+
+\section{Editeur de code}
+Avant le stage,
+un utilisateur devait spécifier manuellement le noyau applicatif en
+en terme de macros instructions m4.\\[2mm]
+
+Après le stage, un utilisateur édite le code de chaque opérations en langage naturel.
+\\[2mm]
+
+L'\'Editeur de Code : 
+\begin{itemize}
+\item Génére les macros m4 correspondantes.
+\item Automatise la traduction des noms de ports en arguments m4.
+\item Complète les noms de ports.
+\item Communique avec Emacs.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Exemple}
+\begin{itemize}
+\item  Le code que l'on devait écrire dans un fichier:
+\begin{verbatim}
+
+    define(`foo',`ifelse(
+        processorType_,processorType_,`ifelse(
+            MGC,`INIT',``'',
+            MGC,`LOOP',``$3[0] = $2[0] + $1;'',
+            MGC,`END',``'')')')
+            
+\end{verbatim}
+\item s'écrit dans l'\'Editeur de Code :
+\begin{verbatim}
+
+    @OUT(out)[0] = @IN(in)[0] + @PARAM(P);
+    
+\end{verbatim}
+\end{itemize}
+
+\section{Deuxième travail}
+\begin{itemize}
+\item Documenter l'\'Editeur de Code.
+\item Créer une application d'automatique où une voiture suit une autre et maintient une distance fixe alors que la première choisit une vitesse.
+\item Apprentissage : introduction à l'automatique, logiciels Scilab et Scicos
+\item Simulation : Scicos et SynDEx.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Diag. avant le stage}
+\dessinsscaption{../qqrapport/figures/syndexavantmoi}{0.4}
+\section{Diag. après le stage}
+\dessinsscaption{../qqrapport/figures/syndexapresmoi}{0.35}
+
+\section{Conclusion}
+\subsection{Appréciations des utilisateurs de l'Éditeur de Code} 
+Ce travail était une demande par l'un (MBDA) des principaux utilisateur
+industriel de SynDEx dont les commentaires après utilisation sont positifs.
+
+\subsection{Expérience acquise}
+Ce stage m'a permis  de :
+\begin{itemize}
+\item[$\bullet$] Découvrir les problèmes d'affectation pour réaliser des sys\-tèmes temps réel.
+\item[$\bullet$] Découvrir des notions en automatique.
+\item[$\bullet$] De manipuler les logiciels SynDEx, Scilab, Scicos,
+\item[$\bullet$] De progresser dans la connaissance du langage OCaml.
+\end{itemize}
+
+\section{FIN}
+\vspace{2cm}
+\begin{center}
+\LARGE{Questions ?}
+\end{center}
+\end{document}
+
+
+
+
+
+

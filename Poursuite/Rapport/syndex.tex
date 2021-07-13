@@ -1,0 +1,238 @@
+\section{Logiciel d'implantation SynDEx}
+\subsection{Méthodologie AAA}
+La méthodologie d'Adéquation Algorithme Architecture
+est basée sur des modèles de graphes pour spécifier d'une part
+l'algorithme et d'autre part l'architecture matérielle. La
+description de l'algorithme permet de mettre en évidence le
+parallélisme potentiel tandis que celle de l'architecture met en
+évidence le parallélisme disponible. Cette méthode consiste en
+fait à décrire l'implantation en terme de transformations de
+graphes. En effet, le graphe modélisant l'algorithme est
+transformé jusqu'à ce qu'il corresponde au graphe matériel
+modélisant l'architecture. L'implantation de l'algorithme sur
+l'architecture consiste donc à réduire le parallélisme potentiel
+au parallélisme disponible tout en cherchant à respecter les
+contraintes temps réel. Toutes ces transformations effectuées
+avant l'exécution en temps réel de l'application, correspondent
+à une distribution et à un ordonnancement des différents calculs
+sur les processeurs et des communications sur les liaisons physiques
+inter-processeurs. C'est à partir de ces allocations spatiales et
+temporelles qu'un exécutif va pouvoir être généré et
+permettre l'exécution de l'algorithme sur l'architecture construite
+avec des processeurs. Cependant, pour que cette implantation soit
+vraiment efficace, il est nécessaire de réaliser une adéquation
+entre l'algorithme et l'architecture. Celle-ci consiste à choisir
+parmi toutes les transformations proposées celle qui optimise les
+performances temps réel. Cette méthodologie a été
+concrétisée dans un logiciel appelé SynDEx.
+
+{\large
+\begin{center}
+\begin{tabular}{ccc}
+& {\sc Adéquation}\\
+{\sc Algorithme} & $\longleftrightarrow$ & {\sc Architecture}\\
+$\downarrow$ & & $\downarrow$\\
+parallélisme & & parallélisme\\
+potentiel & $\stackrel{reduction}{\longrightarrow}$ & disponible\\
+$\downarrow$ & & $\downarrow$\\
+graphe & & graphe\\
+logiciel & $\stackrel{transformation}{\longrightarrow}$ & matériel\\
+& $\Downarrow$\\
+& {\sc exécutif}
+\end{tabular}
+\\
+Construit ou complémenté\\ à partir d'un Noyau Générique
+\end{center}
+}
+
+
+\subsection{SynDEx}\label{syndexsoft}
+Comme il a été dit en introduction, SynDEx est un outil de
+développement pour l'implantation optimisée d'algorithmes
+respectant des contraintes temps réel sur des architecture
+distribuées. A partir de graphes flot de données (la description
+hiérarchique d'opérations est possible) et d'un graphe
+d'architecture matérielle, des heuristiques sont mises en \oe{u}vre
+afin d'en déduire une distribution et un ordonnancement optimisé
+des opérations satisfaisant les contraintes. L'adéquation est
+réalisée en fonction des paramètres des opérations tels que
+temps estimé de calcul ou un impératif sur le type de ressources
+(processeurs, media de communication) o\`u l'opération doit être
+exécutée. L'approche y est formelle et fondée sur la
+sémantique des langages synchrones. Le code issu de l'adéquation
+est un macro-code (m4) qui est ensuite traduit par le macroprocesseur
+standard M4 utilisant des noyaux d'exécutif (confère section \ref{noyauexec}) dépendant des
+processeur spécifiés sur le graphe
+d'architecture (figure \ref{oldprincipes}).
+
+\dessin{figures/syndex/syndex}{0.4}{Principe de SynDEx}{oldprincipes}
+
+%\subsection{Modèles d'algorithmes et d'architectures}
+\subsubsection*{Modèles d'algorithmes}\label{sect_AlgoSimple}
+Un algorithme est modélisé par un graphe flot de données
+éventuellement conditionné (il s'agit d'un hypergraphe orienté),
+qui se compose de sommets et d'arcs. Un sommet est une opération et
+un arc un flot de données, c'est-à-dire un transfert de données
+entre deux opérations.
+
+Une opération peut-être soit un calcul, soit une mémoire
+d'état (retard), soit un conditionnement ou encore une
+entrée-sortie. Les sommets qui ne possèdent pas de
+prédécesseur sont des interfaces d'entrée (capteurs recevant les
+stimuli de l'environnement) et ceux qui ne possèdent pas de
+successeur représentent des interfaces de sortie (actionneurs
+produisant les réactions vers l'environnement). Dans le cas d'une
+opération de calcul, la consommation des entrées précède la
+production des sorties. La figure (\ref{syndexalgo}) donne un exemple de
+la description d'un algorithme via SynDEx.\\[0.5cm]
+\begin{minipage}[b]{.45\linewidth}
+\centering\epsfig{figure=figures/syndex/algo1, width=\linewidth}
+\caption{Un algorithme d'un régulateur simple sous SynDEx.}\label{syndexalgo}
+\end{minipage}\hspace{6mm}
+\begin{minipage}[b]{.45\linewidth}
+\centering\epsfig{figure=figures/syndex/algo2, width=\linewidth}
+\caption{Le même régulateur mais sous Scicos.}\label{scicosalgo}
+\end{minipage}
+
+Les algorithmes peuvent être simulés dans un premier temps avec le logiciel Scilab et son éditeur de schéma bloc Scicos \cite{Scilab, Scicos} puis être convertis vers un algorithme SynDEx grâce à une passerelle \cite{SynDEx}.
+
+
+\subsubsection*{Modèles d'architectures}\label{sect_ArchSimple}
+Une architecture est modélisée par un graphe dont chaque sommet
+représente un processeur ou un média de communication, et chaque
+arc représente une connexion entre un processeur et un média de
+communications (SAM ou RAM). On ne peut connecter directement deux
+processeurs ou deux médias. Chaque sommet est une machine
+séquentielle qui séquence soit des opérations de calcul pour les
+processeurs, soit des opérations de communications pour les médias
+de communications.
+
+La figure (\ref{syndexarchi}) montre 5 processeurs de type PC en relation avec un média de communication TCP/IP.
+\dessin{figures/syndex/archi}{0.5}{Graphe d'architecture.}{syndexarchi}
+
+
+
+\subsection{Heuristique de distribution et d'ordonnancement}
+
+Une fois les spécifications de l'algorithme et de l'architecture
+effectuées, il est nécessaire de réaliser
+l'adéquation. Celle-ci est chargée de respecter d'une part l'ordre
+des événements vérifiés lors de la spécification de
+l'algorithme et d'autre part les contraintes temps réel. Pour cela,
+est choisie parmi toutes les transformations de graphes possibles,
+celle qui optimise les performances temps réel de l'implantation en
+terme de latence. La latence ou temps de réponse R est la longueur
+du chemin critique du graphe logiciel, dont les sommets sont valués
+par les durées d'exécution des opérations correspondantes y
+compris celles des communications inter-processeurs.
+
+\dessin{figures/syndex/exemple}{0.5}{Exemple simple d'algorithme et d'architecture.}{syndexexemple}
+
+Supposons qu'on ait l'algorithme et l'architecture comme montré sur la figure (\ref{syndexexemple}) et que l'on veuille trouver une distribution de l'algorithme. On suppose que chaque opération (tâche) et que chaque communication s'exécute en une unité de temps.
+
+\dessin{figures/syndex/schedul_iter1}{0.5}{Etape 1.}{etape1}
+
+A n'ayant pas de prédécesseur, on doit exécuter l'opération A en premier. A l'étape 1, on la place soit sur le processeur $P_1$, soit sur le processeur $P_2$ (figure (\ref{etape1})). Si on choisit la première solution, on peut placer l'opération B, soit sur  $P_1$, soit sur le $P_2$ (figure \ref{etape2})). Si on choisit la deuxième solution, il faut ajouter une unité de temps pour la communication. De la même façon, si on choisit la deuxième solution, et que l'on place la tâche C sur un processeur, on peut obtenir la figure (\ref{etape3}). On continuera de la même manière pour le placement de la tâche D.\\[0.5cm]
+\begin{minipage}[b]{.45\linewidth}
+\centering\epsfig{figure=figures/syndex/schedul_iter2, width=\linewidth}
+\caption{Etape 2.}\label{etape2}
+\end{minipage}\hspace{6mm}
+\begin{minipage}[b]{.45\linewidth}
+\centering\epsfig{figure=figures/syndex/schedul_iter3, width=\linewidth}
+\caption{Etape 3.}\label{etape3}
+\end{minipage}
+
+Parmi tous ces choix possibles, il faut choisir la meilleure solution, à savoir il faut sélectionner le meilleur choix parmi les solutions possibles qui vont du choix 1.1.1.1 au choix x.x.x.x . La résolution de ce problème est NP-difficile.
+Afin de résoudre ce problème d'optimisation du temps de réponse,
+une heuristique a été développée. Il s'agit d'un algorithme
+glouton dont chaque étape alloue une opération à un processeur,
+route les éventuelles communications inter-processeurs
+c'est-à-dire crée des opérations de communication et alloue
+chacune d'elles à une liaison physique. L'ordonnancement des
+opérations de calculs ou de communication est directement déduit
+de l'ordre dans lequel elles sont allouées.
+
+Cette méthode consiste donc à faire progresser au long du graphe
+une coupe séparant les opérations déjà placées sur des
+processeurs de celles qui ne le sont pas encore. La progression se
+fait en respectant les précédences du graphe logiciel. De toutes
+les opérations à distribuer sur la coupe et de tous les
+processeurs, on choisit la paire qui optimise une fonction locale de
+coût prenant en compte :
+
+
+\begin{itemize}
+\item les différences entre dates locales d'exécution au plus
+  tôt et au plus tard (schedule flexibility),
+\item l'allongement du temps global d'exécution : le temps de
+  réponse (latence),
+\item le rythme d'entrée (cadence),
+\item la capacité mémoire.
+\end{itemize}
+
+Afin d'illustrer l'adéquation, la figure (\ref{schedule})
+montre le graphe temporel d'exécution d'un algorithme, tiré du tutoriel SynDEx, sur l'architecture de la figure (\ref{syndexarchi}). Le
+temps se déroule de haut en bas avec une colonne par processeur
+({\tt root}, ...) ainsi qu'une colonne par média de communication
+({\tt bus}). Chaque opération de calcul est représentée
+par une boîte dont la hauteur est proportionnelle à la durée
+d'exécution de l'opération. Chaque communication inter-processeurs
+est représentée par une boîte dont la taille est
+proportionnelle à la durée de la communication. La communication
+commence dès que l'opération qui a fournit la donnée à
+transmettre est terminée, l'opération qui a besoin de la donnée
+transférée commence dès que la communication est terminée. La
+valeur de la durée d'une itération du graphe est, quant à elle,
+donnée dans la fenêtre principale de SynDEx.
+
+\dessin{figures/syndex/schedule}{0.6}{Graphe temporel pour l'application du tutorial.}{schedule}
+
+\subsection{Noyaux d'exécutif}\label{noyauexec}
+\subsubsection{Génération d'exécutif}\label{kernel}
+Les transformations de graphes modélisant le processus
+d'implantation de l'algorithme sur l'architecture, permettent de
+produire automatiquement des exécutifs temps réel optimisés,
+déchargeant ainsi l'utilisateur des tâches fastidieuses de
+programmation bas niveau et autorisant du même coup une meilleur
+concentration sur les problèmes directement liés au programme
+applicatif.
+
+Un exécutif a pour rôle d'allouer les ressources de l'architecture
+matérielle (unités de calcul, de mémoire et communication) au
+programme d'application. Les exécutifs peuvent être classés en
+fonction de leur manière d'arbitrer l'allocation des
+ressources. Nous avons vu précédemment que cette allocation est
+à la fois spatiale (distribution) et temporelle (ordonnancement). Si
+les optimisations et les décisions que doit prendre l'exécutif
+sont effectuées à l'exécution, on dit que l'allocation est
+dynamique. Par contre, si cela est fait avant l'exécution, on dit
+que l'allocation est statique (il faut connaître les durées
+d'exécution). Dans le cas d'une allocation statique, les exécutifs
+sont les moins pénalisants car dans le cas d'une allocation
+dynamique, l'exécutif consomme une partie des ressources pour
+effectuer ses décisions d'arbitrage et d'optimisation. C'est
+pourquoi SynDEx génère des exécutifs statiques. Il y en a autant que de processeurs dans l'architecture.
+
+\dessin{figures/syndex/arbo}{0.5}{Arborescence des exécutifs
+  SynDEx}{arbo}
+
+Comme les exécutifs sont générés automatiquement, l'utilisateur n'a
+pas d'autre code à écrire que celui de ses opérations de calculs
+et d'entrée/sortie. Tout le reste, c'est-à-dire la distribution,
+l'ordonnancement, les appels des opérations de calcul et
+d'entrée/sortie, les allocations de la mémoire nécessaires aux
+communications inter-opérations est généré automatiquement à
+partir des graphes logiciel et matériel, des résultats de
+l'optimisation et d'un noyau générique. En effet, pour chaque
+processeur, l'exécutif est constitué par un assemblage
+d'éléments d'un noyau générique d'exécutifs (tirés d'une
+bibliothèque système) qui gère les communications
+inter-processeurs.
+Chaque exécutif généré par SynDEx est un macro-code indépendant de l'architecture. Ce macro-code
+est ensuite macro-processé avec des noyaux d'exécutifs dépendant de l'architecture et de l'application, afin d'obtenir du code source, qui après compilation sera  exécutable. 
+
+\subsubsection{Arborescence des noyaux d'exécutifs}
+Les noyaux d'exécutifs sous SynDEx sont divisés en différents groupes
+comme le montre la figure (\ref{arbo}). Le travail de ce stage qui a consisté à
+aider à la conception des noyaux applicatifs (dépendants de l'application)  sera
+expliqué plus en détail dans la deuxième partie de ce rapport.

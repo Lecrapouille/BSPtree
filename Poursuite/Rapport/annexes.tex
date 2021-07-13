@@ -1,0 +1,291 @@
+%%====================================================================
+%%====================================================================
+\part{Annexes}\label{annexes}
+\chapter{Installer Linux Debian et RTAI}
+%%====================================================================
+%%====================================================================
+\section{Installer RTAI}
+%%====================================================================
+Vu que le hardware du PC embarqué a été mis à jour pendant
+ce stage, j'en ai également profité pour mettre à jour l'OS.
+Afin de faciliter la tâche des futurs stagiaires, je décris ici,
+comment installer une distribution Debian, compiler un
+nouveau noyau et installer RTAI.
+
+%%====================================================================
+\section{Etape 1 : installer Debian}
+\subsection*{L'installation de Debian}
+%%====================================================================
+J'ai opté pour l'installation d'une Debian 4.0 NetInst release 0, car
+Debian est réputée pour sa fiabilité. Elle contient un noyau
+2.6.18. Son installation ne pose pas de problème, mais il faut lancer
+l'installation en mode \emph{expert} (non testé en mode
+\emph{expertgui}) car en mode \emph{normal} Debian choisit
+arbitrairement un réseau connecté à un serveur DHCP alors qu'à
+l'INRIA, il impératif de posséder une adresse IPv4 statique.
+
+Vu que j'ai choisît une distribution légère (150 Mo), l'installation
+des logiciels se fait par le réseau (d'où le nom de Debian
+NetInst). Il faut laisser Debian se connecter à un serveur http pour
+installer tous les packages utiles, sinon on n'a pas serveur X.
+
+%Enfin il faut absolument installer \emph{grub}.
+
+%Voici la configuration du CyCab~:
+%\begin{verbatim}
+%Nom du PC embarqué: aoste-rtai
+%adresse IPv4: 128.93.5.18
+%Mask: 255.255.192.0
+%Paserelle: 128.93.1.100
+%Serveur de nom: 128.93.1.23 et 192.93.2.78
+%pwd root: cycab0
+%nom d'utilisateur: aoste
+%pwd utilisateur: cycab0
+%Possibilite de connexion ssh: oui
+%Ex: ssh -X aoste@aoste-rtai
+%Ex: ssh -X aoste@128.93.5.18
+%\end{verbatim}
+
+%%====================================================================
+\subsection*{Faire reconnaître la puce graphique intégrée de la carte mère}
+%%====================================================================
+Debian reconnaît très bien la carte graphique NVidia, mais pas la
+puce graphique Intel de la carte mère car il faut choisir l'une ou l'autre
+dans le BIOS (touche \emph{delete} lors du boot du PC, puis choisir le
+menu XX et (dés)activer XX).
+
+Une fois Debian la Debian installée,  on édite le fichier \emph{/etc/X11/xorg.conf}
+et on ajoute les lignes suivantes~:
+\begin{verbatim}
+Section "Device"
+    Identifier   "Intel 82865G"
+    Driver        "i810"
+EndSection
+\end{verbatim}
+
+On cherche la {\tt Section "Screen"} et on ajoute la ligne suivante à côté de la ligne {\tt Device NVidia}.
+\begin{verbatim}
+#    Device    "Intel 82865G"
+\end{verbatim}
+
+Le {\tt \#} sert à commenter l'utilisation de ce device, car on préférera l'utilisation de la carte graphique NVidia.
+
+\subsection*{Finir d'installer les logiciels manquants}
+Une fois Linux démarré, on se logue en tant que
+utilisateur \emph{aoste} et on finit d'installer les packages
+manquants grâce à l'utilitaire \emph{Synaptic}. On installe les
+packages suivants~: demon ssh, \emph{gcc-3.4} (on créera un lien symbolique
+gcc avec la commande \emph{sudo ln -s gcc-3.4 /usr/sbin/gcc}),
+\emph{autotools}, \emph{auto-make}, \emph{ncurses}, \emph{emacs}, \emph{libraw1394-dev}, \emph{libdld394-dev}, \emph{glade2-dev}, et pour tester comment ce comportement de RTAI au
+stress du CPU)~: \emph{lxdoom}.
+
+
+%%====================================================================
+\section{Etape 2 : compiler un nouveau noyau}
+%%====================================================================
+Sur le site de RTAI \cite{rtaiorg} on télécharge la version 3.4 de
+RTAI dans le répertoire \emph{/usr/src}, on la décompresse et on créer
+un lien symbolique \emph{rtai} par les commandes~:
+\begin{verbatim}
+$ cd /usr/src/
+$ tar jxvf rtai-3.4.tar.bz2
+$ ln -s rtai-3.4 rtai
+\end{verbatim}
+
+La version actuelle du noyau Debian est une 2.6.18 or il ne
+semble pas exister de patch RTAI pour 2.6.18 bien qu'il existe un
+patch pour 2.6.17 ou pour 2.6.19 ! On télécharge sur le site
+\cite{kernelorg} la version 2.6.16-52.
+\begin{verbatim}
+$ cd /usr/src/
+$ tar jxvf linux-2.6.16-52.tar.bz2
+$ ln -s linux-2.6.16-52 linux
+\end{verbatim}
+
+La dernière étape est utile. On lance le configure graphique (il faut
+avoir installer la libncurses), je n'ai pas tester les autres
+alternatives (gtk, ...)
+\begin{verbatim}
+$ make menuconfig
+\end{verbatim}
+
+Après avoir sélectionner les options du noyaux, comme on l'explique
+dans la section suivante (\ref{choixkern}), on compile les sources et on
+installe l'image du noyau et les modules~:
+\begin{verbatim}
+$ make
+$ sudo make install
+$ sudo make modules_install
+\end{verbatim}
+
+Je n'ai rencontré aucun problème de compilation. Donc, si tout va bien
+on retrouve, dans le répertoire \emph{/boot/}, la nouvelle image du noyau
+\emph{vmlinux-2.6.16-52-rtai}. C'est tout à fait normal qu'il n'y a pas de fichier
+\emph{initrd-2.6.16-52-rtai}. On va
+updater \emph{grub} par~:
+\begin{verbatim}
+$ update-grub
+\end{verbatim}
+Ou bien manuellement par~:
+\begin{verbatim}
+$ emacs /boot/grub/menu.lst
+\end{verbatim}
+
+%%====================================================================
+\section{Etape 3 : redémarrer avec le nouveau noyau installé}
+%%====================================================================
+On redémarre la machine et au démarrage du \emph{grub}, on choisit le
+nouveau noyau 2.6.16-52-rtai. Si, le démarrage échoue, c'est que les
+options du noyaux n'ont pas été mises comme il faut, notamment les deux
+importantes~: -- par défaut le système de fichier ext3 est mis en tant
+que module, je l'ai inclus entièrement dans le noyau, et -- ne pas
+mettre la gestion des bus SPI en module. Normalement, après ces deux
+vérifications, Linux se lance sans erreur. Sinon, il faut
+activer/désactiver d'autres options du \emph{configure} et recompiler le noyau.
+
+%%====================================================================
+\section{Etape 4 : compiler RTAI}
+%%====================================================================
+On revient au dossier de rtai, on lance un configure graphique (un peu
+comme pour le kernel), on compile et on installe RTAI.
+\begin{verbatim}
+$ cd /usr/src/rtai
+$ make menuconfig
+$ export PATH=PATH:/usr/realtime/bin
+$ make
+$ sudo make install
+$ sudo make modules_install
+\end{verbatim}
+On sauvegardera la variable \emph{PATH} dans le \emph{.bashrc}.
+
+%%====================================================================
+\section{Etape 5 : tester RTAI au stress}
+%%====================================================================
+Maintenant, on doit vérifier que RTAI fonctionne correctement, en utilisant le
+test {\tt latency} fournis avec les sources RTAI.
+
+\begin{verbatim}
+$ cd /usr/realtime/testsuite/kern/latency/
+$ ./run
+\end{verbatim}
+
+Il faut également lancer des applications gourmandes en CPU et qui
+vont stresser le système, par exemple une application 3D. Ces
+applications "latency killers" causent des retards non prédictibles et
+sont incompatibles avec le concept de temps réel. Il faut vérifier que
+la colonne {\tt overuns} reste toujours à 0, sinon il faut enlever les
+modules susceptibles de causer des retards par la commande {\tt
+  insmod} et/ou supprimer des options du noyau puis recompiler le
+noyau et RTAI (faire un {\tt make distclean} dans les sources RTAI).
+
+%%====================================================================
+\section{Etape 2prim : choisir les options pour la compilation du
+  noyau}\label{choixkern}
+%%====================================================================
+Je conseille d'utiliser mon fichier {\tt .config} pour activer les
+bonnes options. J'indique ici, les options que j'utilise pour mon
+kernel 2.6.16.52 patché avec RTAI 3.4.
+
+\begin{itemize}
+\item[$\bullet$] \emph{Code maturity level options} on sélectionne "Prompt for development ..."
+\item[$\bullet$] \emph{General setup} on met le nom {\tt -rtai} à "Local version".
+\item[$\bullet$] \emph{Loadable module support} on sélectionne "Enable module support",
+"Module unloading" et "Automatic kernel module loading". Déselectionner "Module versioning support".
+\item[$\bullet$] \emph{Processor type and features} Mettre
+  "Subarchitecture Type" à {\tt PC-Compatible} et {\tt Processor
+    family} à Pentium 4. Selectionner "Preemption Model (Preemptible
+  kernel (Low-Latency Desktop))". Mettre "High Memory Support" à
+  4GB. Déselectionner "Use register arguments (EXPERIMENTAL)", "kexec
+  system call (EXPERIMENTAL)", "kernel crash dumps (EXPERIMENTAL)",
+  "Symetric multi-processing support" et "Local APIC support on
+  uniprocessors". Mettre "Timer frequency" le plus élevé possible à
+  savoir 1 Khz.
+\item[$\bullet$] \emph{Power Management options} Enlever "ACPI Support". Déselectionner
+"APM BIOS Support" et "CPU Frequency scaling".
+\item[$\bullet$] \emph{Bus options} Activer "PCI support" mais
+supprimer "PCI Express support" et "ISA support" car le PC embarqué
+n'en possède pas ou n'en utilise pas. Supprimer "PCI hotplug Support".
+\item[$\bullet$] \emph{Networking} enlever "Amateur Radio support" et
+tout ce qui concerne le "Bluetooth" et "802.11".
+\item[$\bullet$] \emph{Device Drivers}
+\begin{itemize}
+\item \emph{Generic driver options} garder les options par défaut.
+\item \emph{Memory Technology Devices (MTD)} à enlever.
+\item \emph{Parallel port support} Peu être activé ou désactivé.
+\item \emph{Plug and Play support} garder par défaut.
+\item Enlever \emph{SCSI device support}, \emph{SPI support},
+  \emph{I2C support}, \emph{USB support}, \emph{Sound} et
+  \emph{Multi-device support (RAID and LVM)}. Activer \emph{IEEE 1394
+    support}.
+\end{itemize}
+\item[$\bullet$] \emph{File systems} Activer "Second extended fs
+  support" et "Ext3 extended attributes".
+\item[$\bullet$] \emph{Instrumentation Support} désactiver tout.
+\item[$\bullet$] Garder les autres options par défaut.
+\end{itemize}
+
+%%====================================================================
+\section{Etape 4prim : choisir les options pour la compilation de RTAI}\label{choixrtai}
+%%====================================================================
+
+Le choix des options pour RTAI est plus simple que le choix des
+options du noyau.
+\begin{itemize}
+\item[$\bullet$] \emph{Menu General} Mettre "Installation directory" à
+  {\tt /usr/realtime} et "Kernel source directory" à {\tt
+    /usr/src/linux}.
+\item[$\bullet$] Mettre \emph{Number of CPUs} à 1.
+\end{itemize}
+
+%%====================================================================
+%\section{Revenir au vieux PC embarqué}
+%%====================================================================
+%Au cas où la nouvelle version du PC embarqué ne marcherait pas comme
+%il faut, voila les différentes étapes pour retrouver l'ancienne
+%configuration (vieux PC embarqué et vieux Linux) qui ont fait plus
+%leur preuve.
+%
+%La carte FireWire a pu etre enlevee pour le nouveau PC.
+%Lancer Linux (RTAI par defaut)
+%adresse\_public ou ifconfig 128.93.xx xxx
+%
+%Depuis bureau AOSTE ssh -X root@128.93.xx xxx
+
+
+%\chapter{Administration Linux}
+%ssh demon
+%mettre en place une clef ssh
+%parler que ssh -X root@xxx est cool mais devrait etre banni en l'interdisant dans la conf
+%mettre un utilisateur sudo
+%Les infos sur l'archi cat /proc/cpuinfo
+
+%Lancer/supp/enlever les modules RTAI, ...
+
+%\chapter{Arborescence des sources}
+
+%genere la doc doxygen
+
+%Presenter l'arborescence des sources:
+%++ihm
+%++robucars
+%++robucos
+
+%configurer la compil du programme IHM
+%./configure --camera=...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

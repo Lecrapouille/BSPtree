@@ -1,0 +1,129 @@
+\difference{\oddsidemargin 0cm
+\evensidemargin 0cm
+\topmargin -0.5cm
+\textheight 23.5cm
+\textwidth 16cm}{%
+%\pagedissolve{Wipe /Di 270}
+\panelwidth=1in
+\margins{1.5cm}{1cm}{1cm}{1cm}
+\screensize{12cm}{16cm}}
+\difference{\hypersetup{pdfwindowui=true,pdfpagemode=None,pdfstartview=FitH}}%
+{\hypersetup{pdfwindowui=true,pdfpagemode=FullScreen}}
+%,pdfpagetransition=Wipe}
+\renewcommand{\equation}{\gather}
+\renewcommand{\endequation}{\endgather}
+\renewcommand{\displaymath}{\gather}
+\renewcommand{\enddisplaymath}{\nonumber\endgather}
+
+\overlay{overlay1}
+%%%%%%%%%%% COULEURS%%%
+%\ifcase\coul\usepackage[monochrome]{color}\or\usepackage{color}\fi
+\everymath{\color{\coulmath}}
+\everydisplay{\color{\coulmath}}
+\let\tim=\text
+\def\text#1{\tim{\textcolor{\coultext}{#1}}}%for text in math
+\newcommand{\coulmath}{blue}
+\newcommand{\coulsection}{red}
+\newcommand{\coulfig}{red}
+\definecolor{OliveGreen}{cmyk}{0.64, 0, 0.95, 0.40}
+\newcommand{\coultheo}{OliveGreen}
+\newcommand{\coultext}{black}
+\definecolor{myFuschia}{cmyk}{0.47, 0.91, 0, 0.20}
+\let\souligne=\emph
+\def\emph#1{\textcolor{myFuschia}{\souligne{#1}}}
+%%%
+  %FORMATAGE DES TETES DES THEOREMES, ETC.
+%%%
+\makeatletter
+%%%%%%%%% thormes etc.
+\def\@begintheorem#1#2[#3]{%
+  \item[\normalfont % reset in case body font is abnormal
+  \hskip\labelsep\color{\coultheo}%
+  \the\thm@headfont%
+  \thm@indent%
+  \@ifempty{#1}{\let\thmname\@gobble}{\let\thmname\@iden}%
+  \@ifempty{#2}{\let\thmnumber\@gobble}{\let\thmnumber\@iden}%
+  \@ifempty{#3}{\let\thmnote\@gobble}{\let\thmnote\@iden}%
+  \thm@swap\swappedhead\thmhead{#1}{#2}{#3}%
+  \the\thm@headpunct]%
+  \thmheadnl % possibly a newline.
+  \ignorespaces}
+
+\renewenvironment{proof}[1][\proofname]{\par
+  \normalfont\color{\coultheo}%
+  \topsep6\p@\@plus6\p@ \trivlist
+  \item[\hskip\labelsep\itshape
+    #1\@addpunct{.}]\normalcolor\ignorespaces
+}{%
+  \qed\endtrivlist
+}
+%%%%%%%%% fin thormes etc.
+\def\NavigationPanel{\normalsfcodes%
+%\href{\@urlid}{\addButton{\buttonwidth}{\@Panelhomepagename}}\\ \pfill
+%\Acrobatmenu{FirstPage}{\addButton{\buttonwidth}{\FBlack\@Paneltitlepagename}}\\\pfill
+%if@paneltoc\relax\else%
+%\hyperlink{contents}{\addButton{\buttonwidth}{\DBlack\@Panelcontentsname}}\\\pfill\fi
+%\imageButton{\buttonwidth}{\buttonwidth}{GC.jpg}\par\vfill
+%\hyperref{../Transp-Optimisation-EDF-93.pdf}{page}{1}{\addButton{\smallbuttonwidth}{EDF93}}\hspace{1pt}%
+%\hyperref{ParisIcours-A4-NB.pdf}{page}{1}{\addButton{\smallbuttonwidth}{DEA}}\\
+%\Acrobatmenu{FullScreen}{\addButton{\smallbuttonwidth}{Plein \'ecr.}}\hspace{1pt}%
+%\hyperref{../Transp-Optimisation-EDF-93.pdf}{page}{1}{\addButton{\smallbuttonwidth}{EDF93}}\\
+%\Acrobatmenu{ZoomIn}{\addButton{\smallbuttonwidth}{Zoom}}\hspace{1pt}\Acrobatmenu{Hand}{\addButton%{\smallbuttonwidth}{Main}}\\
+%\Acrobatmenu{SelectGraphics}{\addButton{\smallbuttonwidth}{S\'elect.}}\hspace{1pt}%
+%\Acrobatmenu{Copy}{\addButton{\smallbuttonwidth}{Copie}}\\
+%\Acrobatmenu{ShowHideClipboard}{\addButton{\buttonwidth}{Presse-papiers}}\\
+%\Acrobatmenu{ShowHideBookmarks}{\addButton{\buttonwidth}{Signets}}\\
+%\Acrobatmenu{ShowHideDestinations}{\addButton{\buttonwidth}{Destinations}}\\
+\Acrobatmenu{GoToPage}{\addButton{\buttonwidth}{\@Panelpagename\space
+\textcolor{red}{\thepage}\space sur\space
+\textcolor{red}{\ScreenLastPage}}}\\
+\Acrobatmenu{GoBack}{\addButton{\smallbuttonwidth}{Pr\'ec\'ed.}}\hspace{1pt}%
+\Acrobatmenu{GoForward}{\addButton{\smallbuttonwidth}{Suivant}}\\
+\Acrobatmenu{FirstPage}{\addButton{.2in}
+{\FBlack\scalebox{.8}[1.4]{\btl\btl}}}\hspace{-3pt}
+\Acrobatmenu{PrevPage}{\addButton{.2in}
+{\FBlack\scalebox{.8}[1.4]{\btl}}}\hspace{-2pt}
+\Acrobatmenu{NextPage}{\addButton{.2in}
+{\LBlack\scalebox{.8}[1.4]{\rtl}}}\hspace{-3pt}
+\Acrobatmenu{LastPage}{\addButton{.2in}
+{\LBlack\scalebox{.8}[1.4]{\rtl\rtl}}}
+}
+
+\def\panel{%
+       \begin{minipage}[t][\paperheight][c]{\panelwidth}%
+       \normalsfcodes%
+       \centering%
+        \null\vspace*{12pt}%
+        \ifx\@emblema\@empty\relax\else%
+        \@@logo{\@emblema}\par\vfill\fi%
+     \if@paneltoc%
+      \@panel@toc\par\vfill\else\relax\fi%
+       \color{blue}%
+   \NavigationPanel%
+   \par
+   \null\vspace*{1pt}
+   \end{minipage}%
+}
+
+%------------------- Panel TOC macros ----------------------
+%
+\long\def\contentsline#1#2#3#4{\def\@@cHead{#1}%
+   \ifx\@@cHead\@@secHead\stepcounter{NUM}%
+   \ifnum\thepanel@section=\theNUM%
+   {\definecolor{panelbackground}{gray}{.3}%
+    \definecolor{fgcolor}{gray}{1}%
+\hyperlink{#4}{\,\scrNormalButton{.965\panelwidth}{\truncate{.9\panelwidth}{#2}}}%
+   }\par\vskip1truept%
+   \else
+   {\definecolor{panelbackground}{rgb}{1,0.976,0.863}%%GC
+    \definecolor{fgcolor}{gray}{0}%
+\hyperlink{#4}{\,\scrNormalButton{.965\panelwidth}{\truncate{.9\panelwidth}{#2}}}%
+   }\par\vskip1truept%
+   \fi\fi}
+
+
+\def\ST{\hbox{\vrule height8pt depth3pt width\z@}\tiny\itshape}
+
+\def\thesection@level{0}
+\makeatother
+

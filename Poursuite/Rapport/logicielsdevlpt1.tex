@@ -1,0 +1,316 @@
+%%====================================================================
+%%==================================================================== 
+%\chapter{Logiciel de développement Scilab}
+%\section{Présentation}
+\section{Logiciel de modélisation et de simulation Scilab/Scicos}
+%%====================================================================
+%%==================================================================== 
+
+Il existe deux types de programmes scientifiques~: -- les logiciels
+algébriques faisant essentiellement du calcul symbolique (Maple,
+Mathematica, Maxima, Axiom, et MuPad), -- les logiciels de calcul
+scientifique faisant essentiellement de l'analyse numérique (Scilab,
+MATLAB).
+
+Scilab \cite{Chancelier, Scilab} est un logiciel libre pour le calcul
+scientifique.  Scilab est un interpréteur de langage manipulant des
+objets typés dynamiquement. Il inclut de nombreuses fonctions
+spécialisées pour le calcul numérique organisées sous forme de
+librairies ou de boites à outils qui couvrent des domaines tels que la
+simulation, l'optimisation, et le traitement du signal et du contrôle.
+
+Une des boites à outils les plus importantes de Scilab est Scicos
+\cite{Chancelier, Scicos}. Scicos est un éditeur graphique de bloc
+diagrammes permettant de modéliser et de simuler des systèmes
+dynamiques. Il est particulièrement utilisé pour modéliser des
+systèmes o\`u des composants temps-continu et temps-discret sont
+inter-connectés.
+
+Un programme Scicos peut être traduit en un programme SynDEx grâce à
+un traducteur intégré dans l'IHM de Scilab. Scicos a été utilisé pour
+simuler et de vérifier le bon fonctionnement de application de SynDEx
+à l'automatique décrite ci dessous.
+
+\subsection{Mise en place de nouveaux blocx Scicos}
+
+Les blocs prédéfinis dans les palettes Scicos permettent de construire
+des schémas très divers mais dans certains cas on a besoin d'une
+fonctionalité que Scicos n'a pas. Il faut en créer un nouveau bloc qui
+peut être défini de plusieurs façons (Scilab, C, Fortran), mais dans tous
+les cas, Scicos a besoin de deux types de fonctions~: -- une fonction
+d'interface, presque toujours écrite en Scilab, pour gérér l'interface
+avec l'éditeur Scicos et -- une fonction de simulation réalisant le
+comportement dynamique du bloc. Cette dernière est utilisée par le
+simulateur est doit être rapide, elle sera écrite en C pur ce projet.
+
+\subsubsection*{La fonction d'interface}
+
+La fonction d'interface d'un bloc détermine non seulement sa
+géométrie, sa couleur, le nombre et la taille de ses ports
+d'entrée-sorties, etc, mais aussi les états iniiaux et ses paramètres.
+Elle gère une fenêtre de dialogie qui permet de ses propriétés, ce que
+l'utilisateur peut faire en cliquant sur le bloc.
+
+Les fonctions d'interface suivent à peu près toujours le même patron~:
+\begin{verbatim}
+// Fichier: CAMERA_FIREWIRE.sci
+
+function [x,y,typ]=CAMERA_FIREWIRE(job,arg1,arg2)
+x=[];y=[];typ=[]
+select job
+
+case 'plot' then
+  standard_draw(arg1)
+case 'getinputs' then
+  [x,y,typ]=standard_inputs(o)
+case 'getoutputs' then
+  [x,y,typ]=standard_outputs(o)
+case 'getorigin' then
+  [x,y]=standard_origin(arg1)
+
+case 'set' then
+  x=arg1;
+  graphics=arg1.graphics;
+  exprs=graphics.exprs;
+  model=arg1.model;
+  while %t do
+    [ok,height,width,exprs]=getvalue(..
+	['Camera FireWire (IEEE 1394)';
+	 '';
+	 'Donne une image RGB de taille sous';
+         'forme de vecteur de taille 3 x height x width'],..
+	['Height';
+	'Width'],..
+	 list('vec',1,'vec',1),exprs)
+    if ~ok then break,end //user cancel modification
+    graphics.exprs=exprs;
+    if ok then
+        model.ipar=[height,width]
+        graphics.exprs=exprs;
+        x.graphics=graphics;
+        model.out = 3 * height * width;
+        x.model=model;
+        break
+    end
+  end
+
+case 'define' then
+  height = 240
+  width  = 320
+  model  = scicos_model()
+  model.sim = list('scicos_camerafirewire',4)
+  model.evtin = 1;
+  model.out = 3 * 240 * 320;
+  model.ipar=[height,width]
+  model.blocktype='d'
+  model.dep_ut=[%f %t]
+  exprs=[string(height); string(width)]
+  gr_i=['txt=[''Camera'';''FireWire''];';
+    'xstringb(orig(1),orig(2),txt,sz(1),sz(2),''fill'')']
+  x=standard_define([4 2],model,exprs,gr_i)
+end
+endfunction
+\end{verbatim}
+
+La figure (\ref{scicoscam}) ce que l'on peut obtenir après compilation.
+\dessin{figures/regulateur/scicos_camera}{0.5}{La fonction d'interface obtenue après compilation.}{scicoscam}
+
+On a utilisé ici les fonctions standard pour dessiner un bloc
+rectangulaire avec les cas {\tt plot} (dessiner le bloc), {\tt
+  getinputs}, {\tt getoutputs} (retourner les coordonnées des entrées
+et des sorties).
+
+Les cas {\tt define} et {\tt set} doivent être adaptés. Le premier
+définit les valeurs initiales des paramêtres et le deuxième gère la
+fenêtre de dialogue avec l'utilisateur. Les variables {\tt graphics}
+et {\tt model} sont des structures représentées sous forme de
+liste. {\tt graphics} contient des informations sur l'aspect du bloc,
+comme sa taille, son emplacement, ... et {\tt model} des informations
+nécessaires pour la simulation comme le nom de la fonction de
+simulation et son type, le nombre et les tailles de ports
+d'entrées-sorties, les valeurs des états, des paramêtres, etc.
+
+Dans le cas {\tt define}, nous crééons deux variables {\tt height} et
+{\tt width} qui définissent la taille par défaut de l'image. {\tt
+  model.out} est le port de sortie qui est un vecteur de taille
+$3\times240\times320$. Nous avons aucune entrée {\tt model.in} car
+nous définissons un capteur. {\tt model.evtin} indique que nous avons
+qu'une entrée d'horloge. {\tt model.blocktype} indique que nous avons
+un bloc de type discret. L'élément {\tt [\%f \%t]} indique que ce bloc
+ne contient pas de dépendance directe d'entré-sortie, mais qu'il est
+temps dépendant.
+
+Dans le cas {\tt set}, nous créons une liste de dialogue qui permet à
+l'utilisateur de modifier les variables {\tt height} et {\tt
+  width}. Les valeurs de ces deux variables seront affichées, ainsi
+qu'un titre. Lorsqu'on clique sur le bouton {\tt ok} on change la
+taille du port de sortie en fonction des nouvelles valeurs de {\tt
+  height} et {\tt width}.
+
+\subsubsection*{La fonction de simulation}
+
+Le patron de la fonction de simulation en langage C est plus simple
+que pour le patron de la fonction d'interface. En effet elle effectue
+les tâches suivantes selon la valeur d'un paramètre {\tt flag}~:
+\begin{itemize}
+\item[$\bullet$] \emph{initialisation}~: Scicos appelle ce cas une
+  seule fois et au tout début de la simulation pour lui permettre
+  d'initialiser ses états initiaux ou ouvrir un le port de la caméra.
+\item[$\bullet$] \emph{terminaison}~: Scicos appelle ce cas une seule
+  fois et à la fin de la simulation pour lui permettre par exemple de
+  libèrer de la mémoire ou de fermer le port de la caméra.
+\item[$\bullet$] \emph{calcul des sorties}~: la fonction calcule ses
+  sorties en fonction des valeurs de ses entrées et de ses états.
+\item[$\bullet$] Il existe d'autres cas comme, la mise à jour des
+  états, calcul des dates des evénements de sortie, calcul de la
+  dérivée de l'état continu, ...
+\end{itemize}
+
+\begin{verbatim}
+/* Fichier: scicos_camera_firewire.c */
+
+#  include <scicos/scicos_block.h>
+
+void		scicos_camera_firewire(scicos_block *block, int flag)
+{
+  switch (flag)
+    {
+    case INITIALISATION:
+      camera_firewire_open();
+      break;
+    case TERMINAISON:
+      camera_firewire_close();
+      break;
+    case CALCUL_DES_SORTIES:
+      camera_firewire_get_new_image(block);
+      break;
+    default: break;
+    }
+}
+\end{verbatim}
+
+La valeur de {\tt flag} est mise à jour par Scicos. J'ai caché la
+valeur des identifiants des tâches en utilisant des {\tt define} même si
+les développeurs de Scicos préférent manipuler directement la valeur
+de {\tt flag}.
+
+\begin{verbatim}
+#define CALCUL_DES_SORTIES      1
+#define INITIALISATION          4
+#define TERMINAISON             5
+\end{verbatim}
+
+On fera attention, au bouton {\tt stop} du menu Scicos qui ne termine
+pas la simulation, mais la met en pause. Par conséquent la fonction
+{\tt camera\_firewire\_close} sera appelée que si on clique ensuite
+sur le bouton {\tt restart}.
+
+Nous n'avons pas encore parler de la structure {\tt
+  scicos\_block}. Elle contient toutes les informations utiles du
+blocs, comme les port d'entrées, sorties, les paramètres, les états~:
+\begin{verbatim}
+typedef struct {
+int nevprt; /* binary coding of activation inputs, -1 if internal ly activated */
+voidg funpt; /* pointer: pointer to the computational function */
+int type; /* type of interfacing function, current type is 4 */
+int scsptr; /* not used for C interfacing functions */
+int nz; /* size of the discrete-time state */
+double *z; /* vector of size nz: discrete-time state */
+int nx; /* size of the continuous-time state */
+double *x; /* vector of size nx: continuous-time state */
+double *xd; /* vector of size nx: derivative of continuous-time state */
+double *res; /* only used for internal ly implicit blocks. vector of size nx */
+int nin; /* number of inputs */
+int *insz; /* input sizes */
+double **inptr; /* table of pointers to inputs */
+int nout; /* number of outputs */
+int *outsz; /* output sizes */
+double **outptr;/* table of pointers to outputs */
+int nevout; /* number of activation output ports */
+double *evout; /* delay times of output activations */
+int nrpar; /* number of real parameters */
+double *rpar; /* real parameters of size nrpar */
+int nipar; /* number of integer parameters */
+int *ipar; /* integer parameters of size nipar */
+int ng; /* number of zero-crossing surfaces */
+double *g; /* zero-crossing surfaces */
+int ztyp; /* boolean, true only if block MAY have zero-crossings */
+int *jroot; /* vector of size ng indicating the presence and direction of crossings */
+char *label; /* block label */
+void **work; /* pointer to workspace if al location done by block */
+int nmode; /* number of modes */
+int *mode; /* mode vector of size nmode */
+} scicos block;
+\end{verbatim}
+
+Voici un exemple de fonction pour le calcul des sorties~:
+\begin{verbatim}
+void    	camera_firewire_get_new_image(scicos_block *block)
+{
+  int		 i;
+  static struct s_device_firewire device;
+  static unsigned char rgb[3 * IMAGE_WIDTH * IMAGE_HEIGHT];
+
+  /* block->ipar[0] <==> height */
+  /* block->ipar[1] <==> width  */
+  camera_firewire_get_frame(&device, rgb);
+  for (i = 0; i < 3 * block->ipar[0] * block->ipar[1]; ++i)
+    block->outptr[0][i] = rgb[i];
+}
+\end{verbatim}
+
+\subsubsection*{Compilation des fonctions d'interface et de simulation}
+
+Voici un script Scilab qui permet de compiler les fonctions
+de simulation et de les lier aux fonctions d'interfaces.
+\begin{verbatim}
+// Fichier: builder.sce
+
+comp_fun_lst = ['scicos_camera_firewire'];
+c_prog_lst   = ['camera_scicos.c'];
+prog_list    = strsubst(c_prog_lst, '.c', '.o');
+lib_list     = ['libraw1394','libdc1394_control'];
+
+ilib_for_link(comp_fun_lst, prog_list, lib_list, 'c');
+genlib('lib_firewire', pwd());
+\end{verbatim}
+
+La variable {\tt comp\_fun\_lst} est une liste de chaine de caractères
+indiquant les noms des fonctions à utiliser. {\tt c\_prog\_lst} stocke
+tous les noms des fichiers C à compiler. {\tt prog\_list} stocke les
+noms des fichiers C compilés et dont l'extension se termine par o.
+{\tt lib\_list} stocke les noms de librairies dynamiques nécéssaires à
+la compilation. Ces librairies se trouve dans le répertoire {\tt
+  usr/lib/} et doivent être dynamiques (pour être ouverte lors de
+l'exécution de la simulation).
+
+Le script suivant permet de lancer la compilation et, si tout va bien,
+permet de créer une palette nomée {\tt myblock.cosf}. Attention, je
+n'ai pas bien compris comment créer une palette {\tt scicos\_pal}
+donc il faut utiliser le menu {\tt Open as palette} pour créer une
+palette valide avec le fichier {\tt myblock.cosf}.
+
+\begin{verbatim}
+exec('builder.sce');
+create_palette(pwd());
+load lib;
+exec loader.sce;
+scicos_pal($+1,1)='foo';
+scicos_pal($+1,2)='myblock.cosf';
+\end{verbatim}
+
+\dessin{figures/regulateur/scicos_camera2}{0.5}{Les fonctions d'interface et de simulation obtenues pendant une simulation.}{scicoscam2}
+
+\subsubsection*{Résultat}
+Si on doit re-modifier l'une des deux fonctions d'interface ou de
+simulation, il faut faire attention à ce que Scilab intègre bien la
+dernière version, ce qui n'est pas toujours le cas. Par exemple si on
+change la fonction d'interface, on doit obligatoirement détruire le
+bloc de la simulation pour en créer un nouveau, sinon l'ancienne
+version ne laisse pas la place à la nouvelle.
+
+Voici une figure (\ref{sci1394}) que l'on peut obtenir avec le fonction
+d'interface et de simulation.
+
+La figure (\ref{scicoscam2}) montre ce que l'on peut obtenir avec le fonction
+d'interface et de simulation.

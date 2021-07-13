@@ -1,0 +1,236 @@
+\chapter{Notions d'automatique}
+Dans ce chapitre, des éléments d'automatique sont présentés rapidement
+afin de faciliter la compréhension des chapitres suivants où des
+applications SynDEx et Scicos sont données.
+
+%%====================================================================
+\section{Rappel de quelques éléments  de l'automatique}
+%%====================================================================
+Considérons un bateau \cite{Faure} ayant un pilote automatique
+recevant en permanence le cap actuel $\alpha$ du bateau et le cap
+désiré $\alpha_c$. En utilisant ces informations le pilote automatique
+génère au cours du temps des ordres de positionnement $\epsilon$ du
+gouvernail de façon à ce que l'erreur de cap $e=\alpha_c -\alpha$ soit
+maintenue aussi faible que possible sachant que le bateau reçoit des
+perturbations extérieures (vent, ...). La figure (\ref{bateau}) montre le schéma bloc du modèle comme nous l'avons montré dans la section \ref{sss}.
+
+\dessin{figures/regulateur/bateau}{0.6}{Pilote automatique de bateau (P.A.)}{bateau}
+
+Pour ce faire, une loi de commande (bloc P.A.), calculant $\epsilon= f(e)$ en
+fonction des informations disponibles, pourrait être~:
+\begin{itemize}
+\item[$\bullet$] par à-coups : $$\epsilon = \begin{cases}
++\epsilon_m & \text{si } e>0\; ,\\
+-\epsilon_m & \text{si } e<0\; .
+\end{cases} $$
+Ca a l'avantage d'être simple, mais n'est pas très efficace. Le système va osciller (un coup trop à gauche, un coup trop à droite, ...)
+
+\item[$\bullet$] proportionnelle : $$\epsilon = Ke\;,$$
+Cette méthode à l'inconvénient de faire apparaître une erreur asymptotique.
+
+\item[$\bullet$] proportionnelle et intégrale : $$\epsilon = Ke +
+  1/\rho\int^te(\alpha)\;d\alpha\;,$$
+Le terme intégrale permet d'additionner les erreurs du systèmes. La sommation des erreurs va continuer jusqu'à ce que la valeur corresponde à la valeur de la consigne. L'inconvénient du terme intégrale est que la réponse à une perturbation devienne plus lente que le seul terme proportionnel.
+
+\item[$\bullet$] proportionnelle et dérivée : $$\epsilon = Ke +
+  K'de/dt\;,$$ Le terme  dérivé permet une réponse plus rapide lors d'un changement rapide de l'erreur. En théorie, ce terme aide le système a être plus réactif, mais en pratique, les bruits blancs (vibration, erreur de lecture des capteurs, ...) vont rendre instable le système (on dérive du bruit). 
+
+\item[$\bullet$] proportionnelle et intégrale et dérivé etc.
+\end{itemize}
+
+C'est la théorie des asservissements qui permettra, dans un cas
+particulier de choisir la loi de commande la mieux adaptée. Le document AVR221 d'Atmel
+explique plus en détail et de façon très simple, l'implémentation d'un régulateur PID
+(dans le cas temps discret) et la méthode Ziegler-Nichols pour trouver les bons gains \cite{avr221}
+car les systèmes deviennent instables quand les valeurs des gains sont trop forts.
+
+Dans les paragraphes suivants on va introduire les outils permettant d'analyser
+la classe des systèmes linéaires temps invariant.
+
+\section{Représentation sous forme de matrice d'état}
+Un système linéaire temps invariant, peut s'écrire sous la forme de matrice d'état, comme pour  l'exemple suivant, du mouvement d'un pendule invers\'e avec les conditions initiales nulles. On peut écrire le système avec $x_1$ l'angle et $x_2$ sa position, et $u$ l'entrée u système et $y$ la sortie (l'observation)~:
+\begin{align*}
+\dot{x_1} & = x_2 \\
+\dot{x_2} & = \frac{mgl}{J} \sin{x_1} + \frac{ml}{J} u \cos{x_1}
+\end{align*}
+
+On peut \'ecrire $\dot{x_2}= f(x_1, x_2, u)$. Gr\^ace \`a la formule de Taylor  :
+$$\dot{x_2} \simeq f(0, 0, 0) + \delta x_1 f_{x_1}'(0, 0, 0) + \delta x_2
+f_{x_2}'(0, 0, 0) + \delta u f_u'(0, 0, 0)$$
+
+Ce qui donne :
+$$\delta \dot{x_2} \simeq \delta x_1 \left( \frac{mgl}{J} \right) + \delta u \left( \frac{ml}{J} \right)$$
+$$\delta \dot{x_1} = \delta x_2$$
+
+Finalement, en changeant de notation $\delta x \rightarrow x, \delta u \rightarrow u, \delta y \rightarrow y$, on obtient le systeme suivant sous la forme matricielle :
+\begin{align*}
+ \dot{x} = &
+\begin{bmatrix}
+0 & 1 \\ 
+\frac{mgl}{J} & 0\\
+\end{bmatrix}
+\begin{bmatrix}
+ x_1 \\  x_2 \\
+\end{bmatrix}
++ \begin{bmatrix}
+0 \\  \frac{ml}{J} \\
+\end{bmatrix}  u
+\\
+ y= & \begin{bmatrix}
+1 & 0 \\ 
+\end{bmatrix}
+\begin{bmatrix}
+ x_1 \\  x_2 \\
+\end{bmatrix}
++ \begin{bmatrix}
+0\\
+\end{bmatrix}  u
+\end{align*}
+
+Soit de la forme générale~:
+\begin{align*}
+\frac{dx}{dt} = & \; Ax + Bu \\
+y = & \; Cx 
+\end{align*}
+
+%%====================================================================
+\section{Transformée de Laplace et transformée en $z$}
+Deux transformations permettent de ramener l'analyse des systèmes
+dynamiques linéaires à du calcul algébrique. Ce sont la transformée de
+Laplace et la transformée en $z$. Elles transforment des fonctions du
+temps en une fonction d'une variable dont la partie imaginaire
+s'interprète en terme de fréquence.  Ces transformations permettent de
+résoudre les équations différentielles linéaire à coefficients
+constants.
+
+%%====================================================================
+\subsection{Transformée de Laplace}
+\subsubsection*{Définition}
+La transformée de Laplace est définie de la manière suivante~: soit
+$f(t)$ une fonction du temps définie pour $t>0$. Alors~:
+$$\LL[f(t)] \equiv F(s) \equiv
+\lim\limits_{
+  \begin{subarray}{l}
+    T \rightarrow \infty \\
+    \epsilon \rightarrow 0
+  \end{subarray}} \int_{\epsilon}^{T} f(t)\;e^{-st} dt=
+\int_{0^{+}}^{\infty} f(t)\;e^{-st}dt\;\;\;\; 0<\epsilon<T$$
+o\`u $s$ est un variable complexe défini par $s\equiv \sigma + j\omega$.
+
+%%====================================================================
+\subsubsection*{ Transformée de Laplace de dérivées}
+Montrons que la transformée de Laplace de la dérivée $df/dt$ d'une
+fonction $f(t)$ vaut~:
+$$\LL\left[\frac{df}{dt}\right] = s \LL f - f(0^{+})$$
+
+En intégrant par partie, on obtient :
+$$\left[ e^{-st}f(t)\right]^{\infty}_{0^{+}}+s\int_{0^{+}}^{\infty}fe^{-st}dt$$
+
+Finalement :
+$$\LL\left[\frac{df}{dt}\right] = s\LL f - f(0^{+})$$
+
+%%====================================================================
+\subsubsection*{Autre exemple}
+Une autre formule utilisée dans l'application du chapitre suivant est
+la transformée de Laplace de la double dérivée $d^{2}f/dt^{2}$ d'une
+fonction $f(t)$~:
+$$\LL\left[\frac{d^{2}f}{dt^{2}}\right] = s^2F(s)-sf(0^{+})-\frac{df}{dt}\Big|_{t=0^{+}}$$
+
+% \subsection{Transformée inverse de Laplace}
+% \subsubsection*{Définition}
+% Soit $F(s)$ la transformée de Laplace de la fonction $f(t), t > 0$,
+% la transformée inverse de $F(s)$ est~:
+% $$\LL^{-1}[F(s)]\equiv f(t) = \frac{1}{2\pi}\int_{c-j\inf}^{c+j\infty}F(s)\;e^{st}ds$$
+% où $c > \sigma_0$ ($\sigma_0$ est un nombre réel, critère de la
+% transformabilitè de $f(t)$).
+
+%%====================================================================
+\subsection{Transformée en $z$}
+La transformée en $z$ est utilisée pour décrire des signaux en temps
+discret.  Soit $\{f(k)\}$ dénote une séquence de valeur réelle $f(0),
+f(1), f(2), \ldots$ ou bien $f(k)$ pour $k=0,1,2,\ldots$. Alors on
+définit la transformée en $z$ par~:
+$$\ZZ\{f(k)\}\equiv F(z) = \sum_{k=0}^{\infty}f(k)z^{-k}$$ o\`u $z$
+est un variable complexe défini par $z\equiv \sigma + j\omega$.
+
+\section{Placement de pôles}
+Un système linéaire temps invariant (LTI) ayant un nombre fini d'états
+s'écrit généralement de la façon suivante~:
+\begin{align*}
+\frac{dx}{dt} = & \; Ax + Bu \\
+y = & \; Cx 
+\end{align*}
+Où la $A$ matrice est une matrice $n \times n,$ $B$ une matrice $n
+\times p,$ $C$ une matrice $q \times n,$ . Sous block diagramme il se
+dessine comme sur la figure \ref{blockdiag}.
+
+
+\dessin{figures/regulateur/blockdiag}{0.6}{u est l'entr\'ee, y la sortie, x
+  l'\'etat (ou m\'emoire)}{blockdiag}
+
+La fonction de transfert d'un système linéaire temps invariant
+mono-entrée mono-sortie est une fonction rationnelle s'écrivant~:
+$$G(s) = C(sI-A)^{-1}B=\frac{N(s)}{D(s)}\;,$$
+où $N$ et $D$ sont deux polynômes.
+
+On appelle pôles les zéros du polynôme $D(s)$, ils sont aussi les
+valeurs propres de la matrice $A$. La présence du pôle $\lambda$
+implique que la sortie du système $y(t)$ contient une composante de la
+forme $e^{\lambda t}$.  Alors, si $Re(\lambda)>0$ la sortie tend vers
+l'infini lorsque $t$ tend vers l'infini. Le système est dit instable.
+Un système est asymptotiquement stable si et seulement si toutes les
+valeurs propres vérifient~: $Re(\lambda_i) < 0$.
+
+Considérons le système bouclé ($u$ en feedback sur l'état) dans lequel
+$u=Kx+v$ le nouveau système s'écrit
+\begin{align*}
+\frac{dx}{dt} = & \; (A+BK)x + Bv \; ,\\
+y = & \; Cx \; .
+\end{align*}
+Le feedback étant à notre disposition on peut choisir ses coefficients
+de façon à placer les pôles du système bouclé où l'on veut. Par
+exemple rendre stable par feedback un système instable.
+
+Un théorème indique sous quelles conditions sur les matrices $(A,B,C)$
+il est possible de placer les pôles du système où l'on veut.
+
+%%====================================================================
+\section{Discrétisation d'une intégrale}
+
+SynDEx manipule seulement des modèles temps discret (et donc, pas de
+temps continu) et il n'est pas capable de manipuler des boucles
+algébriques implicites. C'est pourquoi, une boucle SynDEx doit
+contenir au moins un délais ($1/z$).  Par conséquent, notre
+application Scicos qui est un système dynamique temps continu doit
+être convertie en temps discret pour pouvoir être utilisée dans
+SynDEx.
+
+L'équation différentielle $\dot{x}=u$ est discrétisée d'une
+façon simple en utilisant un schéma de Euler. Notons $h$ 
+le pas de discrétisation et $x_0$ une valeur initiale
+arbitraire. Le système discret s'écrit ~:
+\begin{equation}
+x_{n+1}-x_{n}=u h\label{sys2}
+\end{equation}
+Finalement, le système (\ref{sys2}) est donné en Scicos (SynDEx)
+par la figure. \ref{sciintegdiscr} (\ref{synintegdiscr}). Notons que
+la variable $h$, stockée dans le contexte de Scicos, est utilisée
+dans l'entrée du gain et dans la définition de l'horloge.
+Dans SynDEx, $h$ est défini en tant que paramètre dans la définition d'un gain et
+l'horloge est utilisée directement dans le code source des opérations.\\[2mm]
+\begin{minipage}[b]{.45\linewidth}
+\centering\epsfig{figure=figures/regulateur/scicos_integraldiscrete, width=\linewidth}
+\caption{Une intégrale discrétisée dans Scicos (temps discret).}\label{sciintegdiscr}
+\end{minipage}\hspace{10mm}
+\begin{minipage}[b]{.4\linewidth}
+\centering\epsfig{figure=figures/regulateur/syndex_integraldiscrete, width=\linewidth}
+\caption{Une intégrale discrétisée dans SynDEx.}\label{synintegdiscr}
+\end{minipage}
+
+% On remarquera, que SynDEx ne fonctionne pas si 
+
+%\section{Critere observabilte}
+%\section{commandabilité}
+%\section{Kalman filter}
+%\section{temps discret temps continu}
+%papier PID Atmel
